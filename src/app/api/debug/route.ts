@@ -6,13 +6,13 @@ export async function GET() {
         const db = await createConnection();
         
         // Get total count
-        const [count] = await db.query("SELECT COUNT(*) as total FROM users");
+        const [count] = await db.query("SELECT COUNT(*) as total FROM app_users");
         
         // Get all users (limited to 10 for safety)
-        const [users] = await db.query("SELECT id, full_name, username, email, created_at FROM users LIMIT 10");
+        const [users] = await db.query("SELECT id, username, email, created_at FROM app_users LIMIT 10");
         
         // Get table structure
-        const [tableStructure] = await db.query("DESCRIBE users");
+        const [tableStructure] = await db.query("DESCRIBE app_users");
         
         return NextResponse.json({
             message: "Database debug info",

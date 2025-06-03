@@ -21,12 +21,12 @@ export async function POST(request: NextRequest) {
         const db = await createConnection();
         
         // First, let's check total user count
-        const [totalUsersResult] = await db.query("SELECT COUNT(*) as count FROM users");
+        const [totalUsersResult] = await db.query("SELECT COUNT(*) as count FROM app_users");
         console.log('Total users in database:', totalUsersResult);
 
         // Now check for specific user - destructure to get only the data rows
         const [existingUserRows] = await db.query(
-            "SELECT id, email, username FROM users WHERE email = ? OR username = ?", 
+            "SELECT id, email, username FROM app_users WHERE email = ? OR username = ?", 
             [email, username]
         );
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
         // Insert new user - also destructure the result
         const [result] = await db.query(
-            `INSERT INTO users (username, email, password, created_at) 
+            `INSERT INTO app_users (username, email, password, created_at) 
              VALUES (?, ?, ?, NOW())`,
             [username, email, password]
         );
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
     try {
         const db = await createConnection();
-        const [users] = await db.query("SELECT id, username, email, created_at FROM users");
+        const [users] = await db.query("SELECT id, username, email, created_at FROM app_users");
         
         return NextResponse.json(users);
     } catch (error) {
