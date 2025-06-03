@@ -23,7 +23,7 @@ export default function LoginForm() {
             await new Promise(resolve => setTimeout(resolve, 1000));
             
             // On successful login, redirect to dashboard or home
-            router.push('/');
+            router.push('/menu');
             
         } catch {
             setError('Invalid email or password');
