@@ -20,9 +20,11 @@ export default function Home() {
     },[]);
 
 return (
-    <main className="min-h-screen p-4">
-      <div className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-lg">
-        <RoleChoice/>
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+      <div className="max-w-4xl mx-auto py-8">
+        <div className="bg-white shadow-xl rounded-2xl p-8">
+          <RoleChoice/>
+        </div>
       </div>
     </main>
     );
