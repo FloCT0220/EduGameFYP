@@ -42,7 +42,6 @@ export default function QuizPage() {
     const [showFeedback, setShowFeedback] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
     const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
-    const [showExplanation, setShowExplanation] = useState(false);
 
     // Mock completed nodes for demo - in real app this would come from user data
     const getCompletedNodes = (courseId: string): string[] => {
@@ -96,7 +95,6 @@ export default function QuizPage() {
         
         setIsCorrect(correct);
         setShowFeedback(true);
-        setShowExplanation(!!currentQ.explanation);
         
         const newAnswers = [...answers, selectedAnswer || -1];
         setAnswers(newAnswers);
@@ -112,7 +110,6 @@ export default function QuizPage() {
                 setCurrentQuestion(prev => prev + 1);
                 setSelectedAnswer(null);
                 setShowFeedback(false);
-                setShowExplanation(false);
                 setTimeLeft(30);
             } else {
                 calculateFinalStats(newAnswers);
@@ -175,7 +172,6 @@ export default function QuizPage() {
         setAnswers([]);
         setShowResults(false);
         setShowFeedback(false);
-        setShowExplanation(false);
         setTimeLeft(30);
         setStreakCount(0);
         setQuizStats({ 
@@ -194,117 +190,68 @@ export default function QuizPage() {
         setQuizQuestions(questions);
     };
 
-    const getDifficultyColor = (difficulty: string) => {
-        switch (difficulty) {
-            case 'easy': return 'text-green-600';
-            case 'medium': return 'text-yellow-600';
-            case 'hard': return 'text-red-600';
-            default: return 'text-gray-600';
-        }
-    };
-
     const getScoreColor = () => {
         const percentage = (quizStats.score / quizQuestions.length) * 100;
-        if (percentage >= 80) return 'text-green-600';
-        if (percentage >= 60) return 'text-yellow-600';
+        if (percentage >= 90) return 'text-green-600';
+        if (percentage >= 70) return 'text-yellow-600';
+        if (percentage >= 50) return 'text-orange-600';
         return 'text-red-600';
     };
 
     if (quizQuestions.length === 0) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-6xl mb-4">🎯</div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Loading Quiz...</h2>
-                    <p className="text-gray-600">Preparing questions for {nodeName}</p>
+            <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--background-primary)' }}>
+                <div className="card text-center">
+                    <div className="animate-spin text-4xl mb-4">🧩</div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Quiz...</h2>
+                    <p className="text-gray-600">Preparing your questions</p>
                 </div>
             </div>
         );
     }
 
     if (showResults) {
-        const currentNodeQuestions = quizQuestions.filter(q => q.nodeId === nodeId).length;
-        const reviewQuestions = quizQuestions.length - currentNodeQuestions;
-        
         return (
-            <div className="min-h-screen bg-gray-50 p-6">
+            <div className="min-h-screen p-6" style={{ background: 'var(--background-primary)' }}>
                 <div className="max-w-2xl mx-auto">
-                    <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-                        <div className="text-6xl mb-4">🎉</div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Quiz Complete!</h1>
-                        <p className="text-gray-600 mb-2">Topic: <span className="font-semibold">{nodeName}</span></p>
-                        <p className="text-gray-600 mb-8">Great job! Here are your results:</p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            <div className="bg-gray-50 rounded-lg p-6">
-                                <div className="text-3xl mb-2">📊</div>
-                                <h3 className="font-semibold text-lg">Overall Score</h3>
-                                <p className={`text-2xl font-bold ${getScoreColor()}`}>
-                                    {quizStats.score}/{quizQuestions.length}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                    {Math.round((quizStats.score / quizQuestions.length) * 100)}% Correct
-                                </p>
+                    <div className="card text-center">
+                        <div className="text-6xl mb-6">🎉</div>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-4">Quiz Complete!</h1>
+                        
+                        <div className="mb-8">
+                            <div className={`text-4xl font-bold mb-2 ${getScoreColor()}`}>
+                                {quizStats.score}/{quizQuestions.length}
                             </div>
-
-                            <div className="bg-gray-50 rounded-lg p-6">
-                                <div className="text-3xl mb-2">⭐</div>
-                                <h3 className="font-semibold text-lg">Total Points</h3>
-                                <p className="text-2xl font-bold text-blue-600">
-                                    {quizStats.totalPoints}
-                                </p>
-                                <p className="text-sm text-gray-600">Points Earned</p>
+                            <div className="text-lg text-gray-600">
+                                {Math.round((quizStats.score / quizQuestions.length) * 100)}% Score
                             </div>
+                        </div>
 
-                            <div className="bg-gray-50 rounded-lg p-6">
-                                <div className="text-3xl mb-2">🎯</div>
-                                <h3 className="font-semibold text-lg">Current Topic</h3>
-                                <p className="text-2xl font-bold text-green-600">
-                                    {quizStats.currentNodeQuestionsCorrect}/{currentNodeQuestions}
-                                </p>
-                                <p className="text-sm text-gray-600">Questions Correct</p>
+                        <div className="grid grid-cols-2 gap-4 mb-8">
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                                <div className="text-2xl mb-2">🔥</div>
+                                <div className="text-sm text-gray-600">Best Streak</div>
+                                <div className="text-xl font-bold text-blue-600">{quizStats.streak}</div>
                             </div>
-
-                            <div className="bg-gray-50 rounded-lg p-6">
-                                <div className="text-3xl mb-2">📚</div>
-                                <h3 className="font-semibold text-lg">Review Questions</h3>
-                                <p className="text-2xl font-bold text-purple-600">
-                                    {quizStats.reviewQuestionsCorrect}/{reviewQuestions}
-                                </p>
-                                <p className="text-sm text-gray-600">From Previous Topics</p>
-                            </div>
-
-                            <div className="bg-gray-50 rounded-lg p-6">
-                                <div className="text-3xl mb-2">🔥</div>
-                                <h3 className="font-semibold text-lg">Best Streak</h3>
-                                <p className="text-2xl font-bold text-orange-600">
-                                    {quizStats.streak}
-                                </p>
-                                <p className="text-sm text-gray-600">Consecutive Correct</p>
-                            </div>
-
-                            <div className="bg-gray-50 rounded-lg p-6">
-                                <div className="text-3xl mb-2">⏱️</div>
-                                <h3 className="font-semibold text-lg">Time Bonus</h3>
-                                <p className="text-2xl font-bold text-yellow-600">
-                                    +{quizStats.timeBonus}
-                                </p>
-                                <p className="text-sm text-gray-600">Bonus Points</p>
+                            <div className="bg-green-50 p-4 rounded-lg">
+                                <div className="text-2xl mb-2">⭐</div>
+                                <div className="text-sm text-gray-600">Total Points</div>
+                                <div className="text-xl font-bold text-green-600">{quizStats.totalPoints}</div>
                             </div>
                         </div>
 
                         <div className="space-y-4">
                             <button 
                                 onClick={resetQuiz}
-                                className="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                                className="btn btn-primary w-full"
                             >
-                                Retake Quiz
+                                🔄 Retake Quiz
                             </button>
                             <button 
-                                onClick={() => router.back()}
-                                className="ml-4 bg-gray-500 text-white px-8 py-3 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                                onClick={() => router.push('/dashboard')}
+                                className="btn btn-secondary w-full"
                             >
-                                Back to Course
+                                🏠 Back to Dashboard
                             </button>
                         </div>
                     </div>
@@ -314,140 +261,115 @@ export default function QuizPage() {
     }
 
     const currentQ = quizQuestions[currentQuestion];
-    const isReviewQuestion = currentQ.nodeId !== nodeId;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-2xl mx-auto">
+        <div className="min-h-screen p-6" style={{ background: 'var(--background-primary)' }}>
+            <div className="max-w-4xl mx-auto">
                 {/* Header */}
-                <div className="mb-6">
-                    <div className="flex justify-between items-center mb-4">
+                <div className="card mb-6">
+                    <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">{nodeName} Quiz</h1>
-                            {isReviewQuestion && (
-                                <p className="text-sm text-purple-600 font-medium">📚 Review Question from Previous Topic</p>
-                            )}
+                            <h1 className="text-2xl font-bold text-gray-900 mb-1">🧩 {nodeName} Quiz</h1>
+                            <p className="text-gray-600">Question {currentQuestion + 1} of {quizQuestions.length}</p>
                         </div>
-                        <div className="flex items-center space-x-4">
-                            <div className="text-sm text-gray-600">
-                                Current Streak: <span className="font-bold text-orange-600">{streakCount}</span>
-                            </div>
-                            <div className={`text-sm font-medium ${timeLeft <= 10 ? 'text-red-600' : 'text-gray-600'}`}>
-                                ⏱️ {timeLeft}s
-                            </div>
+                        <div className="text-right">
+                            <div className="text-2xl font-bold text-red-600 mb-1">{timeLeft}s</div>
+                            <div className="text-sm text-gray-600">Time Left</div>
                         </div>
                     </div>
                     
-                    <ProgressBar
-                        current={currentQuestion + 1}
-                        total={quizQuestions.length}
-                        label="Progress"
+                    <ProgressBar 
+                        current={currentQuestion + 1} 
+                        total={quizQuestions.length} 
                         color="blue"
                     />
                 </div>
 
                 {/* Question Card */}
-                <div className="bg-white rounded-lg shadow-lg p-8">
+                <div className="card mb-6">
                     <div className="mb-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <span className="text-sm text-gray-500">
-                                Question {currentQuestion + 1} of {quizQuestions.length}
+                        <div className="flex items-center justify-between mb-4">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                currentQ.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                                currentQ.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                            }`}>
+                                {currentQ.difficulty.charAt(0).toUpperCase() + currentQ.difficulty.slice(1)}
                             </span>
-                            <div className="flex items-center space-x-2">
-                                <span className={`text-sm font-medium ${getDifficultyColor(currentQ.difficulty)}`}>
-                                    {currentQ.difficulty.toUpperCase()}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                    {currentQ.points} points
-                                </span>
-                                {isReviewQuestion && (
-                                    <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
-                                        REVIEW
-                                    </span>
-                                )}
-                            </div>
+                            <span className="text-sm text-gray-600">⭐ {currentQ.points} points</span>
                         </div>
                         
-                        <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                            {currentQ.question}
-                        </h2>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">{currentQ.question}</h2>
                     </div>
 
-                    <div className="space-y-3 mb-8">
+                    {/* Answer Options */}
+                    <div className="space-y-3">
                         {currentQ.options.map((option, index) => (
                             <button
                                 key={index}
                                 onClick={() => handleAnswerSelect(index)}
                                 disabled={showFeedback}
-                                className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                                    showFeedback
-                                        ? index === currentQ.correctAnswer
-                                            ? 'border-green-500 bg-green-50 text-green-800'
-                                            : selectedAnswer === index && index !== currentQ.correctAnswer
-                                            ? 'border-red-500 bg-red-50 text-red-800'
-                                            : 'border-gray-200 bg-gray-50'
-                                        : selectedAnswer === index
-                                        ? 'border-blue-500 bg-blue-50 text-blue-800'
+                                className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ${
+                                    selectedAnswer === index
+                                        ? showFeedback
+                                            ? isCorrect
+                                                ? 'border-green-500 bg-green-50'
+                                                : 'border-red-500 bg-red-50'
+                                            : 'border-blue-500 bg-blue-50'
                                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                }`}
+                                } ${showFeedback ? 'cursor-default' : 'cursor-pointer'}`}
                             >
-                                <span className="font-medium mr-3">
-                                    {String.fromCharCode(65 + index)}.
-                                </span>
-                                {option}
-                                {showFeedback && index === currentQ.correctAnswer && (
-                                    <span className="float-right text-green-600">✓</span>
-                                )}
-                                {showFeedback && selectedAnswer === index && index !== currentQ.correctAnswer && (
-                                    <span className="float-right text-red-600">✗</span>
-                                )}
+                                <div className="flex items-center">
+                                    <span className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium mr-3 ${
+                                        selectedAnswer === index
+                                            ? showFeedback
+                                                ? isCorrect
+                                                    ? 'border-green-500 bg-green-500 text-white'
+                                                    : 'border-red-500 bg-red-500 text-white'
+                                                : 'border-blue-500 bg-blue-500 text-white'
+                                            : 'border-gray-300 text-gray-600'
+                                    }">
+                                        {String.fromCharCode(65 + index)}
+                                    </span>
+                                    <span className="text-gray-900">{option}</span>
+                                </div>
                             </button>
                         ))}
                     </div>
 
+                    {/* Feedback */}
                     {showFeedback && (
-                        <div className={`p-4 rounded-lg mb-6 ${
-                            isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-                        } border`}>
-                            <div className="flex items-center">
-                                <span className="text-2xl mr-3">
-                                    {isCorrect ? '🎉' : '❌'}
+                        <div className={`mt-6 p-4 rounded-lg ${
+                            isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+                        }`}>
+                            <div className="flex items-center mb-2">
+                                <span className="text-2xl mr-2">{isCorrect ? '✅' : '❌'}</span>
+                                <span className={`font-semibold ${
+                                    isCorrect ? 'text-green-800' : 'text-red-800'
+                                }`}>
+                                    {isCorrect ? 'Correct!' : 'Incorrect'}
                                 </span>
-                                <div>
-                                    <p className={`font-semibold ${
-                                        isCorrect ? 'text-green-800' : 'text-red-800'
-                                    }`}>
-                                        {isCorrect ? 'Correct!' : 'Incorrect'}
-                                    </p>
-                                    <p className={`text-sm ${
-                                        isCorrect ? 'text-green-600' : 'text-red-600'
-                                    }`}>
-                                        {isCorrect 
-                                            ? `+${currentQ.points} points ${streakCount >= 3 ? `(+${streakCount * 2} streak bonus!)` : ''}`
-                                            : `The correct answer was: ${currentQ.options[currentQ.correctAnswer]}`
-                                        }
-                                    </p>
-                                    {showExplanation && currentQ.explanation && (
-                                        <p className="text-sm text-gray-700 mt-2 p-3 bg-blue-50 rounded-lg">
-                                            💡 <strong>Explanation:</strong> {currentQ.explanation}
-                                        </p>
-                                    )}
-                                </div>
                             </div>
                         </div>
                     )}
+                </div>
 
+                {/* Action Buttons */}
+                <div className="flex justify-between">
+                    <button
+                        onClick={() => router.push('/dashboard')}
+                        className="btn btn-secondary"
+                    >
+                        🏠 Exit Quiz
+                    </button>
+                    
                     {!showFeedback && (
                         <button
                             onClick={handleAnswerSubmit}
                             disabled={selectedAnswer === null}
-                            className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
-                                selectedAnswer !== null
-                                    ? 'bg-blue-500 text-white hover:bg-blue-600'
-                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            }`}
+                            className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Submit Answer
+                            {currentQuestion === quizQuestions.length - 1 ? 'Finish Quiz' : 'Next Question'}
                         </button>
                     )}
                 </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface SkillNode {
   id: string;
@@ -11,7 +11,11 @@ interface SkillNode {
   unlocked: boolean;
   requirements: string[];
   icon: string;
-  tier: number;
+  level: number; // 1-5 where 1 is foundation, 5 is mastery
+  type: 'lesson' | 'quiz' | 'project';
+  estimated_time: string;
+  points: number;
+  completed: boolean;
 }
 
 interface Connection {
@@ -19,107 +23,44 @@ interface Connection {
   to: string;
 }
 
-const SkillTree: React.FC = () => {
-  const [skills, setSkills] = useState<SkillNode[]>([
-    // Tier 1 - Basic Skills
-    {
-      id: 'foundation',
-      name: 'Foundation',
-      description: 'Basic understanding of core concepts',
-      x: 50,
-      y: 10,
-      unlocked: true,
-      requirements: [],
-      icon: '🏗️',
-      tier: 1
-    },
-    
-    // Tier 2 - Intermediate Skills
-    {
-      id: 'analysis',
-      name: 'Analysis',
-      description: 'Advanced analytical thinking and problem solving',
-      x: 25,
-      y: 35,
-      unlocked: false,
-      requirements: ['foundation'],
-      icon: '🔍',
-      tier: 2
-    },
-    {
-      id: 'creativity',
-      name: 'Creativity',
-      description: 'Creative thinking and innovative solutions',
-      x: 75,
-      y: 35,
-      unlocked: false,
-      requirements: ['foundation'],
-      icon: '🎨',
-      tier: 2
-    },
-    
-    // Tier 3 - Advanced Skills
-    {
-      id: 'leadership',
-      name: 'Leadership',
-      description: 'Lead teams and drive strategic initiatives',
-      x: 15,
-      y: 60,
-      unlocked: false,
-      requirements: ['analysis'],
-      icon: '👑',
-      tier: 3
-    },
-    {
-      id: 'innovation',
-      name: 'Innovation',
-      description: 'Drive breakthrough innovations and transformations',
-      x: 50,
-      y: 60,
-      unlocked: false,
-      requirements: ['analysis', 'creativity'],
-      icon: '💡',
-      tier: 3
-    },
-    {
-      id: 'strategy',
-      name: 'Strategy',
-      description: 'Strategic planning and execution mastery',
-      x: 85,
-      y: 60,
-      unlocked: false,
-      requirements: ['creativity'],
-      icon: '🎯',
-      tier: 3
-    },
-    
-    // Tier 4 - Master Skills
-    {
-      id: 'mastery',
-      name: 'Mastery',
-      description: 'Complete mastery of all domains',
-      x: 50,
-      y: 85,
-      unlocked: false,
-      requirements: ['leadership', 'innovation', 'strategy'],
-      icon: '⭐',
-      tier: 4
-    }
-  ]);
+interface SkillTreeProps {
+  skillTreeId: number;
+  title: string;
+  description: string;
+  icon: string;
+}
 
-  const connections: Connection[] = [
-    { from: 'foundation', to: 'analysis' },
-    { from: 'foundation', to: 'creativity' },
-    { from: 'analysis', to: 'leadership' },
-    { from: 'analysis', to: 'innovation' },
-    { from: 'creativity', to: 'innovation' },
-    { from: 'creativity', to: 'strategy' },
-    { from: 'leadership', to: 'mastery' },
-    { from: 'innovation', to: 'mastery' },
-    { from: 'strategy', to: 'mastery' }
-  ];
-
+const SkillTree: React.FC<SkillTreeProps> = ({ skillTreeId, title, description, icon }) => {
+  const [skills, setSkills] = useState<SkillNode[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedSkill, setSelectedSkill] = useState<SkillNode | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch skill tree data from API
+  useEffect(() => {
+    const fetchSkillTree = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/subjects/skill-trees/${skillTreeId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch skill tree');
+        }
+        
+        const data = await response.json();
+        if (data.success) {
+          setSkills(data.nodes);
+          setConnections(data.connections);
+        } else {
+          throw new Error(data.error || 'Failed to load skill tree');
+        }
+      } catch (err) {
+        console.error('Error fetching skill tree:', err);
+        setLoading(false);
+      }
+    };
+
+    fetchSkillTree();
+  }, [skillTreeId]);
 
   const canUnlock = (skill: SkillNode): boolean => {
     if (skill.unlocked) return false;
@@ -152,8 +93,49 @@ const SkillTree: React.FC = () => {
     return fromSkill?.unlocked || false;
   };
 
+  const getLevelColor = (level: number): string => {
+    switch (level) {
+      case 1: return 'from-green-400 to-green-600';
+      case 2: return 'from-blue-400 to-blue-600';
+      case 3: return 'from-purple-400 to-purple-600';
+      case 4: return 'from-orange-400 to-orange-600';
+      case 5: return 'from-red-400 to-red-600';
+      default: return 'from-gray-400 to-gray-600';
+    }
+  };
+
+  const getLevelName = (level: number): string => {
+    switch (level) {
+      case 1: return 'Foundation';
+      case 2: return 'Intermediate';
+      case 3: return 'Advanced';
+      case 4: return 'Expert';
+      case 5: return 'Mastery';
+      default: return 'Unknown';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading skill tree...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* Header */}
+      <div className="absolute top-4 left-4 z-10 backdrop-blur-sm rounded-lg p-4 border border-purple-500/30">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">{icon}</span>
+          <div>
+            <h2 className="text-xl font-bold text-white">{title}</h2>
+            <p className="text-gray-300 text-sm">{description}</p>
+          </div>
+        </div>
+      </div>
+      
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-pulse"></div>
@@ -224,30 +206,32 @@ const SkillTree: React.FC = () => {
             {/* Skill node */}
             <div className={`
               w-20 h-20 rounded-full flex items-center justify-center text-2xl relative
-              ${skill.unlocked 
+              ${skill.completed 
                 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg shadow-yellow-500/50' 
-                : canUnlock(skill)
+                : skill.unlocked 
                   ? 'bg-gradient-to-br from-green-400 to-blue-500 shadow-lg shadow-green-500/50'
-                  : 'bg-gradient-to-br from-gray-600 to-gray-800 shadow-lg shadow-gray-500/20'
+                  : canUnlock(skill)
+                    ? 'bg-gradient-to-br from-blue-400 to-purple-500 shadow-lg shadow-blue-500/50'
+                    : 'bg-gradient-to-br from-gray-600 to-gray-800 shadow-lg shadow-gray-500/20'
               }
-              border-4 ${skill.unlocked ? 'border-yellow-300' : canUnlock(skill) ? 'border-green-300' : 'border-gray-500'}
+              border-4 ${skill.completed ? 'border-yellow-300' : skill.unlocked ? 'border-green-300' : canUnlock(skill) ? 'border-blue-300' : 'border-gray-500'}
               transition-all duration-300
             `}>
               <span className="text-white drop-shadow-lg">{skill.icon}</span>
               
-              {/* Tier indicator */}
+              {/* Level indicator */}
               <div className={`
                 absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-                ${skill.tier === 1 ? 'bg-bronze-500' : skill.tier === 2 ? 'bg-silver-500' : skill.tier === 3 ? 'bg-gold-500' : 'bg-diamond-500'}
+                bg-gradient-to-br ${getLevelColor(skill.level)}
                 text-white border-2 border-white
               `}>
-                {skill.tier}
+                {skill.level}
               </div>
             </div>
             
             {/* Skill name */}
             <div className="text-center mt-2">
-              <div className={`font-semibold text-sm ${skill.unlocked ? 'text-yellow-300' : canUnlock(skill) ? 'text-green-300' : 'text-gray-400'}`}>
+              <div className={`font-semibold text-sm ${skill.completed ? 'text-yellow-300' : skill.unlocked ? 'text-green-300' : canUnlock(skill) ? 'text-blue-300' : 'text-gray-400'}`}>
                 {skill.name}
               </div>
             </div>
@@ -257,26 +241,43 @@ const SkillTree: React.FC = () => {
 
       {/* Skill details panel */}
       {selectedSkill && (
-        <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-sm rounded-lg p-6 max-w-sm z-10 border border-purple-500/30">
+        <div className="absolute top-4 right-4 backdrop-blur-sm rounded-lg p-6 max-w-sm z-10 border border-purple-500/30">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-3xl">{selectedSkill.icon}</span>
             <div>
               <h3 className="text-xl font-bold text-white">{selectedSkill.name}</h3>
-              <div className={`text-sm px-2 py-1 rounded ${
-                selectedSkill.tier === 1 ? 'bg-bronze-500' : 
-                selectedSkill.tier === 2 ? 'bg-silver-500' : 
-                selectedSkill.tier === 3 ? 'bg-gold-500' : 'bg-diamond-500'
-              } text-white`}>
-                Tier {selectedSkill.tier}
+              <div className={`text-sm px-2 py-1 rounded bg-gradient-to-r ${getLevelColor(selectedSkill.level)} text-white`}>
+                Level {selectedSkill.level} - {getLevelName(selectedSkill.level)}
               </div>
             </div>
           </div>
           
           <p className="text-gray-300 mb-4">{selectedSkill.description}</p>
           
+          <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+            <div>
+              <span className="text-gray-400">Type:</span>
+              <div className="text-white capitalize">{selectedSkill.type}</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Time:</span>
+              <div className="text-white">{selectedSkill.estimated_time}</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Points:</span>
+              <div className="text-white">{selectedSkill.points}</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Status:</span>
+              <div className={`${selectedSkill.completed ? 'text-green-400' : selectedSkill.unlocked ? 'text-blue-400' : 'text-gray-400'}`}>
+                {selectedSkill.completed ? 'Completed' : selectedSkill.unlocked ? 'Unlocked' : 'Locked'}
+              </div>
+            </div>
+          </div>
+          
           {selectedSkill.requirements.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-sm font-semibold text-purple-300 mb-2">Requirements:</h4>
+              <h4 className="text-sm font-semibold text-purple-300 mb-2">Prerequisites:</h4>
               <div className="space-y-1">
                 {selectedSkill.requirements.map(reqId => {
                   const reqSkill = skills.find(s => s.id === reqId);
@@ -293,17 +294,21 @@ const SkillTree: React.FC = () => {
           )}
           
           <div className={`text-center py-2 px-4 rounded font-semibold ${
-            selectedSkill.unlocked 
+            selectedSkill.completed 
               ? 'bg-green-500/20 text-green-300' 
-              : canUnlock(selectedSkill)
+              : selectedSkill.unlocked
                 ? 'bg-blue-500/20 text-blue-300'
-                : 'bg-gray-500/20 text-gray-400'
+                : canUnlock(selectedSkill)
+                  ? 'bg-purple-500/20 text-purple-300'
+                  : 'bg-gray-500/20 text-gray-400'
           }`}>
-            {selectedSkill.unlocked 
-              ? 'Unlocked ✓' 
-              : canUnlock(selectedSkill)
-                ? 'Click to Unlock!'
-                : 'Locked'
+            {selectedSkill.completed 
+              ? 'Completed ✓' 
+              : selectedSkill.unlocked
+                ? 'Click to Start!'
+                : canUnlock(selectedSkill)
+                  ? 'Click to Unlock!'
+                  : 'Locked'
             }
           </div>
           
@@ -317,7 +322,7 @@ const SkillTree: React.FC = () => {
       )}
 
       {/* Progress indicator */}
-      <div className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 border border-purple-500/30">
+      <div className="absolute bottom-4 left-4 backdrop-blur-sm rounded-lg p-4 border border-purple-500/30">
         <h3 className="text-white font-semibold mb-2">Progress</h3>
         <div className="flex items-center gap-2">
           <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -330,18 +335,25 @@ const SkillTree: React.FC = () => {
             {skills.filter(s => s.unlocked).length}/{skills.length}
           </span>
         </div>
+        <div className="text-xs text-gray-400 mt-1">
+          {skills.filter(s => s.completed).length} completed
+        </div>
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 border border-purple-500/30">
+      <div className="absolute bottom-4 right-4 backdrop-blur-sm rounded-lg p-4 border border-purple-500/30">
         <h3 className="text-white font-semibold mb-2">Legend</h3>
         <div className="space-y-2 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500"></div>
-            <span className="text-gray-300">Unlocked</span>
+            <span className="text-gray-300">Completed</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-gradient-to-br from-green-400 to-blue-500"></div>
+            <span className="text-gray-300">Unlocked</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-400 to-purple-500"></div>
             <span className="text-gray-300">Available</span>
           </div>
           <div className="flex items-center gap-2">

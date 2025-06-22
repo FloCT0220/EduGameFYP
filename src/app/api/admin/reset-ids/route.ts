@@ -1,30 +1,43 @@
-import { createConnection } from "lib/db";
+import { query } from "lib/db";
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
+
+// TypeScript interfaces for database results
+interface MaxIdResult {
+    maxId: number | null;
+}
+
+interface MaxIdWithCountResult {
+    maxId: number | null;
+    totalRows: number;
+}
+
+interface TableInfoResult {
+    TABLE_NAME: string;
+    AUTO_INCREMENT: number | null;
+}
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const { table, resetTo } = body;
         
-        // Validate input
-        const allowedTables = ['app_users', 'quiz_items'];
+        // Validate input - updated table names
+        const allowedTables = ['users', 'quiz_questions'];
         if (!allowedTables.includes(table)) {
             return NextResponse.json(
                 { error: "Invalid table name" }, 
                 { status: 400 }
             );
         }
-
-        const db = await createConnection();
         
         if (resetTo === 'auto') {
             // Reset to max ID + 1
-            const [maxResult] = await db.query(`SELECT MAX(id) as maxId FROM ${table}`);
+            const maxResult = await query(`SELECT MAX(id) as maxId FROM ${table}`) as MaxIdResult[];
             const maxId = maxResult[0]?.maxId || 0;
             const nextId = maxId + 1;
             
-            await db.query(`ALTER TABLE ${table} AUTO_INCREMENT = ?`, [nextId]);
+            await query(`ALTER TABLE ${table} AUTO_INCREMENT = ?`, [nextId]);
             
             return NextResponse.json({
                 message: `Auto-increment reset for ${table}`,
@@ -34,7 +47,7 @@ export async function POST(request: NextRequest) {
             
         } else if (resetTo && typeof resetTo === 'number') {
             // Reset to specific number
-            await db.query(`ALTER TABLE ${table} AUTO_INCREMENT = ?`, [resetTo]);
+            await query(`ALTER TABLE ${table} AUTO_INCREMENT = ?`, [resetTo]);
             
             return NextResponse.json({
                 message: `Auto-increment reset for ${table}`,
@@ -59,30 +72,28 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
     try {
-        const db = await createConnection();
-        
         // Get current auto-increment values for all tables
-        const [tables] = await db.query(`
+        const tables = await query(`
             SELECT 
                 TABLE_NAME,
                 AUTO_INCREMENT
             FROM information_schema.TABLES 
             WHERE TABLE_SCHEMA = DATABASE() 
             AND AUTO_INCREMENT IS NOT NULL
-        `);
+        `) as TableInfoResult[];
         
-        // Get max IDs for comparison
-        const [userMax] = await db.query("SELECT MAX(id) as maxId, COUNT(*) as totalRows FROM app_users");
-        const [quizMax] = await db.query("SELECT MAX(id) as maxId, COUNT(*) as totalRows FROM quiz_items");
+        // Get max IDs for comparison - updated table names
+        const userMax = await query("SELECT MAX(id) as maxId, COUNT(*) as totalRows FROM users") as MaxIdWithCountResult[];
+        const quizMax = await query("SELECT MAX(id) as maxId, COUNT(*) as totalRows FROM quiz_questions") as MaxIdWithCountResult[];
         
         return NextResponse.json({
             autoIncrementStatus: tables,
             currentMaxIds: {
-                app_users: {
+                users: {
                     maxId: userMax[0]?.maxId || 0,
                     totalRows: userMax[0]?.totalRows || 0
                 },
-                quiz_items: {
+                quiz_questions: {
                     maxId: quizMax[0]?.maxId || 0,
                     totalRows: quizMax[0]?.totalRows || 0
                 }

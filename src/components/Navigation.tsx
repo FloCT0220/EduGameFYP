@@ -16,15 +16,12 @@ export default function Navigation() {
 
     const studentNavItems = [
         { name: 'Dashboard', path: '/dashboard', icon: '🏠' },
-        { name: 'Courses', path: '/courses', icon: '📚' },
-        { name: 'Quiz', path: '/quiz', icon: '🎯' },
-        { name: 'Achievements', path: '/dashboard?tab=achievements', icon: '🏆' },
-        { name: 'Leaderboard', path: '/dashboard?tab=leaderboard', icon: '👑' },
+        { name: 'Subjects', path: '/courses', icon: '📚' },
     ];
 
     const teacherNavItems = [
         { name: 'Dashboard', path: '/teacher/dashboard', icon: '🏠' },
-        { name: 'My Courses', path: '/teacher/courses', icon: '📚' },
+        { name: 'My Subjects', path: '/teacher/courses', icon: '📚' },
         { name: 'Students', path: '/teacher/students', icon: '👥' },
         { name: 'Analytics', path: '/teacher/analytics', icon: '📊' },
         { name: 'Create Quiz', path: '/teacher/create-quiz', icon: '✏️' },
@@ -37,16 +34,16 @@ export default function Navigation() {
     }
 
     return (
-        <nav className="bg-white shadow-lg border-b">
+        <nav className="glass border-b border-white/20 backdrop-blur-md">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
                         <button 
                             onClick={() => router.push('/')}
-                            className="flex items-center space-x-2 text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
+                            className="flex items-center space-x-2 text-xl font-bold text-white hover:text-blue-200 transition-colors"
                         >
                             <span>🎓</span>
-                            <span>EduQuest</span>
+                            <span className="text-gradient">EduQuest</span>
                         </button>
                     </div>
 
@@ -70,10 +67,10 @@ export default function Navigation() {
                                             router.push(item.path);
                                         }
                                     }}
-                                    className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                    className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                         isActive
-                                            ? 'bg-blue-100 text-blue-700'
-                                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                            ? 'bg-white/20 text-white shadow-lg'
+                                            : 'text-white/80 hover:text-white hover:bg-white/10'
                                     }`}
                                 >
                                     <span>{item.icon}</span>
@@ -82,13 +79,13 @@ export default function Navigation() {
                             );
                         })}
                         
-                        <div className="border-l border-gray-200 pl-4">
+                        <div className="border-l border-white/20 pl-4">
                             <button
                                 onClick={() => {
                                     localStorage.removeItem('userRole');
                                     router.push('/');
                                 }}
-                                className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-red-600 transition-colors"
+                                className="flex items-center space-x-1 px-3 py-2 text-sm text-white/80 hover:text-red-200 transition-colors"
                             >
                                 <span>🚪</span>
                                 <span className="hidden sm:block">Logout</span>

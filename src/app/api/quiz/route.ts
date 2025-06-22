@@ -1,15 +1,19 @@
-import { createConnection } from "lib/db";
+import { query } from "../../../../lib/db";
 import { NextResponse } from "next/server";
 
 export async function GET() {
 	try {
-		const db = await createConnection();
-		const posts = await db.query("SELECT * FROM quiz_items");
+		const questions = await query("SELECT * FROM quiz_questions WHERE is_active = true");
 		
-		return NextResponse.json(posts);
+		return NextResponse.json({
+			success: true,
+			questions: questions
+		});
 	} catch (error) {
-		console.error("Error fetching quiz_items:", error);
-		return NextResponse.json({ error: "Failed to fetch quiz_items" }, { status: 500 });
-		
+		console.error("Error fetching quiz questions:", error);
+		return NextResponse.json({ 
+			error: "Failed to fetch quiz questions",
+			success: false 
+		}, { status: 500 });
 	}
 }

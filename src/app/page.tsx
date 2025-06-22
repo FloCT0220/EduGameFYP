@@ -11,7 +11,6 @@ export default function Home() {
                 const response = data.json();
                 console.log(response);
             } catch (error) {
-            
                 console.error("Error fetching skill_nodes:", error);
             }
         }
@@ -20,9 +19,9 @@ export default function Home() {
     },[]);
 
 return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <main className="min-h-screen p-4" style={{ background: 'var(--background-primary)' }}>
       <div className="max-w-4xl mx-auto py-8">
-        <div className="bg-white shadow-xl rounded-2xl p-8">
+        <div className="card">
           <RoleChoice/>
         </div>
       </div>
