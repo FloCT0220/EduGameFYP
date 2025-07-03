@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CourseService } from '../../../../lib/services/courseService';
+import { CourseService } from '@/lib/services/courseService';
 
 // TypeScript interface for course data
 interface CourseData {

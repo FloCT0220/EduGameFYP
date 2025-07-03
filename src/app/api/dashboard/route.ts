@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UserService } from '../../../../lib/services/userService';
+import { UserService } from '@/lib/services/userService';
 
 export async function GET(request: NextRequest) {
   try {

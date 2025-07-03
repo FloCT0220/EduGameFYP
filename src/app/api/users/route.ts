@@ -1,6 +1,7 @@
-import { query } from "../../../../lib/db";  
+import { query } from "@/lib/db";  
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
+import bcrypt from 'bcryptjs';
 
 // TypeScript interfaces for database results
 interface ExistingUser {
@@ -51,12 +52,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // For demo purposes, using simple hash - in production use proper bcrypt
-        const hashedPassword = `hashed_${password}`;
+        // Hash password using bcrypt
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert new user
         const result = await query(
-            `INSERT INTO users (username, email, password_hash, role, created_at) 
+            `INSERT INTO users (username, email, password, role, created_at) 
              VALUES (?, ?, ?, ?, NOW())`,
             [username, email, hashedPassword, role]
         ) as InsertResult;

@@ -16,20 +16,18 @@ export interface User {
 
 export interface UserProgress {
   user_id: number;
-  subject_id: number;
-  node_id: string;
-  completed: boolean;
+  course_id: number;
+  topic_id: number;
   completed_at?: Date;
   points_earned: number;
-  attempts: number;
-  best_score: number;
-  time_spent: number;
+  time_spent_minutes: number;
+  progress_percentage: number;
 }
 
 export interface UserEnrollment {
   id: number;
   user_id: number;
-  subject_id: number;
+  course_id: number;
   enrolled_at: Date;
   completed_at?: Date;
   progress_percentage: number;
@@ -38,13 +36,13 @@ export interface UserEnrollment {
 
 export interface Achievement {
   id: number;
-  title: string;
+  name: string;
   description: string;
-  icon: string;
-  type: 'streak' | 'points' | 'completion' | 'speed' | 'accuracy' | 'level';
-  requirement_value: number;
-  points_reward: number;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  icon_url: string;
+  badge_color: string;
+  points_required: number;
+  category: string;
+  is_active: boolean;
   earned?: boolean;
   earned_at?: Date;
 }
@@ -71,21 +69,21 @@ export class UserService {
     const user = await this.getUserById(userId);
     if (!user) return null;
 
-    // Get subject progress
+    // Get course progress
     const enrollments = await query(`
       SELECT 
         ue.*,
-        s.title as subject_title,
-        s.description as subject_description,
-        COUNT(sn.id) as total_nodes,
-        COUNT(CASE WHEN unp.completed = true THEN 1 END) as completed_nodes
+        c.title as course_title,
+        c.description as course_description,
+        COUNT(t.id) as total_topics,
+        COUNT(CASE WHEN up.completed_at IS NOT NULL THEN 1 END) as completed_topics
       FROM user_enrollments ue
-      JOIN subjects s ON ue.subject_id = s.id
-      LEFT JOIN skill_nodes sn ON s.id = sn.subject_id AND sn.is_active = true
-      LEFT JOIN user_node_progress unp ON ue.user_id = unp.user_id 
-        AND sn.node_id = unp.node_id AND unp.subject_id = s.id
+      JOIN courses c ON ue.course_id = c.id
+      LEFT JOIN topics t ON c.id = t.course_id AND t.is_published = true
+      LEFT JOIN user_progress up ON ue.user_id = up.user_id 
+        AND t.id = up.topic_id AND up.course_id = c.id
       WHERE ue.user_id = ?
-      GROUP BY ue.id, s.id
+      GROUP BY ue.id, c.id
     `, [userId]) as UserEnrollment[];
 
     // Get recent achievements
@@ -100,9 +98,9 @@ export class UserService {
     const quizStats = await query(`
       SELECT 
         COUNT(*) as total_attempts,
-        AVG(score_percentage) as avg_score,
-        SUM(total_points) as total_quiz_points
-      FROM quiz_attempts 
+        AVG(score) as avg_score,
+        SUM(correct_answers) as total_quiz_points
+      FROM user_quiz_attempts 
       WHERE user_id = ?
     `, [userId]) as { total_attempts: number; avg_score: number; total_quiz_points: number }[];
 
@@ -114,60 +112,54 @@ export class UserService {
     };
   }
 
-  // Get user's subject enrollments
+  // Get user's course enrollments
   static async getUserEnrollments(userId: number): Promise<UserEnrollment[]> {
     return await query(`
       SELECT 
         ue.*,
-        s.title,
-        s.description,
-        s.difficulty,
-        s.estimated_duration,
-        COUNT(sn.id) as total_lessons,
-        COUNT(CASE WHEN unp.completed = true THEN 1 END) as completed_lessons
+        c.title,
+        c.description,
+        c.difficulty_level as difficulty,
+        COUNT(t.id) as total_lessons,
+        COUNT(CASE WHEN up.completed_at IS NOT NULL THEN 1 END) as completed_lessons
       FROM user_enrollments ue
-      JOIN subjects s ON ue.subject_id = s.id
-      LEFT JOIN skill_nodes sn ON s.id = sn.subject_id AND sn.is_active = true
-      LEFT JOIN user_node_progress unp ON ue.user_id = unp.user_id 
-        AND sn.node_id = unp.node_id AND unp.subject_id = s.id
+      JOIN courses c ON ue.course_id = c.id
+      LEFT JOIN topics t ON c.id = t.course_id AND t.is_published = true
+      LEFT JOIN user_progress up ON ue.user_id = up.user_id 
+        AND t.id = up.topic_id AND up.course_id = c.id
       WHERE ue.user_id = ?
       GROUP BY ue.id
       ORDER BY ue.enrolled_at DESC
     `, [userId]) as UserEnrollment[];
   }
 
-  // Update user progress on a node
-  static async updateNodeProgress(
+  // Update user progress on a topic
+  static async updateTopicProgress(
     userId: number, 
-    skillTreeId: number, 
-    nodeId: string, 
+    courseId: number, 
+    topicId: number, 
     progressData: {
       completed: boolean;
       pointsEarned: number;
-      score: number;
       timeSpent: number;
     }
   ): Promise<void> {
     await query(`
-      INSERT INTO user_node_progress 
-      (user_id, subject_id, node_id, completed, completed_at, points_earned, best_score, time_spent, attempts)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+      INSERT INTO user_progress 
+      (user_id, course_id, topic_id, completed_at, points_earned, time_spent_minutes)
+      VALUES (?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
-        completed = VALUES(completed),
-        completed_at = CASE WHEN VALUES(completed) = true THEN NOW() ELSE completed_at END,
+        completed_at = CASE WHEN ? = true THEN NOW() ELSE completed_at END,
         points_earned = GREATEST(points_earned, VALUES(points_earned)),
-        best_score = GREATEST(best_score, VALUES(best_score)),
-        time_spent = time_spent + VALUES(time_spent),
-        attempts = attempts + 1
+        time_spent_minutes = time_spent_minutes + VALUES(time_spent_minutes)
     `, [
       userId, 
-      skillTreeId, 
-      nodeId, 
-      progressData.completed,
+      courseId, 
+      topicId, 
       progressData.completed ? new Date() : null,
       progressData.pointsEarned,
-      progressData.score,
-      progressData.timeSpent
+      progressData.timeSpent,
+      progressData.completed
     ]);
   }
 
@@ -184,41 +176,41 @@ export class UserService {
     `, [pointsEarned, currentStreak, currentStreak, pointsEarned, userId]);
   }
 
-  // Update subject progress percentage
-  static async updateSubjectProgress(userId: number, subjectId: number): Promise<void> {
+  // Update course progress percentage
+  static async updateCourseProgress(userId: number, courseId: number): Promise<void> {
     await query(`
       UPDATE user_enrollments ue
       SET 
         progress_percentage = (
           SELECT 
             CASE 
-              WHEN COUNT(sn.id) = 0 THEN 0
-              ELSE (COUNT(CASE WHEN unp.completed = true THEN 1 END) * 100.0 / COUNT(sn.id))
+              WHEN COUNT(t.id) = 0 THEN 0
+              ELSE (COUNT(CASE WHEN up.completed_at IS NOT NULL THEN 1 END) * 100.0 / COUNT(t.id))
             END
-          FROM skill_nodes sn
-          JOIN user_node_progress unp ON sn.node_id = unp.node_id AND sn.subject_id = unp.subject_id
-          WHERE sn.subject_id = ? AND unp.user_id = ?
+          FROM topics t
+          LEFT JOIN user_progress up ON t.id = up.topic_id AND up.user_id = ? AND up.course_id = ?
+          WHERE t.course_id = ? AND t.is_published = true
         ),
         total_points_earned = (
-          SELECT COALESCE(SUM(unp.points_earned), 0)
-          FROM user_node_progress unp
-          WHERE unp.user_id = ? AND unp.subject_id = ?
+          SELECT COALESCE(SUM(up.points_earned), 0)
+          FROM user_progress up
+          WHERE up.user_id = ? AND up.course_id = ?
         ),
         completed_at = CASE 
           WHEN (
-            SELECT COUNT(CASE WHEN unp.completed = true THEN 1 END) 
-            FROM skill_nodes sn
-            JOIN user_node_progress unp ON sn.node_id = unp.node_id AND sn.subject_id = unp.subject_id
-            WHERE sn.subject_id = ? AND unp.user_id = ?
+            SELECT COUNT(CASE WHEN up.completed_at IS NOT NULL THEN 1 END) 
+            FROM topics t
+            LEFT JOIN user_progress up ON t.id = up.topic_id AND up.user_id = ? AND up.course_id = ?
+            WHERE t.course_id = ? AND t.is_published = true
           ) = (
             SELECT COUNT(*) 
-            FROM skill_nodes sn
-            WHERE sn.subject_id = ? AND sn.is_active = true
+            FROM topics t
+            WHERE t.course_id = ? AND t.is_published = true
           ) THEN NOW()
           ELSE completed_at
         END
-      WHERE user_id = ? AND subject_id = ?
-    `, [subjectId, userId, userId, subjectId, userId, subjectId, subjectId, userId, subjectId]);
+      WHERE user_id = ? AND course_id = ?
+    `, [userId, courseId, courseId, userId, courseId, userId, courseId, courseId, courseId, userId, courseId]);
   }
 
   // Get user achievements
@@ -227,21 +219,20 @@ export class UserService {
       SELECT 
         a.*,
         ua.earned_at,
-        ua.progress_value,
         CASE WHEN ua.id IS NOT NULL THEN true ELSE false END as earned
       FROM achievements a
       LEFT JOIN user_achievements ua ON a.id = ua.achievement_id AND ua.user_id = ?
       WHERE a.is_active = true
-      ORDER BY ua.earned_at DESC, a.rarity DESC, a.points_reward DESC
+      ORDER BY ua.earned_at DESC, a.points_required DESC
     `, [userId]) as Achievement[];
   }
 
   // Award achievement to user
   static async awardAchievement(userId: number, achievementId: number): Promise<void> {
     await query(`
-      INSERT IGNORE INTO user_achievements (user_id, achievement_id, progress_value)
-      VALUES (?, ?, (SELECT requirement_value FROM achievements WHERE id = ?))
-    `, [userId, achievementId, achievementId]);
+      INSERT IGNORE INTO user_achievements (user_id, achievement_id)
+      VALUES (?, ?)
+    `, [userId, achievementId]);
   }
 
   // Get leaderboard
@@ -257,26 +248,26 @@ export class UserService {
       FROM users 
       WHERE role = 'student'
       ORDER BY total_points DESC, max_streak DESC 
-      LIMIT ?
-    `, [limit]) as User[];
+      LIMIT ${limit}
+    `) as User[];
   }
 
   // Record daily learning activity
   static async recordDailyActivity(userId: number, pointsEarned: number): Promise<void> {
     await query(`
-      INSERT INTO learning_streaks (user_id, streak_date, activities_completed, points_earned)
-      VALUES (?, CURDATE(), 1, ?)
+      INSERT INTO daily_activity (user_id, activity_date, points_earned, lessons_completed)
+      VALUES (?, CURDATE(), ?, 1)
       ON DUPLICATE KEY UPDATE
-        activities_completed = activities_completed + 1,
+        lessons_completed = lessons_completed + 1,
         points_earned = points_earned + ?
     `, [userId, pointsEarned, pointsEarned]);
   }
 
-  // Enroll user in subject
-  static async enrollUserInSubject(userId: number, subjectId: number): Promise<void> {
+  // Enroll user in course
+  static async enrollUserInCourse(userId: number, courseId: number): Promise<void> {
     await query(`
-      INSERT IGNORE INTO user_enrollments (user_id, subject_id)
+      INSERT IGNORE INTO user_enrollments (user_id, course_id)
       VALUES (?, ?)
-    `, [userId, subjectId]);
+    `, [userId, courseId]);
   }
 } 

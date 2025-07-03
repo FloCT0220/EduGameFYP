@@ -157,3 +157,45 @@ INSERT INTO user_achievements (user_id, achievement_id, earned_at, progress_valu
 (2, 1, NOW(), 1),
 (2, 2, NOW(), 5),
 (2, 3, NOW(), 1);
+
+-- Sample topics for "Introduction to Programming"
+INSERT INTO topics (course_id, title, content, lesson_order, points_reward, duration_minutes) VALUES
+(1, 'Understanding Variables and Data Types', 'Learn about different types of variables and how to use them effectively in programming.', 1, 10, 20),
+(1, 'Control Flow: If Statements and Loops', 'Master the basics of program flow control using if statements and different types of loops.', 2, 15, 25),
+(1, 'Functions and Methods', 'Understand how to create and use functions to organize and reuse code.', 3, 20, 30),
+(1, 'Arrays and Lists', 'Learn about data structures for storing collections of items.', 4, 25, 30);
+
+-- Sample topics for "Web Development Fundamentals"
+INSERT INTO topics (course_id, title, content, lesson_order, points_reward, duration_minutes) VALUES
+(2, 'HTML Basics', 'Learn the fundamentals of HTML and document structure.', 1, 10, 20),
+(2, 'CSS Styling', 'Master CSS for styling web pages and creating responsive designs.', 2, 15, 25),
+(2, 'JavaScript Fundamentals', 'Introduction to JavaScript programming for web interactivity.', 3, 20, 30),
+(2, 'Building a Simple Website', 'Put it all together by building a complete website.', 4, 25, 35);
+
+-- Sample topics for "Database Design"
+INSERT INTO topics (course_id, title, content, lesson_order, points_reward, duration_minutes) VALUES
+(3, 'Introduction to Databases', 'Understanding database concepts and types.', 1, 10, 20),
+(3, 'SQL Basics', 'Learn fundamental SQL queries and database operations.', 2, 15, 25),
+(3, 'Database Normalization', 'Master the principles of database normalization and design.', 3, 20, 30),
+(3, 'Advanced Queries and Optimization', 'Learn advanced SQL queries and performance optimization.', 4, 25, 30);
+
+-- Sample topics for "Mobile App Development"
+INSERT INTO topics (course_id, title, content, lesson_order, points_reward, duration_minutes) VALUES
+(4, 'Mobile Development Overview', 'Introduction to mobile app development concepts.', 1, 10, 20),
+(4, 'UI Design for Mobile', 'Learn mobile UI design principles and best practices.', 2, 15, 25),
+(4, 'App Navigation and State', 'Master app navigation and state management.', 3, 20, 30),
+(4, 'Publishing Your App', 'Learn how to test and publish your mobile app.', 4, 25, 30);
+
+-- Sample topics for "Data Science Essentials"
+INSERT INTO topics (course_id, title, content, lesson_order, points_reward, duration_minutes) VALUES
+(5, 'Introduction to Data Science', 'Understanding the basics of data science and its applications.', 1, 10, 20),
+(5, 'Data Analysis with Python', 'Learn to analyze data using Python and popular libraries.', 2, 15, 25),
+(5, 'Data Visualization', 'Master creating effective data visualizations.', 3, 20, 30),
+(5, 'Machine Learning Basics', 'Introduction to basic machine learning concepts.', 4, 25, 35);
+
+-- Sample topics for "Cloud Computing"
+INSERT INTO topics (course_id, title, content, lesson_order, points_reward, duration_minutes) VALUES
+(6, 'Cloud Computing Fundamentals', 'Understanding cloud computing concepts and services.', 1, 10, 20),
+(6, 'AWS Services Overview', 'Introduction to key AWS services and their uses.', 2, 15, 25),
+(6, 'Cloud Security', 'Learn about securing applications in the cloud.', 3, 20, 30),
+(6, 'Deploying Cloud Applications', 'Master deploying and scaling applications in the cloud.', 4, 25, 30);

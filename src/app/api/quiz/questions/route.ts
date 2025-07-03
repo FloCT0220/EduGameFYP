@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { QuizService } from '../../../../../lib/services/quizService';
+import { QuizService } from '@/lib/services/quizService';
 
 export async function GET(request: NextRequest) {
   try {
