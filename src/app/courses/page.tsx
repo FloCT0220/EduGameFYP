@@ -6,17 +6,6 @@ import ProgressBar from '@/components/gamification/ProgressBar';
 // For now, using a hardcoded user ID - replace with actual authentication
 const CURRENT_USER_ID = 1;
 
-interface SkillTree {
-    id: number;
-    title: string;
-    description: string;
-    icon: string;
-    order_index: number;
-    total_nodes: number;
-    completed_nodes: number;
-    progress_percentage: number;
-}
-
 interface Subject {
     id: number;
     title: string;
@@ -28,7 +17,6 @@ interface Subject {
     enrolled: boolean;
     progress_percentage: number;
     total_points_earned: number;
-    skill_trees: SkillTree[];
 }
 
 export default function SubjectsPage() {
@@ -161,18 +149,6 @@ export default function SubjectsPage() {
                     
                     <div className="card">
                         <div className="flex items-center">
-                            <div className="text-3xl mr-3">🌳</div>
-                            <div>
-                                <p className="text-sm text-gray-600">Skill Trees</p>
-                                <p className="text-2xl font-bold text-green-600">
-                                    {subjects.reduce((total, subject) => total + subject.skill_trees.length, 0)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="card">
-                        <div className="flex items-center">
                             <div className="text-3xl mr-3">🎯</div>
                             <div>
                                 <p className="text-sm text-gray-600">In Progress</p>
@@ -264,7 +240,6 @@ export default function SubjectsPage() {
                                 )}
                                 
                                 <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                                    <span>🌳 {subject.skill_trees.length} Skill Trees</span>
                                     <span>⭐ {subject.total_points_earned} Points</span>
                                 </div>
                             </div>

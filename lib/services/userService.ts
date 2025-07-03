@@ -4,7 +4,7 @@ export interface User {
   id: number;
   email: string;
   username: string;
-  role: 'student' | 'teacher';
+  role: 'student' | 'admin';
   avatar_url?: string;
   total_points: number;
   current_streak: number;
@@ -16,7 +16,7 @@ export interface User {
 
 export interface UserProgress {
   user_id: number;
-  skill_tree_id: number;
+  subject_id: number;
   node_id: string;
   completed: boolean;
   completed_at?: Date;
@@ -81,10 +81,9 @@ export class UserService {
         COUNT(CASE WHEN unp.completed = true THEN 1 END) as completed_nodes
       FROM user_enrollments ue
       JOIN subjects s ON ue.subject_id = s.id
-      LEFT JOIN skill_trees st ON s.id = st.subject_id
-      LEFT JOIN skill_nodes sn ON st.id = sn.skill_tree_id AND sn.is_active = true
+      LEFT JOIN skill_nodes sn ON s.id = sn.subject_id AND sn.is_active = true
       LEFT JOIN user_node_progress unp ON ue.user_id = unp.user_id 
-        AND st.id = unp.skill_tree_id AND sn.node_id = unp.node_id
+        AND sn.node_id = unp.node_id AND unp.subject_id = s.id
       WHERE ue.user_id = ?
       GROUP BY ue.id, s.id
     `, [userId]) as UserEnrollment[];
@@ -128,10 +127,9 @@ export class UserService {
         COUNT(CASE WHEN unp.completed = true THEN 1 END) as completed_lessons
       FROM user_enrollments ue
       JOIN subjects s ON ue.subject_id = s.id
-      LEFT JOIN skill_trees st ON s.id = st.subject_id
-      LEFT JOIN skill_nodes sn ON st.id = sn.skill_tree_id AND sn.is_active = true
+      LEFT JOIN skill_nodes sn ON s.id = sn.subject_id AND sn.is_active = true
       LEFT JOIN user_node_progress unp ON ue.user_id = unp.user_id 
-        AND st.id = unp.skill_tree_id AND sn.node_id = unp.node_id
+        AND sn.node_id = unp.node_id AND unp.subject_id = s.id
       WHERE ue.user_id = ?
       GROUP BY ue.id
       ORDER BY ue.enrolled_at DESC
@@ -152,7 +150,7 @@ export class UserService {
   ): Promise<void> {
     await query(`
       INSERT INTO user_node_progress 
-      (user_id, skill_tree_id, node_id, completed, completed_at, points_earned, best_score, time_spent, attempts)
+      (user_id, subject_id, node_id, completed, completed_at, points_earned, best_score, time_spent, attempts)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
       ON DUPLICATE KEY UPDATE
         completed = VALUES(completed),
@@ -197,36 +195,30 @@ export class UserService {
               WHEN COUNT(sn.id) = 0 THEN 0
               ELSE (COUNT(CASE WHEN unp.completed = true THEN 1 END) * 100.0 / COUNT(sn.id))
             END
-          FROM skill_trees st
-          JOIN skill_nodes sn ON st.id = sn.skill_tree_id AND sn.is_active = true
-          LEFT JOIN user_node_progress unp ON st.id = unp.skill_tree_id 
-            AND sn.node_id = unp.node_id AND unp.user_id = ?
-          WHERE st.subject_id = ?
+          FROM skill_nodes sn
+          JOIN user_node_progress unp ON sn.node_id = unp.node_id AND sn.subject_id = unp.subject_id
+          WHERE sn.subject_id = ? AND unp.user_id = ?
         ),
         total_points_earned = (
           SELECT COALESCE(SUM(unp.points_earned), 0)
           FROM user_node_progress unp
-          JOIN skill_trees st ON unp.skill_tree_id = st.id
-          WHERE unp.user_id = ? AND st.subject_id = ?
+          WHERE unp.user_id = ? AND unp.subject_id = ?
         ),
         completed_at = CASE 
           WHEN (
             SELECT COUNT(CASE WHEN unp.completed = true THEN 1 END) 
-            FROM skill_trees st
-            JOIN skill_nodes sn ON st.id = sn.skill_tree_id AND sn.is_active = true
-            LEFT JOIN user_node_progress unp ON st.id = unp.skill_tree_id 
-              AND sn.node_id = unp.node_id AND unp.user_id = ?
-            WHERE st.subject_id = ?
+            FROM skill_nodes sn
+            JOIN user_node_progress unp ON sn.node_id = unp.node_id AND sn.subject_id = unp.subject_id
+            WHERE sn.subject_id = ? AND unp.user_id = ?
           ) = (
             SELECT COUNT(*) 
-            FROM skill_trees st
-            JOIN skill_nodes sn ON st.id = sn.skill_tree_id 
-            WHERE st.subject_id = ? AND sn.is_active = true
+            FROM skill_nodes sn
+            WHERE sn.subject_id = ? AND sn.is_active = true
           ) THEN NOW()
           ELSE completed_at
         END
       WHERE user_id = ? AND subject_id = ?
-    `, [userId, subjectId, userId, subjectId, userId, subjectId, subjectId, userId, subjectId]);
+    `, [subjectId, userId, userId, subjectId, userId, subjectId, subjectId, userId, subjectId]);
   }
 
   // Get user achievements

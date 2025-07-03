@@ -34,19 +34,11 @@ interface SubjectData {
     color_theme: string;
 }
 
-interface SkillTreeData {
-    id: number;
-    title: string;
-    description: string;
-    icon: string;
-}
-
 export default function SubjectSkillTreePage() {
     const params = useParams();
     const subjectId = params.subjectId as string;
     
     const [subject, setSubject] = useState<SubjectData | null>(null);
-    const [skillTree, setSkillTree] = useState<SkillTreeData | null>(null);
     const [nodes, setNodes] = useState<SkillNode[]>([]);
     const [connections, setConnections] = useState<Connection[]>([]);
     const [selectedNode, setSelectedNode] = useState<SkillNode | null>(null);
@@ -55,179 +47,171 @@ export default function SubjectSkillTreePage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchSubjectAndSkillTree = async () => {
+        const fetchSubject = async () => {
             try {
                 setLoading(true);
-                // For demo purposes, we'll use the first skill tree of the subject
-                // In a real app, you might want to select which skill tree to show
-                const response = await fetch(`/api/subjects/skill-trees/1?userId=1`);
+                const response = await fetch(`/api/subjects/${subjectId}`);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch skill tree');
+                    throw new Error('Failed to fetch subject nodes');
                 }
-                
                 const data = await response.json();
                 if (data.success) {
-                    setSkillTree(data.skillTree);
+                    setSubject(data.subject);
                     setNodes(data.nodes);
-                    setConnections(data.connections);
-                    
-                    // Set subject data (in real app, this would come from the API)
-                    setSubject({
-                        id: parseInt(subjectId),
-                        title: 'Web Development',
-                        description: 'Master modern web development with HTML, CSS, JavaScript, and React',
-                        difficulty: 'foundation',
-                        icon: '🌐',
-                        color_theme: 'blue'
-                    });
                 } else {
-                    throw new Error(data.error || 'Failed to load skill tree');
+                    throw new Error(data.error || 'Failed to load subject nodes');
                 }
             } catch (err) {
-                console.error('Error fetching skill tree:', err);
+                console.error('Error fetching subject nodes:', err);
                 setError(err instanceof Error ? err.message : 'An error occurred');
-                // For demo purposes, use sample data
-                setSampleData();
+                // setSampleData();
             } finally {
                 setLoading(false);
             }
         };
-
         if (subjectId) {
-            fetchSubjectAndSkillTree();
+            fetchSubject();
         }
     }, [subjectId]);
 
-    const setSampleData = () => {
-        setSubject({
-            id: parseInt(subjectId),
-            title: 'Web Development',
-            description: 'Master modern web development with HTML, CSS, JavaScript, and React',
-            difficulty: 'foundation',
-            icon: '🌐',
-            color_theme: 'blue'
-        });
+    // Generate connections from node requirements
+    useEffect(() => {
+        if (nodes.length > 0) {
+            const newConnections = nodes.flatMap(node =>
+                (node.requirements || []).map((reqId: string) => ({
+                    from: reqId,
+                    to: node.id
+                }))
+            );
+            setConnections(newConnections);
+        } else {
+            setConnections([]);
+        }
+    }, [nodes]);
+
+    // const setSampleData = () => {
+    //     setSubject({
+    //         id: parseInt(subjectId),
+    //         title: 'Web Development',
+    //         description: 'Master modern web development with HTML, CSS, JavaScript, and React',
+    //         difficulty: 'foundation',
+    //         icon: '🌐',
+    //         color_theme: 'blue'
+    //     });
         
-        setSkillTree({
-            id: 1,
-            title: 'HTML & CSS Fundamentals',
-            description: 'Learn the building blocks of web development',
-            icon: '🎨'
-        });
-
-        setNodes([
-            // Level 1 - Foundation
-            {
-                id: 'html-basics',
-                name: 'HTML Structure',
-                description: 'Learn basic HTML tags and document structure',
-                level: 1,
-                x: 50,
-                y: 10,
-                unlocked: true,
-                completed: true,
-                requirements: [],
-                icon: '📄',
-                type: 'lesson',
-                estimated_time: '30 min',
-                points: 50,
-                content_url: '/content/html-basics'
-            },
-            {
-                id: 'css-basics',
-                name: 'CSS Styling',
-                description: 'Master CSS selectors and basic styling',
-                level: 1,
-                x: 25,
-                y: 35,
-                unlocked: true,
-                completed: true,
-                requirements: ['html-basics'],
-                icon: '🎨',
-                type: 'lesson',
-                estimated_time: '45 min',
-                points: 50,
-                content_url: '/content/css-basics'
-            },
-            {
-                id: 'css-layout',
-                name: 'CSS Layout',
-                description: 'Learn flexbox and grid layouts',
-                level: 1,
-                x: 75,
-                y: 35,
-                unlocked: true,
-                completed: false,
-                requirements: ['css-basics'],
-                icon: '📐',
-                type: 'lesson',
-                estimated_time: '60 min',
-                points: 50,
-                content_url: '/content/css-layout'
-            },
+    //     setNodes([
+    //         // Level 1 - Foundation
+    //         {
+    //             id: 'html-basics',
+    //             name: 'HTML Structure',
+    //             description: 'Learn basic HTML tags and document structure',
+    //             level: 1,
+    //             x: 50,
+    //             y: 10,
+    //             unlocked: true,
+    //             completed: true,
+    //             requirements: [],
+    //             icon: '📄',
+    //             type: 'lesson',
+    //             estimated_time: '30 min',
+    //             points: 50,
+    //             content_url: '/content/html-basics'
+    //         },
+    //         {
+    //             id: 'css-basics',
+    //             name: 'CSS Styling',
+    //             description: 'Master CSS selectors and basic styling',
+    //             level: 1,
+    //             x: 25,
+    //             y: 35,
+    //             unlocked: true,
+    //             completed: true,
+    //             requirements: ['html-basics'],
+    //             icon: '🎨',
+    //             type: 'lesson',
+    //             estimated_time: '45 min',
+    //             points: 50,
+    //             content_url: '/content/css-basics'
+    //         },
+    //         {
+    //             id: 'css-layout',
+    //             name: 'CSS Layout',
+    //             description: 'Learn flexbox and grid layouts',
+    //             level: 1,
+    //             x: 75,
+    //             y: 35,
+    //             unlocked: true,
+    //             completed: false,
+    //             requirements: ['css-basics'],
+    //             icon: '📐',
+    //             type: 'lesson',
+    //             estimated_time: '60 min',
+    //             points: 50,
+    //             content_url: '/content/css-layout'
+    //         },
             
-            // Level 2 - Intermediate
-            {
-                id: 'responsive-design',
-                name: 'Responsive Design',
-                description: 'Create mobile-friendly websites',
-                level: 2,
-                x: 50,
-                y: 60,
-                unlocked: false,
-                completed: false,
-                requirements: ['css-layout'],
-                icon: '📱',
-                type: 'lesson',
-                estimated_time: '90 min',
-                points: 75,
-                content_url: '/content/responsive-design'
-            },
-            {
-                id: 'css-animations',
-                name: 'CSS Animations',
-                description: 'Add smooth animations and transitions',
-                level: 2,
-                x: 15,
-                y: 60,
-                unlocked: false,
-                completed: false,
-                requirements: ['css-basics'],
-                icon: '✨',
-                type: 'lesson',
-                estimated_time: '75 min',
-                points: 75,
-                content_url: '/content/css-animations'
-            },
+    //         // Level 2 - Intermediate
+    //         {
+    //             id: 'responsive-design',
+    //             name: 'Responsive Design',
+    //             description: 'Create mobile-friendly websites',
+    //             level: 2,
+    //             x: 50,
+    //             y: 60,
+    //             unlocked: false,
+    //             completed: false,
+    //             requirements: ['css-layout'],
+    //             icon: '📱',
+    //             type: 'lesson',
+    //             estimated_time: '90 min',
+    //             points: 75,
+    //             content_url: '/content/responsive-design'
+    //         },
+    //         {
+    //             id: 'css-animations',
+    //             name: 'CSS Animations',
+    //             description: 'Add smooth animations and transitions',
+    //             level: 2,
+    //             x: 15,
+    //             y: 60,
+    //             unlocked: false,
+    //             completed: false,
+    //             requirements: ['css-basics'],
+    //             icon: '✨',
+    //             type: 'lesson',
+    //             estimated_time: '75 min',
+    //             points: 75,
+    //             content_url: '/content/css-animations'
+    //         },
             
-            // Level 3 - Advanced
-            {
-                id: 'css-architecture',
-                name: 'CSS Architecture',
-                description: 'Organize CSS with BEM and CSS modules',
-                level: 3,
-                x: 50,
-                y: 85,
-                unlocked: false,
-                completed: false,
-                requirements: ['responsive-design', 'css-animations'],
-                icon: '🏗️',
-                type: 'project',
-                estimated_time: '120 min',
-                points: 100,
-                content_url: '/content/css-architecture'
-            }
-        ]);
+    //         // Level 3 - Advanced
+    //         {
+    //             id: 'css-architecture',
+    //             name: 'CSS Architecture',
+    //             description: 'Organize CSS with BEM and CSS modules',
+    //             level: 3,
+    //             x: 50,
+    //             y: 85,
+    //             unlocked: false,
+    //             completed: false,
+    //             requirements: ['responsive-design', 'css-animations'],
+    //             icon: '🏗️',
+    //             type: 'project',
+    //             estimated_time: '120 min',
+    //             points: 100,
+    //             content_url: '/content/css-architecture'
+    //         }
+    //     ]);
 
-        setConnections([
-            { from: 'html-basics', to: 'css-basics' },
-            { from: 'css-basics', to: 'css-layout' },
-            { from: 'css-layout', to: 'responsive-design' },
-            { from: 'css-basics', to: 'css-animations' },
-            { from: 'responsive-design', to: 'css-architecture' },
-            { from: 'css-animations', to: 'css-architecture' }
-        ]);
-    };
+    //     setConnections([
+    //         { from: 'html-basics', to: 'css-basics' },
+    //         { from: 'css-basics', to: 'css-layout' },
+    //         { from: 'css-layout', to: 'responsive-design' },
+    //         { from: 'css-basics', to: 'css-animations' },
+    //         { from: 'responsive-design', to: 'css-architecture' },
+    //         { from: 'css-animations', to: 'css-architecture' }
+    //     ]);
+    // };
 
     const canUnlock = (node: SkillNode): boolean => {
         if (node.unlocked) return false;
@@ -309,7 +293,7 @@ export default function SubjectSkillTreePage() {
         );
     }
 
-    if (error || !subject || !skillTree) {
+    if (error || !subject) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
@@ -400,7 +384,6 @@ export default function SubjectSkillTreePage() {
                     <span className="text-3xl">{subject.icon}</span>
                     <div>
                         <h2 className="text-xl font-bold text-white">{subject.title}</h2>
-                        <p className="text-gray-300 text-sm">{skillTree.title}</p>
                     </div>
                 </div>
             </div>

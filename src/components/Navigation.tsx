@@ -19,15 +19,11 @@ export default function Navigation() {
         { name: 'Subjects', path: '/courses', icon: '📚' },
     ];
 
-    const teacherNavItems = [
-        { name: 'Dashboard', path: '/teacher/dashboard', icon: '🏠' },
-        { name: 'My Subjects', path: '/teacher/courses', icon: '📚' },
-        { name: 'Students', path: '/teacher/students', icon: '👥' },
-        { name: 'Analytics', path: '/teacher/analytics', icon: '📊' },
-        { name: 'Create Quiz', path: '/teacher/create-quiz', icon: '✏️' },
+    const adminNavItems = [
+        { name: 'Dashboard', path: '/admin/dashboard', icon: '🏠' }
     ];
-
-    const navItems = userRole === 'student' ? studentNavItems : teacherNavItems;
+console.log(userRole);
+    const navItems = userRole === 'student' ? studentNavItems : adminNavItems;
 
     if (pathname === '/' || pathname === '/login' || pathname === '/register') {
         return null; // Don't show navigation on landing and auth pages
@@ -39,7 +35,13 @@ export default function Navigation() {
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
                         <button 
-                            onClick={() => router.push('/')}
+                            onClick={() => {
+                                if (userRole === 'admin') {
+                                    router.push('/admin/dashboard');
+                                } else {
+                                    router.push('/dashboard');
+                                }
+                            }}
                             className="flex items-center space-x-2 text-xl font-bold text-white hover:text-blue-200 transition-colors"
                         >
                             <span>🎓</span>

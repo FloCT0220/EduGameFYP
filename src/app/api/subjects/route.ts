@@ -14,21 +14,6 @@ interface Subject {
     total_points_earned: number;
 }
 
-interface SkillTree {
-    id: number;
-    title: string;
-    description: string;
-    icon: string;
-    order_index: number;
-    total_nodes: number;
-    completed_nodes: number;
-    progress_percentage: number;
-}
-
-interface SubjectWithSkillTrees extends Subject {
-    skill_trees: SkillTree[];
-}
-
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
@@ -72,51 +57,9 @@ export async function GET(request: NextRequest) {
 
         const subjects = await query(subjectsQuery, queryParams) as Subject[];
 
-        // For each subject, fetch its skill trees with progress
-        const subjectsWithSkillTrees = await Promise.all(
-            subjects.map(async (subject: Subject): Promise<SubjectWithSkillTrees> => {
-                const skillTreesQuery = `
-                    SELECT 
-                        st.id,
-                        st.title,
-                        st.description,
-                        st.icon,
-                        st.order_index,
-                        COUNT(sn.id) as total_nodes,
-                        COALESCE(completed_nodes.completed_count, 0) as completed_nodes,
-                        CASE 
-                            WHEN COUNT(sn.id) > 0 
-                            THEN ROUND((COALESCE(completed_nodes.completed_count, 0) / COUNT(sn.id)) * 100, 1)
-                            ELSE 0 
-                        END as progress_percentage
-                    FROM skill_trees st
-                    LEFT JOIN skill_nodes sn ON st.id = sn.skill_tree_id AND sn.is_active = 1
-                    LEFT JOIN (
-                        SELECT 
-                            sn.skill_tree_id,
-                            COUNT(*) as completed_count
-                        FROM skill_nodes sn
-                        INNER JOIN user_node_progress unp ON sn.id = unp.node_id
-                        WHERE unp.user_id = ? AND unp.completed = 1
-                        GROUP BY sn.skill_tree_id
-                    ) completed_nodes ON st.id = completed_nodes.skill_tree_id
-                    WHERE st.subject_id = ? AND st.is_active = 1
-                    GROUP BY st.id
-                    ORDER BY st.order_index
-                `;
-
-                const skillTrees = await query(skillTreesQuery, [userId, subject.id]) as SkillTree[];
-
-                return {
-                    ...subject,
-                    skill_trees: skillTrees
-                };
-            })
-        );
-
         return NextResponse.json({
             success: true,
-            subjects: subjectsWithSkillTrees
+            subjects: subjects
         });
 
     } catch (error) {

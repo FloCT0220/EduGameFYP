@@ -29,7 +29,7 @@ export default function LoginForm() {
             if (userRole === 'student') {
                 router.push('/dashboard');
             } else {
-                router.push('/dashboard'); // or teacher dashboard
+                router.push('/admin/dashboard'); // admin dashboard
             }
             
         } catch {
