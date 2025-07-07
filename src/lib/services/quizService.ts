@@ -74,9 +74,53 @@ export class QuizService {
   static async getQuizQuestions(courseId: number, nodeId: string): Promise<QuizQuestion[]> {
     return await query(`
       SELECT * FROM quiz_questions
-      WHERE course_id = ? AND node_id = ? AND is_active = true
+      WHERE subject_id = ? AND node_id = ? AND is_active = true
       ORDER BY RAND()
     `, [courseId, nodeId]) as QuizQuestion[];
+  }
+
+  // Get cumulative quiz questions (current lesson + all previous lessons)
+  static async getCumulativeQuizQuestions(courseId: number, topicId: number): Promise<QuizQuestion[]> {
+    try {
+      // First, get the current topic's lesson_order
+      const currentTopic = await query(`
+        SELECT lesson_order FROM topics 
+        WHERE id = ? AND course_id = ?
+      `, [topicId, courseId]) as { lesson_order: number }[];
+
+      if (currentTopic.length === 0) {
+        return [];
+      }
+
+      const currentLessonOrder = currentTopic[0].lesson_order;
+
+      // Get all topic IDs up to and including the current lesson_order
+      const eligibleTopics = await query(`
+        SELECT id FROM topics 
+        WHERE course_id = ? AND lesson_order <= ? AND is_published = true
+        ORDER BY lesson_order
+      `, [courseId, currentLessonOrder]) as { id: number }[];
+
+      if (eligibleTopics.length === 0) {
+        return [];
+      }
+
+      // Get quiz questions for all eligible topics (simplified approach)
+      const topicIds = eligibleTopics.map(topic => topic.id.toString());
+      const placeholders = topicIds.map(() => '?').join(', ');
+      
+      const questions = await query(`
+        SELECT * FROM quiz_questions
+        WHERE subject_id = ? AND node_id IN (${placeholders}) AND is_active = true
+        ORDER BY RAND()
+      `, [courseId, ...topicIds]) as QuizQuestion[];
+
+      return questions;
+    } catch (error) {
+      console.error('Error in getCumulativeQuizQuestions:', error);
+      // Fallback to single topic if there's an error
+      return await this.getQuizQuestions(courseId, topicId.toString());
+    }
   }
 
   // Get a specific quiz question by question_id

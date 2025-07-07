@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginForm() {
     const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ export default function LoginForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
+    const { login } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -16,20 +18,13 @@ export default function LoginForm() {
         setError('');
 
         try {
-            // Add your login logic here
-            console.log('Login attempt:', { email, password });
+            const success = await login(email, password);
             
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Get user role from localStorage
-            const userRole = localStorage.getItem('userRole') || 'student';
-            
-            // Redirect based on role
-            if (userRole === 'student') {
+            if (success) {
+                // Redirect to dashboard after successful login
                 router.push('/dashboard');
             } else {
-                router.push('/admin/dashboard'); // admin dashboard
+                setError('Invalid email or password');
             }
             
         } catch {

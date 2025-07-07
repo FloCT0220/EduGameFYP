@@ -98,9 +98,9 @@ export class UserService {
     const quizStats = await query(`
       SELECT 
         COUNT(*) as total_attempts,
-        AVG(score) as avg_score,
-        SUM(correct_answers) as total_quiz_points
-      FROM user_quiz_attempts 
+        AVG(score_percentage) as avg_score,
+        SUM(total_points) as total_quiz_points
+      FROM quiz_attempts 
       WHERE user_id = ?
     `, [userId]) as { total_attempts: number; avg_score: number; total_quiz_points: number }[];
 

@@ -5,18 +5,19 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const courseId = searchParams.get('courseId');
-    const nodeId = searchParams.get('nodeId');
+    const topicId = searchParams.get('topicId'); // Changed from nodeId to topicId for clarity
 
-    if (!courseId || !nodeId) {
+    if (!courseId || !topicId) {
       return NextResponse.json(
-        { error: 'Course ID and Node ID are required' },
+        { error: 'Course ID and Topic ID are required' },
         { status: 400 }
       );
     }
 
-    const questions = await QuizService.getQuizQuestions(
+    // Use cumulative quiz questions (current + all previous lessons)
+    const questions = await QuizService.getCumulativeQuizQuestions(
       parseInt(courseId), 
-      nodeId
+      parseInt(topicId)
     );
 
     // Format questions for frontend (hide correct answers)

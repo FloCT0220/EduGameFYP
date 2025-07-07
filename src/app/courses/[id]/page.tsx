@@ -1,16 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { FaClock, FaUsers, FaPlay, FaLock, FaCheck, FaTrophy } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-
-// Mock user context for now - memoized to prevent re-renders
-const useUser = () => {
-    return useMemo(() => ({ 
-        user: { id: 1, username: 'student' } 
-    }), []);
-};
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Course {
     id: number;
@@ -62,7 +56,7 @@ interface SkillTreeLevel {
 }
 
 export default function CoursePage() {
-    const { user } = useUser();
+    const { user, isAuthenticated, loading: authLoading } = useAuth();
     const router = useRouter();
     const params = useParams();
     const courseId = params.id as string;
@@ -72,11 +66,18 @@ export default function CoursePage() {
     const [loading, setLoading] = useState(true);
     const [enrolling, setEnrolling] = useState(false);
 
+    // Redirect to login if not authenticated
+    useEffect(() => {
+        if (!authLoading && !isAuthenticated) {
+            router.push('/login');
+        }
+    }, [authLoading, isAuthenticated, router]);
+
     useEffect(() => {
         if (courseId && user?.id) {
             fetchCourseData();
         }
-    }, [courseId, user?.id]); // Only depend on user.id, not the entire user object
+    }, [courseId, user?.id]);
 
     const fetchCourseData = async () => {
         try {
@@ -277,9 +278,9 @@ export default function CoursePage() {
         );
     };
 
-    if (loading) {
+    if (authLoading || loading || !user) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center md:ml-64">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-blue-600 mx-auto mb-4"></div>
                     <p className="text-lg font-medium text-gray-600">Loading course...</p>
@@ -290,7 +291,7 @@ export default function CoursePage() {
 
     if (!courseData) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 flex items-center justify-center md:ml-64">
                 <div className="text-center p-8">
                     <h2 className="text-2xl font-bold text-red-600 mb-4">Course Not Found</h2>
                     <button
@@ -310,7 +311,7 @@ export default function CoursePage() {
         : 0;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 md:ml-64">
             {/* Header */}
             <div className="bg-white shadow-lg border-b">
                 <div className="max-w-7xl mx-auto px-6 py-6">

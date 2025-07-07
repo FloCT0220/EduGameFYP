@@ -1,14 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import ProgressBar from '@/components/gamification/ProgressBar';
+import { useRouter } from 'next/navigation';
 import Badge from '@/components/gamification/Badge';
 import PointsDisplay from '@/components/gamification/PointsDisplay';
-import Leaderboard from '@/components/gamification/Leaderboard';
-
-// For now, using a hardcoded user ID - replace with actual authentication
-const CURRENT_USER_ID = 1; // This should come from your auth system
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardData {
     user: {
@@ -43,29 +39,30 @@ interface DashboardData {
     };
 }
 
-interface LeaderboardEntry {
-    id: number;
-    name: string;
-    points: number;
-    level: number;
-    streak: number;
-}
+
 
 export default function Dashboard() {
-    const searchParams = useSearchParams();
-    const tabParam = searchParams.get('tab');
-    const [activeTab, setActiveTab] = useState(tabParam || 'overview');
+    const router = useRouter();
+    const { user, isAuthenticated, loading: authLoading } = useAuth();
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-    const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Redirect to login if not authenticated
+    useEffect(() => {
+        if (!authLoading && !isAuthenticated) {
+            router.push('/login');
+        }
+    }, [authLoading, isAuthenticated, router]);
 
     // Fetch dashboard data from API
     useEffect(() => {
         const fetchDashboardData = async () => {
+            if (!user) return;
+            
             try {
                 setLoading(true);
-                const response = await fetch(`/api/dashboard?userId=${CURRENT_USER_ID}`);
+                const response = await fetch(`/api/dashboard?userId=${user.id}`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch dashboard data');
@@ -86,37 +83,14 @@ export default function Dashboard() {
         };
 
         fetchDashboardData();
-    }, []);
+    }, [user]);
 
-    // Fetch leaderboard data
-    useEffect(() => {
-        const fetchLeaderboard = async () => {
-            try {
-                const response = await fetch('/api/leaderboard');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        setLeaderboardData(data.leaderboard);
-                    }
-                }
-            } catch (err) {
-                console.error('Error fetching leaderboard:', err);
-            }
-        };
 
-        fetchLeaderboard();
-    }, []);
-
-    useEffect(() => {
-        if (tabParam) {
-            setActiveTab(tabParam);
-        }
-    }, [tabParam]);
 
     // Loading state
-    if (loading) {
+    if (authLoading || loading || !user) {
         return (
-            <div className="min-h-screen p-6" style={{ background: 'var(--background-primary)' }}>
+            <div className="min-h-screen p-6 md:ml-64" style={{ background: 'var(--background-primary)' }}>
                 <div className="max-w-7xl mx-auto">
                     <div className="animate-pulse space-y-8">
                         <div className="h-8 bg-white/20 rounded w-1/3"></div>
@@ -134,7 +108,7 @@ export default function Dashboard() {
     // Error state
     if (error || !dashboardData) {
         return (
-            <div className="min-h-screen p-6" style={{ background: 'var(--background-primary)' }}>
+            <div className="min-h-screen p-6 md:ml-64" style={{ background: 'var(--background-primary)' }}>
                 <div className="max-w-7xl mx-auto">
                     <div className="card border-red-200 bg-red-50">
                         <h2 className="text-red-800 font-semibold mb-2">Error Loading Dashboard</h2>
@@ -151,15 +125,15 @@ export default function Dashboard() {
         );
     }
 
-    const { user, courses, achievements, quizStats } = dashboardData;
+    const { user: dashboardUser, courses, achievements, quizStats } = dashboardData;
 
     return (
-        <div className="min-h-screen p-6" style={{ background: 'var(--background-primary)' }}>
+        <div className="min-h-screen p-6 md:ml-64" style={{ background: 'var(--background-primary)' }}>
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8 bg-white/80 rounded-lg p-4">
                     <h1 className="text-3xl font-bold mb-2">
-                        Welcome back, {user.name}! 👋
+                        Welcome back, {dashboardUser.name}! 👋
                     </h1>
                     <p className="text-white/80">Ready to continue your learning journey?</p>
                 </div>
@@ -167,10 +141,10 @@ export default function Dashboard() {
                 {/* Points Display */}
                 <div className="mb-8">
                     <PointsDisplay
-                        points={user.points}
-                        level={user.level}
-                        xpForNextLevel={user.xpForNextLevel}
-                        currentXP={user.currentXP}
+                        points={dashboardUser.points}
+                        level={dashboardUser.level}
+                        xpForNextLevel={dashboardUser.xpForNextLevel}
+                        currentXP={dashboardUser.currentXP}
                         showAnimation={true}
                         size="lg"
                     />
@@ -183,7 +157,7 @@ export default function Dashboard() {
                             <div className="text-3xl mr-3">🔥</div>
                             <div>
                                 <h3 className="text-sm text-gray-600">Current Streak</h3>
-                                <p className="text-2xl font-bold text-orange-600">{user.streakDays} days</p>
+                                <p className="text-2xl font-bold text-orange-600">{dashboardUser.streakDays} days</p>
                             </div>
                         </div>
                     </div>
@@ -225,128 +199,23 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Tabs */}
-                <div className="mb-8">
-                    <div className="flex space-x-1 bg-white/10 rounded-lg p-1">
-                        {[
-                            { id: 'overview', label: 'Overview', icon: '📊' },
-                            { id: 'courses', label: 'Courses', icon: '📚' },
-                            { id: 'achievements', label: 'Achievements', icon: '🏆' },
-                            { id: 'leaderboard', label: 'Leaderboard', icon: '🏅' }
-                        ].map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                                    activeTab === tab.id
-                                        ? 'bg-white text-gray-900 shadow-lg'
-                                        : 'text-white/80 hover:text-white hover:bg-white/10'
-                                }`}
-                            >
-                                <span>{tab.icon}</span>
-                                <span>{tab.label}</span>
-                            </button>
+
+
+                {/* Achievements */}
+                <div className="card">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">🏆 Your Achievements</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {achievements.map((achievement, index) => (
+                            <Badge
+                                key={`achievement-${achievement.title}-${index}`}
+                                title={achievement.title}
+                                description={achievement.description}
+                                icon={achievement.icon}
+                                earned={achievement.earned}
+                                rarity={achievement.rarity}
+                            />
                         ))}
                     </div>
-                </div>
-
-                {/* Tab Content */}
-                <div className="space-y-6">
-                    {activeTab === 'overview' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Recent Activity */}
-                            <div className="card">
-                                <h2 className="font-semibold text-gray-900 mb-4">Recent Activity</h2>
-                                <div className="space-y-3">
-                                    <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                                        <span className="text-2xl">📚</span>
-                                        <div>
-                                            <p className="font-medium text-gray-900">Completed Algebra Basics</p>
-                                            <p className="text-sm text-gray-600">2 hours ago</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                                        <span className="text-2xl">🏆</span>
-                                        <div>
-                                            <p className="font-medium text-gray-900">Earned &quot;Math Wizard&quot; Badge</p>
-                                            <p className="text-sm text-gray-600">1 day ago</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                                        <span className="text-2xl">⭐</span>
-                                        <div>
-                                            <p className="font-medium text-gray-900">Reached Level 5</p>
-                                            <p className="text-sm text-gray-600">3 days ago</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Quick Actions */}
-                            <div className="card">
-                                <h2 className="font-semibold text-gray-900 mb-4">Quick Actions</h2>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button className="btn btn-primary">
-                                        📚 Continue Learning
-                                    </button>
-                                    <button className="btn btn-secondary">
-                                        🧩 Take Quiz
-                                    </button>
-                                    <button className="btn btn-success">
-                                        🏆 View Achievements
-                                    </button>
-                                    <button className="btn btn-warning">
-                                        📊 View Progress
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'courses' && (
-                        <div className="card">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Courses</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {courses.map((course) => (
-                                    <div key={course.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h4 className="font-medium text-gray-900">{course.name}</h4>
-                                            <span className="text-sm text-gray-500">{course.progress}%</span>
-                                        </div>
-                                        <ProgressBar current={course.completedLessons} total={course.totalLessons} />
-                                        <div className="mt-2 text-sm text-gray-600">
-                                            {course.completedLessons}/{course.totalLessons} lessons completed
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'achievements' && (
-                        <div className="card">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Achievements</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {achievements.map((achievement, index) => (
-                                    <Badge
-                                        key={index}
-                                        title={achievement.title}
-                                        description={achievement.description}
-                                        icon={achievement.icon}
-                                        earned={achievement.earned}
-                                        rarity={achievement.rarity}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'leaderboard' && (
-                        <div className="card">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Leaderboard</h3>
-                            <Leaderboard entries={leaderboardData.map(entry => ({ ...entry, id: entry.id.toString() }))} />
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

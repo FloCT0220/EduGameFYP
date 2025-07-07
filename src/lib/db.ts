@@ -1,5 +1,4 @@
 import mysql from 'mysql2/promise';
-import bcrypt from 'bcryptjs';
 
 export interface DatabaseConfig {
   host: string;
@@ -36,7 +35,11 @@ export const initializeDatabase = async () => {
   try {
     console.log('🔄 Initializing database...');
     await createTables();
+    
+    // Import and call the sample data function
+    const { insertDefaultData } = await import('./sampleData');
     await insertDefaultData();
+    
     isInitialized = true;
     console.log('✅ Database initialized successfully');
   } catch (error) {
@@ -114,14 +117,21 @@ const createTables = async () => {
     // User topic progress table
     `CREATE TABLE IF NOT EXISTS user_topic_progress (
       user_id INT NOT NULL,
+      course_id INT NOT NULL,
       topic_id INT NOT NULL,
       completed BOOLEAN NOT NULL DEFAULT FALSE,
       completed_at TIMESTAMP NULL,
+      points_earned INT DEFAULT 0,
+      attempts INT DEFAULT 0,
+      time_spent INT DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (user_id, topic_id),
+      PRIMARY KEY (user_id, course_id, topic_id),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
+      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
+      INDEX idx_user_course (user_id, course_id),
+      INDEX idx_completion (completed)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
     // Quizzes table
@@ -147,19 +157,23 @@ const createTables = async () => {
     // Quiz questions table
     `CREATE TABLE IF NOT EXISTS quiz_questions (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      quiz_id INT NOT NULL,
-      question_text TEXT NOT NULL,
-      question_type ENUM('multiple_choice', 'true_false', 'coding', 'short_answer') NOT NULL,
-      correct_answer TEXT,
-      options JSON,
-      points INT DEFAULT 1,
+      question_id VARCHAR(50) NOT NULL UNIQUE,
+      subject_id INT NOT NULL,
+      node_id VARCHAR(50) NOT NULL,
+      question TEXT NOT NULL,
+      option_a VARCHAR(500) NOT NULL,
+      option_b VARCHAR(500) NOT NULL,
+      option_c VARCHAR(500) NOT NULL,
+      option_d VARCHAR(500) NOT NULL,
+      correct_answer INT NOT NULL CHECK (correct_answer BETWEEN 0 AND 3),
+      points INT DEFAULT 10,
+      difficulty ENUM('easy', 'medium', 'hard') DEFAULT 'easy',
       explanation TEXT,
-      question_order INT NOT NULL,
       is_active BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
-      INDEX idx_quiz_order (quiz_id, question_order),
-      INDEX idx_active (is_active)
+      INDEX idx_subject_node (subject_id, node_id),
+      INDEX idx_active (is_active),
+      INDEX idx_difficulty (difficulty)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
     // User enrollments table
@@ -172,6 +186,7 @@ const createTables = async () => {
       progress_percentage DECIMAL(5,2) DEFAULT 0.00,
       total_points_earned INT DEFAULT 0,
       certificate_url VARCHAR(255),
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
       UNIQUE KEY unique_enrollment (user_id, course_id),
@@ -198,21 +213,64 @@ const createTables = async () => {
       INDEX idx_user_course (user_id, course_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // User quiz attempts table
-    `CREATE TABLE IF NOT EXISTS user_quiz_attempts (
+    // Quiz attempts table
+    `CREATE TABLE IF NOT EXISTS quiz_attempts (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,
-      quiz_id INT NOT NULL,
-      score DECIMAL(5,2),
-      total_questions INT,
-      correct_answers INT,
-      time_taken_minutes INT,
-      answers JSON,
-      attempt_number INT DEFAULT 1,
-      completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      subject_id INT NOT NULL,
+      node_id VARCHAR(50) NOT NULL,
+      questions_total INT NOT NULL,
+      questions_correct INT NOT NULL,
+      score_percentage DECIMAL(5,2) NOT NULL,
+      points_earned INT NOT NULL,
+      time_bonus INT DEFAULT 0,
+      streak_bonus INT DEFAULT 0,
+      total_points INT NOT NULL,
+      max_streak INT DEFAULT 0,
+      time_taken INT,
+      started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      completed_at TIMESTAMP NULL,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
-      INDEX idx_user_quiz (user_id, quiz_id)
+      INDEX idx_user_quiz (user_id, subject_id, node_id),
+      INDEX idx_user_attempts (user_id),
+      INDEX idx_completed (completed_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+    // Quiz answers table
+    `CREATE TABLE IF NOT EXISTS quiz_answers (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      attempt_id INT NOT NULL,
+      question_id VARCHAR(50) NOT NULL,
+      selected_answer INT,
+      is_correct BOOLEAN NOT NULL,
+      points_earned INT DEFAULT 0,
+      time_taken INT,
+      FOREIGN KEY (attempt_id) REFERENCES quiz_attempts(id) ON DELETE CASCADE,
+      INDEX idx_attempt (attempt_id),
+      INDEX idx_question (question_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+    // Quiz questions table
+    `CREATE TABLE IF NOT EXISTS quiz_questions (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      question_id VARCHAR(50) NOT NULL,
+      subject_id INT NOT NULL,
+      node_id VARCHAR(50) NOT NULL,
+      question TEXT NOT NULL,
+      option_a VARCHAR(500) NOT NULL,
+      option_b VARCHAR(500) NOT NULL,
+      option_c VARCHAR(500) NOT NULL,
+      option_d VARCHAR(500) NOT NULL,
+      correct_answer INT NOT NULL CHECK (correct_answer BETWEEN 0 AND 3),
+      points INT DEFAULT 10,
+      difficulty ENUM('easy', 'medium', 'hard') DEFAULT 'easy',
+      explanation TEXT,
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (subject_id) REFERENCES courses(id) ON DELETE CASCADE,
+      UNIQUE KEY unique_question_id (question_id),
+      INDEX idx_subject_node (subject_id, node_id),
+      INDEX idx_active (is_active)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
     // Achievements table
@@ -281,6 +339,41 @@ const createTables = async () => {
       UNIQUE KEY unique_user_date (user_id, activity_date),
       INDEX idx_user (user_id),
       INDEX idx_date (activity_date)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+    // Learning streaks table
+    `CREATE TABLE IF NOT EXISTS learning_streaks (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      streak_date DATE NOT NULL,
+      activities_completed INT DEFAULT 0,
+      points_earned INT DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY unique_user_date (user_id, streak_date),
+      INDEX idx_user (user_id),
+      INDEX idx_date (streak_date)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+    // Coding Challenges table
+    `CREATE TABLE IF NOT EXISTS coding_challenges (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      prompt TEXT NOT NULL,
+      starter_code_py TEXT,
+      starter_code_js TEXT,
+      starter_code_c TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+    // Coding Challenge Testcases table
+    `CREATE TABLE IF NOT EXISTS coding_challenge_testcases (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      challenge_id INT NOT NULL,
+      input TEXT NOT NULL,
+      expected_output TEXT NOT NULL,
+      is_sample BOOLEAN DEFAULT FALSE,
+      FOREIGN KEY (challenge_id) REFERENCES coding_challenges(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
   ];
 
@@ -293,96 +386,33 @@ const createTables = async () => {
       throw error;
     }
   }
-};
 
-// Insert default data
-const insertDefaultData = async () => {
-  const pool = createPool();
-
+  // Add missing columns to existing tables
   try {
-    // Check if admin user exists
-    const [adminExists] = await pool.execute(
-      'SELECT id FROM users WHERE role = "admin" LIMIT 1'
-    );
-
-    if ((adminExists as mysql.RowDataPacket[]).length === 0) {
-      // Create default admin user
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      
-      await pool.execute(
-        'INSERT INTO users (username, email, password, role, level, experience_points, total_points) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        ['admin', 'admin@example.com', hashedPassword, 'admin', 10, 1000, 1000]
-      );
-      console.log('✅ Default admin user created');
+    // Check if updated_at column exists in user_enrollments
+    const [columns] = await pool.execute(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = 'fyp' 
+        AND TABLE_NAME = 'user_enrollments' 
+        AND COLUMN_NAME = 'updated_at'
+    `);
+    
+    if ((columns as mysql.RowDataPacket[]).length === 0) {
+      await pool.execute(`
+        ALTER TABLE user_enrollments 
+        ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      `);
+      console.log('✅ Added updated_at column to user_enrollments');
+    } else {
+      console.log('ℹ️ updated_at column already exists in user_enrollments');
     }
-
-    // Insert default achievements
-    const [achievementsExist] = await pool.execute(
-      'SELECT id FROM achievements LIMIT 1'
-    );
-
-    if ((achievementsExist as mysql.RowDataPacket[]).length === 0) {
-      const defaultAchievements = [
-        ['First Steps', 'Complete your first lesson', '🎯', 'blue', 10, 'learning'],
-        ['Quiz Master', 'Pass your first quiz', '🧠', 'green', 20, 'assessment'],
-        ['Streak Starter', 'Study for 3 days in a row', '📅', 'purple', 30, 'habits'],
-        ['Point Collector', 'Earn 100 total points', '💎', 'yellow', 100, 'points'],
-        ['Course Finisher', 'Complete your first course', '🏆', 'gold', 200, 'completion'],
-        ['Speed Learner', 'Complete 5 lessons in one day', '⚡', 'orange', 50, 'speed'],
-        ['Persistent Learner', 'Study for 7 days in a row', '🔥', 'red', 100, 'habits'],
-        ['Knowledge Seeker', 'Complete 10 quizzes', '📚', 'indigo', 150, 'assessment']
-      ];
-
-      for (const achievement of defaultAchievements) {
-        await pool.execute(
-          'INSERT INTO achievements (name, description, icon_url, badge_color, points_required, category) VALUES (?, ?, ?, ?, ?, ?)',
-          achievement
-        );
-      }
-      console.log('✅ Default achievements created');
-    }
-
-    // Insert sample courses if none exist
-    const [coursesExist] = await pool.execute(
-      'SELECT id FROM courses LIMIT 1'
-    );
-
-    if ((coursesExist as mysql.RowDataPacket[]).length === 0) {
-      const sampleCourses = [
-        [
-          'Introduction to Programming',
-          'Learn the fundamentals of programming with hands-on examples and interactive exercises.',
-          'beginner',
-          'Programming'
-        ],
-        [
-          'Web Development Basics',
-          'Master HTML, CSS, and JavaScript to build amazing websites from scratch.',
-          'beginner',
-          'Web Development'
-        ],
-        [
-          'Database Design',
-          'Learn how to design efficient and scalable database systems.',
-          'intermediate',
-          'Database'
-        ]
-      ];
-
-      for (const course of sampleCourses) {
-        await pool.execute(
-          'INSERT INTO courses (title, description, difficulty_level, category, is_published) VALUES (?, ?, ?, ?, ?)',
-          [...course, true]
-        );
-      }
-      console.log('✅ Sample courses created');
-    }
-
-    console.log('✅ Default data inserted successfully');
   } catch (error) {
-    console.error('❌ Error inserting default data:', error);
+    console.log('ℹ️ Error checking/adding updated_at column:', error);
   }
 };
+
+
 
 // Enhanced query function with auto-initialization
 export const query = async (sql: string, params?: (string | number | boolean | null | Date)[]) => {

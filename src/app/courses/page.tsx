@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import ProgressBar from '@/components/gamification/ProgressBar';
-
-// For now, using a hardcoded user ID - replace with actual authentication
-const CURRENT_USER_ID = 1;
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Course {
     id: number;
@@ -18,21 +17,32 @@ interface Course {
 }
 
 export default function CoursesPage() {
+    const router = useRouter();
+    const { user, isAuthenticated, loading: authLoading } = useAuth();
     const [activeFilter, setActiveFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const categories = ['all', 'beginner', 'intermediate', 'advanced'];
+    const categories = ['all', 'my-courses', 'beginner', 'intermediate', 'advanced'];
+    
+    // Redirect to login if not authenticated
+    useEffect(() => {
+        if (!authLoading && !isAuthenticated) {
+            router.push('/login');
+        }
+    }, [authLoading, isAuthenticated, router]);
     
     // Fetch courses from API
     useEffect(() => {
         const fetchCourses = async () => {
+            if (!user) return;
+            
             try {
                 setLoading(true);
                 const params = new URLSearchParams({
-                    userId: CURRENT_USER_ID.toString(),
+                    userId: user.id.toString(),
                     ...(activeFilter !== 'all' && { difficulty: activeFilter })
                 });
                 
@@ -56,14 +66,56 @@ export default function CoursesPage() {
         };
 
         fetchCourses();
-    }, [activeFilter]);
+    }, [user, activeFilter]);
     
     const filteredCourses = courses.filter(course => {
-        const matchesCategory = activeFilter === 'all' || course.difficulty_level === activeFilter;
+        const matchesCategory = activeFilter === 'all' || 
+                              (activeFilter === 'my-courses' && course.enrolled) ||
+                              course.difficulty_level === activeFilter;
         const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              course.description.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesCategory && matchesSearch;
     });
+
+    // Enroll in a course
+    const handleEnrollment = async (courseId: number) => {
+        if (!user) return;
+        
+        try {
+            const response = await fetch('/api/subjects', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: user.id,
+                    courseId
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Refresh courses data to show updated enrollment status
+                const params = new URLSearchParams({
+                    userId: user.id.toString(),
+                    ...(activeFilter !== 'all' && { difficulty: activeFilter })
+                });
+                
+                const refreshResponse = await fetch(`/api/subjects?${params}`);
+                const refreshData = await refreshResponse.json();
+                
+                if (refreshData.success) {
+                    setCourses(refreshData.courses);
+                }
+            } else {
+                alert(data.error || 'Failed to enroll in course');
+            }
+        } catch (error) {
+            console.error('Enrollment error:', error);
+            alert('Failed to enroll in course');
+        }
+    };
 
     const getProgressColor = (progress: number) => {
         if (progress === 100) return 'green';
@@ -85,9 +137,9 @@ export default function CoursesPage() {
     };
 
     // Loading state
-    if (loading) {
+    if (authLoading || loading || !user) {
         return (
-            <div className="min-h-screen py-8" style={{ background: 'var(--background-primary)' }}>
+            <div className="min-h-screen py-8 md:ml-64" style={{ background: 'var(--background-primary)' }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="animate-pulse space-y-8">
                         <div className="h-8 bg-white/20 rounded w-1/3"></div>
@@ -105,7 +157,7 @@ export default function CoursesPage() {
     // Error state
     if (error) {
         return (
-            <div className="min-h-screen py-8" style={{ background: 'var(--background-primary)' }}>
+            <div className="min-h-screen py-8 md:ml-64" style={{ background: 'var(--background-primary)' }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="card border-red-200 bg-red-50">
                         <h2 className="text-red-800 font-semibold mb-2">Error Loading Courses</h2>
@@ -123,16 +175,16 @@ export default function CoursesPage() {
     }
 
     return (
-        <div className="min-h-screen py-8" style={{ background: 'var(--background-primary)' }}>
+        <div className="min-h-screen py-8 md:ml-64" style={{ background: 'var(--background-primary)' }}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">📚 Course Library</h1>
-                    <p className="text-white/80">Explore courses and master skill trees with different levels and prerequisites!</p>
+                <div className="mb-8 bg-white/80 rounded-lg p-4">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">📚 Course Library</h1>
+                    <p className="text-gray-700">Welcome back, {user?.username}! Explore courses and master skill trees with different levels and prerequisites!</p>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                     <div className="card">
                         <div className="flex items-center">
                             <div className="text-3xl mr-3">📖</div>
@@ -152,6 +204,18 @@ export default function CoursesPage() {
                                 <p className="text-sm text-gray-600">In Progress</p>
                                 <p className="text-2xl font-bold text-orange-600">
                                     {courses.filter(c => c.enrolled && c.progress_percentage > 0 && c.progress_percentage < 100).length}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="card">
+                        <div className="flex items-center">
+                            <div className="text-3xl mr-3">✅</div>
+                            <div>
+                                <p className="text-sm text-gray-600">Completed Courses</p>
+                                <p className="text-2xl font-bold text-green-600">
+                                    {courses.filter(c => c.enrolled && c.progress_percentage === 100).length}
                                 </p>
                             </div>
                         </div>
@@ -193,7 +257,7 @@ export default function CoursesPage() {
                                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                                 >
-                                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                                    {category === 'my-courses' ? 'My Courses' : category.charAt(0).toUpperCase() + category.slice(1)}
                                 </button>
                             ))}
                         </div>
@@ -252,10 +316,7 @@ export default function CoursesPage() {
                                     </button>
                                 ) : (
                                     <button 
-                                        onClick={() => {
-                                            // Enroll in course
-                                            console.log('Enrolling in course:', course.id);
-                                        }}
+                                        onClick={() => handleEnrollment(course.id)}
                                         className="flex-1 btn btn-success"
                                     >
                                         Enroll Now
