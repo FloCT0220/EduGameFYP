@@ -12,7 +12,7 @@ export default function Navigation() {
         { name: 'Dashboard', path: '/dashboard', icon: '🏠' },
         { name: 'Courses', path: '/courses', icon: '📚' },
         { name: 'Coding Simulators', path: '/coding-sim', icon: '🖥️' },
-        { name: 'Leaderboard', path: '/dashboard?tab=leaderboard', icon: '🏅' },
+        { name: 'Leaderboard', path: '/leaderboard', icon: '🏅' },
     ];
 
     const adminNavItems = [
@@ -24,10 +24,13 @@ export default function Navigation() {
         return null; // Don't show navigation on landing and auth pages
     }
 
-    // Check if we should show sidebar (on dashboard or courses pages)
+    // Check if we should show sidebar (on main app pages)
     const shouldShowSidebar = pathname === '/dashboard' || 
                              pathname === '/courses' || 
                              pathname.startsWith('/courses/') ||
+                             pathname === '/coding-sim' ||
+                             pathname === '/leaderboard' ||
+                             pathname === '/profile' ||
                              pathname.startsWith('/admin/dashboard');
 
     if (!shouldShowSidebar) {
@@ -59,19 +62,15 @@ export default function Navigation() {
                     <div className="space-y-2 px-3">
                         {navItems.map((item) => {
                             const isActive = pathname === item.path || 
-                                           (item.path.includes('?tab=') && pathname === '/dashboard') ||
                                            (item.path === '/dashboard' && pathname === '/dashboard') ||
                                            (item.path === '/courses' && pathname.startsWith('/courses')) ||
-                                           (item.path.includes('tab=leaderboard') && pathname === '/dashboard');
+                                           (item.path === '/leaderboard' && pathname === '/leaderboard');
                             
                             return (
                                 <button
                                     key={item.path}
                                     onClick={() => {
-                                        if (item.path.includes('?tab=')) {
-                                            const tab = item.path.split('?tab=')[1];
-                                            router.push(`/dashboard?tab=${tab}`);
-                                        } else if (item.path === '/quiz') {
+                                        if (item.path === '/quiz') {
                                             // For general quiz access from nav, use default parameters
                                             router.push('/quiz?courseId=1&nodeId=general&nodeName=General Knowledge Quiz');
                                         } else {
@@ -92,21 +91,35 @@ export default function Navigation() {
                     </div>
                 </div>
 
-                {/* User Info and Logout */}
+                {/* User Info and Actions */}
                 <div className="border-t border-blue-700 p-4">
-                    <div className="mb-3">
-                        <div className="text-xs text-white/60 mb-1">Welcome back</div>
-                        <div className="text-sm text-white font-medium truncate">
-                            {user?.username}
+                    {/* Profile Link */}
+                    <button
+                        onClick={() => router.push('/profile')}
+                        className={`w-full flex items-center space-x-3 px-3 py-2 mb-3 text-sm rounded-lg transition-all duration-200 ${
+                            pathname === '/profile'
+                                ? 'bg-white/20 text-white shadow-lg'
+                                : 'text-white/80 hover:text-white hover:bg-white/10'
+                        }`}
+                    >
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {user?.username?.charAt(0).toUpperCase()}
                         </div>
-                    </div>
+                        <div className="flex-1 text-left">
+                            <div className="text-sm font-medium truncate">{user?.username}</div>
+                            <div className="text-xs text-white/60">View Profile</div>
+                        </div>
+                    </button>
                     
+                    {/* Logout Button */}
                     <button
                         onClick={() => {
-                            logout();
-                            router.push('/');
+                            if (confirm('Are you sure you want to logout?')) {
+                                logout();
+                                router.push('/');
+                            }
                         }}
-                        className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-white/80 hover:text-red-200 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                        className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-white/80 hover:text-red-200 hover:bg-red-500/20 rounded-lg transition-all duration-200 border border-red-500/30"
                     >
                         <span className="text-lg">🚪</span>
                         <span>Logout</span>

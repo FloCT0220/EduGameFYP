@@ -14,12 +14,17 @@ export const insertDefaultData = async () => {
 
     if ((adminExists as mysql.RowDataPacket[]).length === 0) {
       // Create default admin user
-      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const hashedPassword = await bcrypt.hash('123', 10);
+      const hashedPasswordUser = await bcrypt.hash('123', 10);
       
       await pool.execute(
-        'INSERT INTO users (username, email, password, role, level, experience_points, total_points) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        ['admin', 'admin@example.com', hashedPassword, 'admin', 10, 1000, 1000]
+        'INSERT INTO users (username, email, password, role, level, experience_points, total_points) VALUES (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?)',
+        [
+          'admin', 'admin@email.com', hashedPassword, 'admin', 10, 1000, 1000,
+          'user', 'user@email.com', hashedPasswordUser, 'student', 0, 0, 0
+        ]
       );
+      
       console.log('✅ Default admin user created');
     }
 

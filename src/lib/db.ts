@@ -59,7 +59,7 @@ const createTables = async () => {
       username VARCHAR(50) UNIQUE NOT NULL,
       email VARCHAR(100) UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
-      role ENUM('student', 'admin', 'instructor') DEFAULT 'student',
+      role ENUM('student', 'admin') DEFAULT 'student',
       avatar_url VARCHAR(255),
       bio TEXT,
       level INT DEFAULT 1,
@@ -404,11 +404,10 @@ const createTables = async () => {
         ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       `);
       console.log('✅ Added updated_at column to user_enrollments');
-    } else {
-      console.log('ℹ️ updated_at column already exists in user_enrollments');
     }
+
   } catch (error) {
-    console.log('ℹ️ Error checking/adding updated_at column:', error);
+    console.log('ℹ️ Error checking/adding columns:', error);
   }
 };
 
