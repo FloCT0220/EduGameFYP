@@ -143,13 +143,15 @@ export default function TopicContentPage() {
         try {
             const timeSpent = Math.floor((Date.now() - readingStartTime) / 1000 / 60); // in minutes
             
+            const token = localStorage.getItem('authToken');
+            
             const response = await fetch(`/api/quiz/submit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    userId: user?.id,
                     courseId: parseInt(courseId),
                     topicId: topicId,
                     answers: answers,

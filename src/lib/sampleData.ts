@@ -42,7 +42,14 @@ export const insertDefaultData = async () => {
         ['Course Finisher', 'Complete your first course', '🏆', 'gold', 200, 'completion'],
         ['Speed Learner', 'Complete 5 lessons in one day', '⚡', 'orange', 50, 'speed'],
         ['Persistent Learner', 'Study for 7 days in a row', '🔥', 'red', 100, 'habits'],
-        ['Knowledge Seeker', 'Complete 10 quizzes', '📚', 'indigo', 150, 'assessment']
+        ['Knowledge Seeker', 'Complete 10 quizzes', '📚', 'indigo', 150, 'assessment'],
+        // Coding achievements
+        ['First Code', 'Submit your first coding solution', '💻', 'blue', 0, 'coding'],
+        ['Bug Squasher', 'Fix a runtime error', '🐛', 'red', 10, 'coding'],
+        ['Speed Coder', 'Solve a challenge in under 5 minutes', '⚡', 'yellow', 20, 'coding'],
+        ['Algorithm Master', 'Solve 10 coding challenges', '🧮', 'purple', 50, 'coding'],
+        ['Code Warrior', 'Solve challenges in 3 different languages', '⚔️', 'orange', 30, 'coding'],
+        ['Perfect Score', 'Get 100% on a hard challenge', '🎯', 'gold', 40, 'coding']
       ];
 
       for (const achievement of defaultAchievements) {
@@ -220,6 +227,232 @@ export const insertDefaultData = async () => {
         );
       }
       console.log('✅ Sample quiz questions created');
+    }
+
+    // Insert coding challenges sample data
+    const [codingChallengesExist] = await pool.execute(
+      'SELECT id FROM coding_challenges LIMIT 1'
+    );
+
+    if ((codingChallengesExist as mysql.RowDataPacket[]).length === 0) {
+      const [adminUser] = await pool.execute(
+        'SELECT id FROM users WHERE role = "admin" LIMIT 1'
+      ) as [mysql.RowDataPacket[], mysql.FieldPacket[]];
+
+      if (adminUser.length > 0) {
+        const adminId = adminUser[0].id;
+
+        // Sample coding challenges
+        const codingChallenges = [
+          [
+            'Two Sum',
+            'Find two numbers in an array that add up to a target sum.',
+            'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.',
+            'easy',
+            10, 20, 50, 300, 256,
+            JSON.stringify(['python', 'javascript', 'java', 'cpp', 'c']),
+            JSON.stringify({
+              python: 'def two_sum(nums, target):\n    # Your solution here\n    pass',
+              javascript: 'function twoSum(nums, target) {\n    // Your solution here\n}',
+              java: 'public int[] twoSum(int[] nums, int target) {\n    // Your solution here\n    return new int[0];\n}',
+              cpp: '#include <vector>\nusing namespace std;\n\nvector<int> twoSum(vector<int>& nums, int target) {\n    // Your solution here\n    return {};\n}',
+              c: '#include <stdio.h>\n#include <stdlib.h>\n\nint* twoSum(int* nums, int numsSize, int target, int* returnSize) {\n    // Your solution here\n    return NULL;\n}'
+            }),
+            '1 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9\n-10^9 <= target <= 10^9\nOnly one valid answer exists.',
+            JSON.stringify([
+              { input: '[2,7,11,15], target=9', output: '[0,1]', explanation: 'nums[0] + nums[1] = 2 + 7 = 9' },
+              { input: '[3,2,4], target=6', output: '[1,2]', explanation: 'nums[1] + nums[2] = 2 + 4 = 6' }
+            ]),
+            'Try using a hash map to store the numbers you\'ve seen and their indices.',
+            JSON.stringify(['array', 'hash-table', 'easy']),
+            adminId, true
+          ],
+          [
+            'Add Two Numbers',
+            'Add two numbers represented as linked lists.',
+            'You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list.\n\nYou may assume the two numbers do not contain any leading zero, except the number 0 itself.',
+            'intermediate',
+            10, 20, 50, 300, 256,
+            JSON.stringify(['python', 'javascript', 'java', 'cpp']),
+            JSON.stringify({
+              python: 'class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\ndef add_two_numbers(l1, l2):\n    # Your solution here\n    pass',
+              javascript: 'function ListNode(val, next) {\n    this.val = (val===undefined ? 0 : val)\n    this.next = (next===undefined ? null : next)\n}\n\nfunction addTwoNumbers(l1, l2) {\n    // Your solution here\n}',
+              java: 'public class ListNode {\n    int val;\n    ListNode next;\n    ListNode() {}\n    ListNode(int val) { this.val = val; }\n    ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n}\n\npublic ListNode addTwoNumbers(ListNode l1, ListNode l2) {\n    // Your solution here\n    return null;\n}',
+              cpp: 'struct ListNode {\n    int val;\n    ListNode *next;\n    ListNode() : val(0), next(nullptr) {}\n    ListNode(int x) : val(x), next(nullptr) {}\n    ListNode(int x, ListNode *next) : val(x), next(next) {}\n};\n\nListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {\n    // Your solution here\n    return nullptr;\n}'
+            }),
+            'The number of nodes in each linked list is in the range [1, 100].\n0 <= Node.val <= 9\nIt is guaranteed that the list represents a number that does not have leading zeros.',
+            JSON.stringify([
+              { input: 'l1 = [2,4,3], l2 = [5,6,4]', output: '[7,0,8]', explanation: '342 + 465 = 807' },
+              { input: 'l1 = [0], l2 = [0]', output: '[0]', explanation: '0 + 0 = 0' }
+            ]),
+            'Remember to handle the carry when the sum of two digits is greater than 9.',
+            JSON.stringify(['linked-list', 'math', 'recursion', 'intermediate']),
+            adminId, true
+          ],
+          [
+            'Reverse String',
+            'Write a function that reverses a string.',
+            'Write a function that reverses a string. The input string is given as an array of characters s.\n\nYou must do this by modifying the input array in-place with O(1) extra memory.',
+            'easy',
+            10, 20, 50, 300, 256,
+            JSON.stringify(['python', 'javascript', 'java', 'cpp', 'c']),
+            JSON.stringify({
+              python: 'def reverse_string(s):\n    # Your solution here\n    pass',
+              javascript: 'function reverseString(s) {\n    // Your solution here\n}',
+              java: 'public void reverseString(char[] s) {\n    // Your solution here\n}',
+              cpp: '#include <vector>\nusing namespace std;\n\nvoid reverseString(vector<char>& s) {\n    // Your solution here\n}',
+              c: '#include <stdio.h>\n\nvoid reverseString(char* s, int sSize) {\n    // Your solution here\n}'
+            }),
+            '1 <= s.length <= 10^5\ns[i] is a printable ascii character.',
+            JSON.stringify([
+              { input: 's = ["h","e","l","l","o"]', output: '["o","l","l","e","h"]', explanation: 'Reverse the array of characters' },
+              { input: 's = ["H","a","n","n","a","h"]', output: '["h","a","n","n","a","H"]', explanation: 'Reverse the array of characters' }
+            ]),
+            'Use two pointers approach - one from the start and one from the end.',
+            JSON.stringify(['two-pointers', 'string', 'easy']),
+            adminId, true
+          ],
+          [
+            'Maximum Subarray',
+            'Find the contiguous subarray with the largest sum.',
+            'Given an integer array nums, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.\n\nA subarray is a contiguous part of an array.',
+            'intermediate',
+            10, 20, 50, 300, 256,
+            JSON.stringify(['python', 'javascript', 'java', 'cpp']),
+            JSON.stringify({
+              python: 'def max_subarray(nums):\n    # Your solution here\n    pass',
+              javascript: 'function maxSubArray(nums) {\n    // Your solution here\n}',
+              java: 'public int maxSubArray(int[] nums) {\n    // Your solution here\n    return 0;\n}',
+              cpp: '#include <vector>\nusing namespace std;\n\nint maxSubArray(vector<int>& nums) {\n    // Your solution here\n    return 0;\n}'
+            }),
+            '1 <= nums.length <= 10^5\n-10^4 <= nums[i] <= 10^4',
+            JSON.stringify([
+              { input: 'nums = [-2,1,-3,4,-1,2,1,-5,4]', output: '6', explanation: '[4,-1,2,1] has the largest sum = 6' },
+              { input: 'nums = [1]', output: '1', explanation: 'Single element' }
+            ]),
+            'Consider using Kadane\'s algorithm for an efficient O(n) solution.',
+            JSON.stringify(['array', 'divide-and-conquer', 'dynamic-programming', 'intermediate']),
+            adminId, true
+          ],
+          [
+            'Binary Tree Inorder Traversal',
+            'Return the inorder traversal of a binary tree.',
+            'Given the root of a binary tree, return the inorder traversal of its nodes\' values.\n\nInorder traversal visits nodes in this order: left subtree, root, right subtree.',
+            'hard',
+            10, 20, 50, 300, 256,
+            JSON.stringify(['python', 'javascript', 'java', 'cpp']),
+            JSON.stringify({
+              python: 'class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef inorder_traversal(root):\n    # Your solution here\n    pass',
+              javascript: 'function TreeNode(val, left, right) {\n    this.val = (val===undefined ? 0 : val)\n    this.left = (left===undefined ? null : left)\n    this.right = (right===undefined ? null : right)\n}\n\nfunction inorderTraversal(root) {\n    // Your solution here\n}',
+              java: 'public class TreeNode {\n    int val;\n    TreeNode left;\n    TreeNode right;\n    TreeNode() {}\n    TreeNode(int val) { this.val = val; }\n    TreeNode(int val, TreeNode left, TreeNode right) {\n        this.val = val;\n        this.left = left;\n        this.right = right;\n    }\n}\n\npublic List<Integer> inorderTraversal(TreeNode root) {\n    // Your solution here\n    return new ArrayList<>();\n}',
+              cpp: 'struct TreeNode {\n    int val;\n    TreeNode *left;\n    TreeNode *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n};\n\nvector<int> inorderTraversal(TreeNode* root) {\n    // Your solution here\n    return {};\n}'
+            }),
+            'The number of nodes in the tree is in the range [0, 100].\n-100 <= Node.val <= 100',
+            JSON.stringify([
+              { input: 'root = [1,null,2,3]', output: '[1,3,2]', explanation: 'Inorder: left, root, right' },
+              { input: 'root = []', output: '[]', explanation: 'Empty tree' }
+            ]),
+            'Try both recursive and iterative approaches. For iterative, use a stack.',
+            JSON.stringify(['stack', 'tree', 'depth-first-search', 'binary-tree', 'hard']),
+            adminId, true
+          ]
+        ];
+
+        // Insert coding challenges
+        for (const challenge of codingChallenges) {
+          await pool.execute(
+            `INSERT INTO coding_challenges 
+            (title, description, problem_statement, difficulty, points_easy, points_intermediate, points_hard, 
+             time_limit, memory_limit, supported_languages, function_signature, constraints, examples, hints, tags, created_by, is_active) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            challenge
+          );
+        }
+        console.log('✅ Coding challenges created');
+
+        // Insert test cases for each challenge
+        const testCases = [
+          // Two Sum (Challenge 1)
+          [1, '[2,7,11,15]\n9', '[0,1]', true, false, 1.0],
+          [1, '[3,2,4]\n6', '[1,2]', true, false, 1.0],
+          [1, '[3,3]\n6', '[0,1]', false, true, 1.0],
+          [1, '[1,2,3,4,5]\n9', '[3,4]', false, true, 1.0],
+          [1, '[-1,-2,-3,-4,-5]\n-8', '[2,4]', false, true, 1.0],
+
+          // Add Two Numbers (Challenge 2)
+          [2, '[2,4,3]\n[5,6,4]', '[7,0,8]', true, false, 1.0],
+          [2, '[0]\n[0]', '[0]', true, false, 1.0],
+          [2, '[9,9,9,9,9,9,9]\n[9,9,9,9]', '[8,9,9,9,0,0,0,1]', false, true, 1.0],
+          [2, '[1,2,3]\n[4,5,6]', '[5,7,9]', false, true, 1.0],
+
+          // Reverse String (Challenge 3)
+          [3, '["h","e","l","l","o"]', '["o","l","l","e","h"]', true, false, 1.0],
+          [3, '["H","a","n","n","a","h"]', '["h","a","n","n","a","H"]', true, false, 1.0],
+          [3, '["a"]', '["a"]', false, true, 1.0],
+          [3, '["a","b"]', '["b","a"]', false, true, 1.0],
+          [3, '["1","2","3","4","5"]', '["5","4","3","2","1"]', false, true, 1.0],
+
+          // Maximum Subarray (Challenge 4)
+          [4, '[-2,1,-3,4,-1,2,1,-5,4]', '6', true, false, 1.0],
+          [4, '[1]', '1', true, false, 1.0],
+          [4, '[5,4,-1,7,8]', '23', false, true, 1.0],
+          [4, '[-2,-1]', '-1', false, true, 1.0],
+          [4, '[-1,-2,-3,-4]', '-1', false, true, 1.0],
+
+          // Binary Tree Inorder Traversal (Challenge 5)
+          [5, '[1,null,2,3]', '[1,3,2]', true, false, 1.0],
+          [5, '[]', '[]', true, false, 1.0],
+          [5, '[1]', '[1]', false, true, 1.0],
+          [5, '[1,2,3,4,5,null,6]', '[4,2,5,1,3,6]', false, true, 1.0],
+          [5, '[1,2,3,null,null,4,5]', '[2,1,4,3,5]', false, true, 1.0]
+        ];
+
+        for (const testCase of testCases) {
+          await pool.execute(
+            'INSERT INTO coding_test_cases (challenge_id, input_data, expected_output, is_sample, is_hidden, weight) VALUES (?, ?, ?, ?, ?, ?)',
+            testCase
+          );
+        }
+        console.log('✅ Test cases created');
+
+        // Create sample submissions
+        const [studentUser] = await pool.execute(
+          'SELECT id FROM users WHERE role = "student" LIMIT 1'
+        ) as [mysql.RowDataPacket[], mysql.FieldPacket[]];
+
+        if (studentUser.length > 0) {
+          const studentId = studentUser[0].id;
+
+          const sampleSubmissions = [
+            // Student submissions for Two Sum
+            [studentId, 1, 'python', 'def two_sum(nums, target):\n    for i in range(len(nums)):\n        for j in range(i+1, len(nums)):\n            if nums[i] + nums[j] == target:\n                return [i, j]\n    return []', 'accepted', 45, 32, 5, 5, 100.0, 10, null, '[0,1]'],
+            
+            // Student submissions for Reverse String
+            [studentId, 3, 'javascript', 'function reverseString(s) {\n    let left = 0;\n    let right = s.length - 1;\n    while (left < right) {\n        [s[left], s[right]] = [s[right], s[left]];\n        left++;\n        right--;\n    }\n}', 'accepted', 12, 16, 5, 5, 100.0, 10, null, 'void']
+          ];
+
+          for (const submission of sampleSubmissions) {
+            await pool.execute(
+              `INSERT INTO coding_submissions 
+              (user_id, challenge_id, language, source_code, status, execution_time, memory_used, 
+               test_cases_passed, test_cases_total, score, points_earned, error_message, output_data) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              submission
+            );
+          }
+          console.log('✅ Sample submissions created');
+
+          // Initialize user coding stats
+          await pool.execute(
+            `INSERT INTO user_coding_stats 
+            (user_id, challenges_attempted, challenges_solved, total_submissions, easy_solved, 
+             intermediate_solved, hard_solved, total_coding_points, average_attempts, best_streak, current_streak) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [studentId, 2, 2, 2, 2, 0, 0, 20, 1.0, 2, 2]
+          );
+          console.log('✅ User coding stats initialized');
+        }
+      }
     }
 
     console.log('✅ Default data inserted successfully');

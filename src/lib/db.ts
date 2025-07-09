@@ -134,26 +134,6 @@ const createTables = async () => {
       INDEX idx_completion (completed)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // Quizzes table
-    `CREATE TABLE IF NOT EXISTS quizzes (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      topic_id INT,
-      course_id INT,
-      title VARCHAR(200) NOT NULL,
-      description TEXT,
-      time_limit_minutes INT DEFAULT 30,
-      passing_score INT DEFAULT 70,
-      points_reward INT DEFAULT 20,
-      attempts_allowed INT DEFAULT 3,
-      is_published BOOLEAN DEFAULT TRUE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-      INDEX idx_topic (topic_id),
-      INDEX idx_course (course_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
     // Quiz questions table
     `CREATE TABLE IF NOT EXISTS quiz_questions (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -250,29 +230,6 @@ const createTables = async () => {
       INDEX idx_question (question_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // Quiz questions table
-    `CREATE TABLE IF NOT EXISTS quiz_questions (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      question_id VARCHAR(50) NOT NULL,
-      subject_id INT NOT NULL,
-      node_id VARCHAR(50) NOT NULL,
-      question TEXT NOT NULL,
-      option_a VARCHAR(500) NOT NULL,
-      option_b VARCHAR(500) NOT NULL,
-      option_c VARCHAR(500) NOT NULL,
-      option_d VARCHAR(500) NOT NULL,
-      correct_answer INT NOT NULL CHECK (correct_answer BETWEEN 0 AND 3),
-      points INT DEFAULT 10,
-      difficulty ENUM('easy', 'medium', 'hard') DEFAULT 'easy',
-      explanation TEXT,
-      is_active BOOLEAN DEFAULT TRUE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (subject_id) REFERENCES courses(id) ON DELETE CASCADE,
-      UNIQUE KEY unique_question_id (question_id),
-      INDEX idx_subject_node (subject_id, node_id),
-      INDEX idx_active (is_active)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
     // Achievements table
     `CREATE TABLE IF NOT EXISTS achievements (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -299,29 +256,6 @@ const createTables = async () => {
       UNIQUE KEY unique_user_achievement (user_id, achievement_id),
       INDEX idx_user (user_id),
       INDEX idx_achievement (achievement_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-    // Skill tree nodes table
-    `CREATE TABLE IF NOT EXISTS skill_tree_nodes (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      course_id INT NOT NULL,
-      topic_id INT NOT NULL,
-      node_id VARCHAR(50) NOT NULL,
-      title VARCHAR(200) NOT NULL,
-      description TEXT,
-      lesson_order INT NOT NULL,
-      points_reward INT DEFAULT 10,
-      parent_node_id VARCHAR(50),
-      left_child_id VARCHAR(50),
-      right_child_id VARCHAR(50),
-      is_root BOOLEAN DEFAULT FALSE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
-      UNIQUE KEY unique_course_node (course_id, node_id),
-      INDEX idx_course (course_id),
-      INDEX idx_topic (topic_id),
-      INDEX idx_parent (parent_node_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
     // Daily activity log
@@ -354,26 +288,108 @@ const createTables = async () => {
       INDEX idx_date (streak_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // Coding Challenges table
+    // Coding challenges table
     `CREATE TABLE IF NOT EXISTS coding_challenges (
       id INT AUTO_INCREMENT PRIMARY KEY,
       title VARCHAR(255) NOT NULL,
-      prompt TEXT NOT NULL,
-      starter_code_py TEXT,
-      starter_code_js TEXT,
-      starter_code_c TEXT,
+      description TEXT NOT NULL,
+      problem_statement TEXT NOT NULL,
+      difficulty ENUM('easy', 'intermediate', 'hard') NOT NULL DEFAULT 'easy',
+      points_easy INT DEFAULT 10,
+      points_intermediate INT DEFAULT 20,
+      points_hard INT DEFAULT 50,
+      time_limit INT DEFAULT 300,
+      memory_limit INT DEFAULT 256,
+      supported_languages JSON NOT NULL,
+      function_signature JSON,
+      constraints TEXT,
+      examples JSON,
+      hints TEXT,
+      tags JSON,
+      created_by INT NOT NULL,
+      is_active BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_difficulty (difficulty),
+      INDEX idx_active (is_active),
+      INDEX idx_created_by (created_by)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // Coding Challenge Testcases table
-    `CREATE TABLE IF NOT EXISTS coding_challenge_testcases (
+    // Test cases for coding challenges
+    `CREATE TABLE IF NOT EXISTS coding_test_cases (
       id INT AUTO_INCREMENT PRIMARY KEY,
       challenge_id INT NOT NULL,
-      input TEXT NOT NULL,
+      input_data TEXT NOT NULL,
       expected_output TEXT NOT NULL,
       is_sample BOOLEAN DEFAULT FALSE,
-      FOREIGN KEY (challenge_id) REFERENCES coding_challenges(id) ON DELETE CASCADE
+      is_hidden BOOLEAN DEFAULT TRUE,
+      weight DECIMAL(3,2) DEFAULT 1.00,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (challenge_id) REFERENCES coding_challenges(id) ON DELETE CASCADE,
+      INDEX idx_challenge (challenge_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+    // User coding submissions
+    `CREATE TABLE IF NOT EXISTS coding_submissions (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      challenge_id INT NOT NULL,
+      language VARCHAR(20) NOT NULL,
+      source_code TEXT NOT NULL,
+      status ENUM('pending', 'running', 'accepted', 'wrong_answer', 'time_limit_exceeded', 'memory_limit_exceeded', 'runtime_error', 'compilation_error') DEFAULT 'pending',
+      execution_time INT,
+      memory_used INT,
+      test_cases_passed INT DEFAULT 0,
+      test_cases_total INT DEFAULT 0,
+      score DECIMAL(5,2) DEFAULT 0.00,
+      points_earned INT DEFAULT 0,
+      error_message TEXT,
+      output_data TEXT,
+      submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      judged_at TIMESTAMP NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (challenge_id) REFERENCES coding_challenges(id) ON DELETE CASCADE,
+      INDEX idx_user (user_id),
+      INDEX idx_challenge (challenge_id),
+      INDEX idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+    // Test case results for each submission
+    `CREATE TABLE IF NOT EXISTS coding_submission_results (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      submission_id INT NOT NULL,
+      test_case_id INT NOT NULL,
+      status ENUM('passed', 'failed', 'error', 'timeout') NOT NULL,
+      execution_time INT,
+      memory_used INT,
+      actual_output TEXT,
+      error_message TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (submission_id) REFERENCES coding_submissions(id) ON DELETE CASCADE,
+      FOREIGN KEY (test_case_id) REFERENCES coding_test_cases(id) ON DELETE CASCADE,
+      INDEX idx_submission (submission_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+    // User coding statistics
+    `CREATE TABLE IF NOT EXISTS user_coding_stats (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      challenges_attempted INT DEFAULT 0,
+      challenges_solved INT DEFAULT 0,
+      total_submissions INT DEFAULT 0,
+      easy_solved INT DEFAULT 0,
+      intermediate_solved INT DEFAULT 0,
+      hard_solved INT DEFAULT 0,
+      total_coding_points INT DEFAULT 0,
+      average_attempts DECIMAL(4,2) DEFAULT 0.00,
+      best_streak INT DEFAULT 0,
+      current_streak INT DEFAULT 0,
+      last_submission_at TIMESTAMP NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY unique_user_stats (user_id),
+      INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
   ];
 
@@ -410,8 +426,6 @@ const createTables = async () => {
     console.log('ℹ️ Error checking/adding columns:', error);
   }
 };
-
-
 
 // Enhanced query function with auto-initialization
 export const query = async (sql: string, params?: (string | number | boolean | null | Date)[]) => {

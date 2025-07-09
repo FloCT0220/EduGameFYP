@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { verifyToken } from '@/lib/auth';
+import { QuizService } from '@/lib/services/quizService';
 
 interface QuizAnswer {
     questionId: string;
@@ -7,7 +9,6 @@ interface QuizAnswer {
 }
 
 interface QuizSubmission {
-    userId: number;
     courseId: number;
     topicId: string;
     answers: QuizAnswer[];
@@ -16,24 +17,30 @@ interface QuizSubmission {
 
 export async function POST(request: NextRequest) {
     try {
+        // Extract and verify user from authentication token
+        const token = request.headers.get('authorization')?.replace('Bearer ', '');
+        const user = verifyToken(token || '');
+        
+        if (!user) {
+            return NextResponse.json(
+                { error: 'Unauthorized' }, 
+                { status: 401 }
+            );
+        }
+        
+        const userId = user.id;
         const body: QuizSubmission = await request.json();
-        const { userId, courseId, topicId, answers, timeSpent } = body;
+        const { courseId, topicId, answers, timeSpent } = body;
 
-        if (!userId || !courseId || !topicId || !answers || !Array.isArray(answers)) {
+        if (!courseId || !topicId || !answers || !Array.isArray(answers)) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
 
-        // Get all quiz questions for this topic
-        const questionsQuery = `
-            SELECT question_id, correct_answer, points, difficulty
-            FROM quiz_questions
-            WHERE subject_id = ? AND node_id = ? AND is_active = true
-        `;
-
-        const questions = await query(questionsQuery, [courseId, topicId.toString()]);
+        // Get cumulative quiz questions (current + all previous topics)
+        const questions = await QuizService.getCumulativeQuizQuestions(courseId, parseInt(topicId));
 
         if (!questions || questions.length === 0) {
             return NextResponse.json(
