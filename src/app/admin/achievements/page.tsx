@@ -4,19 +4,19 @@ import { useEffect, useState } from "react";
 
 interface Achievement {
   id: number;
-  title: string;
+  name: string;
   description: string;
-  icon: string;
-  type: "streak" | "points" | "completion" | "speed" | "accuracy" | "level";
-  requirement_value: number;
-  points_reward: number;
-  rarity: "common" | "rare" | "epic" | "legendary";
+  icon_url: string;
+  badge_color: string;
+  points_required: number;
+  category: string;
   is_active: boolean;
+  created_at?: string;
 }
 
-// Define types for AchievementType and Rarity
-type AchievementType = "streak" | "points" | "completion" | "speed" | "accuracy" | "level";
-type Rarity = "common" | "rare" | "epic" | "legendary";
+// Define types for Category and BadgeColor
+type Category = "streak" | "points" | "completion" | "speed" | "accuracy" | "level";
+type BadgeColor = "blue" | "green" | "purple" | "yellow" | "red";
 
 export default function AdminAchievements() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -24,13 +24,12 @@ export default function AdminAchievements() {
   const [showForm, setShowForm] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
   const [formData, setFormData] = useState({
-    title: "",
+    name: "",
     description: "",
-    icon: "🏆",
-    type: "streak" as AchievementType,
-    requirement_value: 1,
-    points_reward: 0,
-    rarity: "common" as Rarity,
+    icon_url: "🏆",
+    badge_color: "blue" as BadgeColor,
+    points_required: 0,
+    category: "streak" as Category,
     is_active: true,
   });
 
@@ -67,13 +66,12 @@ export default function AdminAchievements() {
         setShowForm(false);
         setEditingAchievement(null);
         setFormData({
-          title: "",
+          name: "",
           description: "",
-          icon: "🏆",
-          type: "streak",
-          requirement_value: 1,
-          points_reward: 0,
-          rarity: "common",
+          icon_url: "🏆",
+          badge_color: "blue",
+          points_required: 0,
+          category: "streak",
           is_active: true,
         });
         fetchAchievements();
@@ -86,13 +84,12 @@ export default function AdminAchievements() {
   const handleEdit = (achievement: Achievement) => {
     setEditingAchievement(achievement);
     setFormData({
-      title: achievement.title,
+      name: achievement.name,
       description: achievement.description,
-      icon: achievement.icon,
-      type: achievement.type as AchievementType,
-      requirement_value: achievement.requirement_value,
-      points_reward: achievement.points_reward,
-      rarity: achievement.rarity as Rarity,
+      icon_url: achievement.icon_url,
+      badge_color: achievement.badge_color as BadgeColor,
+      points_required: achievement.points_required,
+      category: achievement.category as Category,
       is_active: achievement.is_active,
     });
     setShowForm(true);
@@ -138,11 +135,11 @@ export default function AdminAchievements() {
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                     <input
                       type="text"
-                      value={formData.title}
-                      onChange={e => setFormData({ ...formData, title: e.target.value })}
+                      value={formData.name}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
                       className="w-full p-2 border border-gray-300 rounded-lg"
                       required
                     />
@@ -161,17 +158,17 @@ export default function AdminAchievements() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
                     <input
                       type="text"
-                      value={formData.icon}
-                      onChange={e => setFormData({ ...formData, icon: e.target.value })}
+                      value={formData.icon_url}
+                      onChange={e => setFormData({ ...formData, icon_url: e.target.value })}
                       className="w-full p-2 border border-gray-300 rounded-lg"
                       placeholder="🏆"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                     <select
-                      value={formData.type}
-                      onChange={e => setFormData({ ...formData, type: e.target.value as AchievementType })}
+                      value={formData.category}
+                      onChange={e => setFormData({ ...formData, category: e.target.value as Category })}
                       className="w-full p-2 border border-gray-300 rounded-lg"
                     >
                       <option value="streak">Streak</option>
@@ -183,38 +180,28 @@ export default function AdminAchievements() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Requirement Value</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Points Required</label>
                     <input
                       type="number"
-                      value={formData.requirement_value}
-                      onChange={e => setFormData({ ...formData, requirement_value: parseInt(e.target.value) })}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                      min={1}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Points Reward</label>
-                    <input
-                      type="number"
-                      value={formData.points_reward}
-                      onChange={e => setFormData({ ...formData, points_reward: parseInt(e.target.value) })}
+                      value={formData.points_required}
+                      onChange={e => setFormData({ ...formData, points_required: parseInt(e.target.value) })}
                       className="w-full p-2 border border-gray-300 rounded-lg"
                       min={0}
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Rarity</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Badge Color</label>
                     <select
-                      value={formData.rarity}
-                      onChange={e => setFormData({ ...formData, rarity: e.target.value as Rarity })}
+                      value={formData.badge_color}
+                      onChange={e => setFormData({ ...formData, badge_color: e.target.value as BadgeColor })}
                       className="w-full p-2 border border-gray-300 rounded-lg"
                     >
-                      <option value="common">Common</option>
-                      <option value="rare">Rare</option>
-                      <option value="epic">Epic</option>
-                      <option value="legendary">Legendary</option>
+                      <option value="blue">Blue</option>
+                      <option value="green">Green</option>
+                      <option value="purple">Purple</option>
+                      <option value="yellow">Yellow</option>
+                      <option value="red">Red</option>
                     </select>
                   </div>
                   <div>
@@ -235,13 +222,12 @@ export default function AdminAchievements() {
                       setShowForm(false);
                       setEditingAchievement(null);
                       setFormData({
-                        title: "",
+                        name: "",
                         description: "",
-                        icon: "🏆",
-                        type: "streak",
-                        requirement_value: 1,
-                        points_reward: 0,
-                        rarity: "common",
+                        icon_url: "🏆",
+                        badge_color: "blue",
+                        points_required: 0,
+                        category: "streak",
                         is_active: true,
                       });
                     }}
@@ -266,11 +252,10 @@ export default function AdminAchievements() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requirement</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rarity</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points Required</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Badge Color</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -279,24 +264,25 @@ export default function AdminAchievements() {
                 {achievements.map((achievement) => (
                   <tr key={achievement.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-2xl mr-2">{achievement.icon}</span>
-                      <span className="font-medium text-gray-900">{achievement.title}</span>
+                      <span className="text-2xl mr-2">{achievement.icon_url}</span>
+                      <span className="font-medium text-gray-900">{achievement.name}</span>
                       <div className="text-xs text-gray-500">{achievement.description}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{achievement.type}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{achievement.requirement_value}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{achievement.points_reward}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{achievement.category}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{achievement.points_required}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        achievement.rarity === "common"
-                          ? "bg-gray-100 text-gray-800"
-                          : achievement.rarity === "rare"
+                        achievement.badge_color === "blue"
                           ? "bg-blue-100 text-blue-800"
-                          : achievement.rarity === "epic"
+                          : achievement.badge_color === "green"
+                          ? "bg-green-100 text-green-800"
+                          : achievement.badge_color === "purple"
                           ? "bg-purple-100 text-purple-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          : achievement.badge_color === "yellow"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
                       }`}>
-                        {achievement.rarity}
+                        {achievement.badge_color}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

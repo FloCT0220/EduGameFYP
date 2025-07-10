@@ -32,11 +32,6 @@ interface DashboardData {
         earnedDate?: Date;
         rarity: 'common' | 'rare' | 'epic' | 'legendary';
     }>;
-    quizStats: {
-        totalAttempts: number;
-        averageScore: number;
-        totalPoints: number;
-    };
 }
 
 
@@ -126,7 +121,7 @@ export default function Dashboard() {
         );
     }
 
-    const { user: dashboardUser, courses, achievements, quizStats } = dashboardData;
+    const { user: dashboardUser, courses, achievements } = dashboardData;
 
     return (
         <div className="min-h-screen p-6 md:ml-64" style={{ background: 'var(--background-primary)' }}>
@@ -152,7 +147,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="card">
                         <div className="flex items-center">
                             <div className="text-3xl mr-3">🔥</div>
@@ -169,7 +164,7 @@ export default function Dashboard() {
                             <div>
                                 <h3 className="text-sm text-gray-600">Courses</h3>
                                 <p className="text-2xl font-bold text-blue-600">
-                                    {courses.filter(c => c.progress === 100).length}/{courses.length}
+                                    {courses.filter(c => c.progress >= 100 || c.completedLessons === c.totalLessons).length}/{courses.length}
                                 </p>
                             </div>
                         </div>
@@ -182,18 +177,6 @@ export default function Dashboard() {
                                 <h3 className="text-sm text-gray-600">Achievements</h3>
                                 <p className="text-2xl font-bold text-purple-600">
                                     {achievements.filter(a => a.earned).length}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="card">
-                        <div className="flex items-center">
-                            <div className="text-3xl mr-3">📊</div>
-                            <div>
-                                <h3 className="text-sm text-gray-600">Quiz Score</h3>
-                                <p className="text-2xl font-bold text-green-600">
-                                    {quizStats.averageScore}%
                                 </p>
                             </div>
                         </div>

@@ -137,7 +137,6 @@ const createTables = async () => {
     // Quiz questions table
     `CREATE TABLE IF NOT EXISTS quiz_questions (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      question_id VARCHAR(50) NOT NULL UNIQUE,
       subject_id INT NOT NULL,
       node_id VARCHAR(50) NOT NULL,
       question TEXT NOT NULL,
@@ -219,12 +218,13 @@ const createTables = async () => {
     `CREATE TABLE IF NOT EXISTS quiz_answers (
       id INT AUTO_INCREMENT PRIMARY KEY,
       attempt_id INT NOT NULL,
-      question_id VARCHAR(50) NOT NULL,
+      question_id INT NOT NULL,
       selected_answer INT,
       is_correct BOOLEAN NOT NULL,
       points_earned INT DEFAULT 0,
       time_taken INT,
       FOREIGN KEY (attempt_id) REFERENCES quiz_attempts(id) ON DELETE CASCADE,
+      FOREIGN KEY (question_id) REFERENCES quiz_questions(id) ON DELETE CASCADE,
       INDEX idx_attempt (attempt_id),
       INDEX idx_question (question_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
@@ -257,22 +257,6 @@ const createTables = async () => {
       INDEX idx_achievement (achievement_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // Daily activity log
-    `CREATE TABLE IF NOT EXISTS daily_activity (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT NOT NULL,
-      activity_date DATE NOT NULL,
-      points_earned INT DEFAULT 0,
-      lessons_completed INT DEFAULT 0,
-      quizzes_completed INT DEFAULT 0,
-      time_spent_minutes INT DEFAULT 0,
-      streak_count INT DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      UNIQUE KEY unique_user_date (user_id, activity_date),
-      INDEX idx_user (user_id),
-      INDEX idx_date (activity_date)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
     // Learning streaks table
     `CREATE TABLE IF NOT EXISTS learning_streaks (

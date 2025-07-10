@@ -24,8 +24,6 @@ interface UserProfile {
 interface UserStats {
   totalCourses: number;
   completedCourses: number;
-  totalQuizAttempts: number;
-  averageQuizScore: number;
   codingChallengesCompleted: number;
   totalAchievements: number;
 }
@@ -94,8 +92,6 @@ export default function ProfilePage() {
             setStats({
               totalCourses: dashboardData.courses?.length || 0,
               completedCourses: dashboardData.courses?.filter((c: Course) => c.progress === 100).length || 0,
-              totalQuizAttempts: dashboardData.quizStats?.totalAttempts || 0,
-              averageQuizScore: Math.round(dashboardData.quizStats?.averageScore || 0),
               codingChallengesCompleted: 0, // TODO: Add coding challenges stats
               totalAchievements: dashboardData.achievements?.filter((a: Achievement) => a.earned).length || 0
             });
@@ -288,7 +284,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white/80 rounded-lg p-6 text-center">
             <div className="text-3xl mb-2">🔥</div>
             <div className="text-2xl font-bold text-orange-600">{profile.current_streak}</div>
@@ -302,13 +298,6 @@ export default function ProfilePage() {
               {stats?.completedCourses || 0}/{stats?.totalCourses || 0}
             </div>
             <div className="text-sm text-gray-600">Courses Completed</div>
-          </div>
-
-          <div className="bg-white/80 rounded-lg p-6 text-center">
-            <div className="text-3xl mb-2">📊</div>
-            <div className="text-2xl font-bold text-green-600">{stats?.averageQuizScore || 0}%</div>
-            <div className="text-sm text-gray-600">Avg Quiz Score</div>
-            <div className="text-xs text-gray-500 mt-1">{stats?.totalQuizAttempts || 0} attempts</div>
           </div>
 
           <div className="bg-white/80 rounded-lg p-6 text-center">

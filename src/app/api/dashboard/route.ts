@@ -1,5 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UserService } from '@/lib/services/userService';
+import { UserService, UserEnrollment } from '@/lib/services/userService';
+
+interface DashboardEnrollmentData extends UserEnrollment {
+  course_title: string;
+  course_description: string;
+  total_topics: number;
+  completed_topics: number;
+}
+
+interface AchievementData {
+  name: string;
+  description: string;
+  icon_url: string;
+  badge_color: string;
+  earned_at?: Date;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,26 +49,21 @@ export async function GET(request: NextRequest) {
         streakDays: dashboardData.user.current_streak,
         maxStreak: dashboardData.user.max_streak
       },
-      courses: dashboardData.enrollments.map((enrollment: any) => ({
-        id: enrollment.subject_id,
-        name: enrollment.subject_title || 'Unknown Subject',
-        progress: enrollment.progress_percentage,
-        totalLessons: enrollment.total_nodes || 0,
-        completedLessons: enrollment.completed_nodes || 0
+      courses: (dashboardData.enrollments as DashboardEnrollmentData[]).map((enrollment: DashboardEnrollmentData) => ({
+        id: enrollment.course_id,
+        name: enrollment.course_title || 'Unknown Course',
+        progress: enrollment.progress_percentage || 0,
+        totalLessons: enrollment.total_topics || 0,
+        completedLessons: enrollment.completed_topics || 0
       })),
-      achievements: dashboardData.achievements.map(achievement => ({
-        title: achievement.title,
+      achievements: dashboardData.achievements.map((achievement: AchievementData) => ({
+        title: achievement.name,
         description: achievement.description,
-        icon: achievement.icon,
+        icon: achievement.icon_url,
         earned: !!achievement.earned_at,
         earnedDate: achievement.earned_at,
-        rarity: achievement.rarity
-      })),
-      quizStats: {
-        totalAttempts: dashboardData.quizStats.total_attempts,
-        averageScore: Math.round(dashboardData.quizStats.avg_score || 0),
-        totalPoints: dashboardData.quizStats.total_quiz_points
-      }
+        rarity: 'common' as const
+      }))
     };
 
     return NextResponse.json({

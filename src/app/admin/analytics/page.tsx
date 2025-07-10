@@ -1,7 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaUsers, FaBook, FaChartLine, FaDownload, FaCalendarAlt, FaTrophy, FaCode, FaEye } from 'react-icons/fa';
+import { FaUsers, FaBook, FaChartLine, FaCalendarAlt, FaTrophy } from 'react-icons/fa';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface AnalyticsData {
   userEngagement: {
@@ -60,20 +81,6 @@ export default function AnalyticsPage() {
     }
   };
 
-  const exportData = () => {
-    if (!analytics) return;
-    
-    const dataStr = JSON.stringify(analytics, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `analytics-${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -101,25 +108,16 @@ export default function AnalyticsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Platform Analytics</h1>
           <p className="text-gray-600 mt-1">Comprehensive insights into user engagement and performance</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-          >
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 90 days</option>
-            <option value="365">Last year</option>
-          </select>
-          <button
-            onClick={exportData}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center text-sm"
-          >
-            <FaDownload className="mr-2 h-4 w-4" />
-            Export Data
-          </button>
-        </div>
+        <select
+          value={dateRange}
+          onChange={(e) => setDateRange(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+        >
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="365">Last year</option>
+        </select>
       </div>
 
       {/* User Engagement Metrics */}
@@ -231,40 +229,52 @@ export default function AnalyticsPage() {
           <FaChartLine className="mr-2 h-5 w-5 text-indigo-600" />
           Weekly Activity Trends
         </h2>
-        <div className="space-y-4">
-          {analytics.systemUsage.weeklyActivity.map((day, index) => (
-            <div key={index} className="flex items-center space-x-4">
-              <div className="w-20 text-sm text-gray-600">{day.date}</div>
-              <div className="flex-1 flex items-center space-x-2">
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full" 
-                    style={{width: `${Math.min((day.users / Math.max(...analytics.systemUsage.weeklyActivity.map(d => d.users))) * 100, 100)}%`}}
-                  ></div>
-                </div>
-                <span className="text-sm text-blue-600 w-12">{day.users}</span>
-              </div>
-              <div className="flex-1 flex items-center space-x-2">
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-green-600 h-2 rounded-full" 
-                    style={{width: `${Math.min((day.completions / Math.max(...analytics.systemUsage.weeklyActivity.map(d => d.completions))) * 100, 100)}%`}}
-                  ></div>
-                </div>
-                <span className="text-sm text-green-600 w-12">{day.completions}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center justify-center space-x-6 mt-4 text-xs text-gray-600">
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-blue-600 rounded mr-2"></div>
-            Active Users
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-green-600 rounded mr-2"></div>
-            Course Completions
-          </div>
+        <div className="h-64">
+          <Line
+            data={{
+              labels: analytics.systemUsage.weeklyActivity.map(day => day.date),
+              datasets: [
+                {
+                  label: 'Active Users',
+                  data: analytics.systemUsage.weeklyActivity.map(day => day.users),
+                  borderColor: 'rgb(37, 99, 235)',
+                  backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                  tension: 0.4,
+                  fill: true
+                },
+                {
+                  label: 'Course Completions',
+                  data: analytics.systemUsage.weeklyActivity.map(day => day.completions),
+                  borderColor: 'rgb(22, 163, 74)',
+                  backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                  tension: 0.4,
+                  fill: true
+                }
+              ]
+            }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: 'rgba(0, 0, 0, 0.1)'
+                  }
+                },
+                x: {
+                  grid: {
+                    display: false
+                  }
+                }
+              }
+            }}
+          />
         </div>
       </div>
 
@@ -274,20 +284,58 @@ export default function AnalyticsPage() {
           <FaCalendarAlt className="mr-2 h-5 w-5 text-purple-600" />
           Peak Usage Hours
         </h2>
-        <div className="grid grid-cols-6 md:grid-cols-12 gap-2">
-          {analytics.systemUsage.peakUsageHours.map((hour) => (
-            <div key={hour.hour} className="text-center">
-              <div className="text-xs text-gray-600 mb-1">{hour.hour}:00</div>
-              <div 
-                className="bg-purple-600 rounded-sm mx-auto"
-                style={{
-                  height: `${Math.max((hour.users / Math.max(...analytics.systemUsage.peakUsageHours.map(h => h.users))) * 40, 4)}px`,
-                  width: '16px'
-                }}
-              ></div>
-              <div className="text-xs text-purple-600 mt-1">{hour.users}</div>
-            </div>
-          ))}
+        <div className="h-64">
+          <Line
+            data={{
+              labels: analytics.systemUsage.peakUsageHours.map(hour => `${hour.hour}:00`),
+              datasets: [
+                {
+                  label: 'Active Users',
+                  data: analytics.systemUsage.peakUsageHours.map(hour => hour.users),
+                  borderColor: 'rgb(147, 51, 234)',
+                  backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                  tension: 0.4,
+                  fill: true
+                }
+              ]
+            }}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false
+                },
+                tooltip: {
+                  callbacks: {
+                    title: (context) => `${context[0].label} hrs`,
+                    label: (context) => `${context.formattedValue} users`
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: {
+                    color: 'rgba(0, 0, 0, 0.1)'
+                  },
+                  title: {
+                    display: true,
+                    text: 'Active Users'
+                  }
+                },
+                x: {
+                  grid: {
+                    display: false
+                  },
+                  title: {
+                    display: true,
+                    text: 'Hour of Day'
+                  }
+                }
+              }
+            }}
+          />
         </div>
       </div>
     </div>

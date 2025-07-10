@@ -167,62 +167,62 @@ export const insertDefaultData = async () => {
     if ((quizQuestionsExist as mysql.RowDataPacket[]).length === 0) {
       const sampleQuizQuestions = [
         // Topic 1 - Understanding Variables and Data Types (Course 1, Topic ID 1)
-        ['topic-1-q1', 1, '1', 'What is a variable in programming?', 'A constant value that never changes', 'A named storage location for data', 'A mathematical function', 'A type of programming language', 1, 10, 'easy'],
-        ['topic-1-q2', 1, '1', 'Which of the following is a primitive data type?', 'Array', 'Object', 'Integer', 'Function', 2, 10, 'easy'],
-        ['topic-1-q3', 1, '1', 'What is the difference between a variable and a constant?', 'There is no difference', 'Variables can change, constants cannot', 'Constants can change, variables cannot', 'Both can change freely', 1, 15, 'medium'],
-        ['topic-1-q4', 1, '1', 'Which naming convention is considered best practice for variables?', 'using spaces', 'camelCase or snake_case', 'ALL_CAPS', 'random-symbols', 1, 15, 'medium'],
+        [1, '1', 'What is a variable in programming?', 'A constant value that never changes', 'A named storage location for data', 'A mathematical function', 'A type of programming language', 1, 10, 'easy'],
+        [1, '1', 'Which of the following is a primitive data type?', 'Array', 'Object', 'Integer', 'Function', 2, 10, 'easy'],
+        [1, '1', 'What is the difference between a variable and a constant?', 'There is no difference', 'Variables can change, constants cannot', 'Constants can change, variables cannot', 'Both can change freely', 1, 15, 'medium'],
+        [1, '1', 'Which naming convention is considered best practice for variables?', 'using spaces', 'camelCase or snake_case', 'ALL_CAPS', 'random-symbols', 1, 15, 'medium'],
 
         // Topic 2 - HTML Basics (Course 2, Topic ID 2)
-        ['topic-2-q1', 2, '2', 'What does HTML stand for?', 'Hyper Text Markup Language', 'High Tech Modern Language', 'Home Tool Markup Language', 'Hyperlink Text Markup Language', 0, 10, 'easy'],
-        ['topic-2-q2', 2, '2', 'Which HTML tag is used to define the main content of a document?', '<body>', '<main>', '<content>', '<section>', 0, 10, 'easy'],
-        ['topic-2-q3', 2, '2', 'What is the correct syntax for creating a link in HTML?', '<a href="url">Link text</a>', '<link url="url">Link text</link>', '<a src="url">Link text</a>', '<href="url">Link text</href>', 0, 15, 'medium'],
-        ['topic-2-q4', 2, '2', 'What is the purpose of the DOCTYPE declaration?', 'To define CSS styles', 'To declare the HTML version', 'To include JavaScript', 'To create comments', 1, 15, 'medium'],
+        [2, '2', 'What does HTML stand for?', 'Hyper Text Markup Language', 'High Tech Modern Language', 'Home Tool Markup Language', 'Hyperlink Text Markup Language', 0, 10, 'easy'],
+        [2, '2', 'Which HTML tag is used to define the main content of a document?', '<body>', '<main>', '<content>', '<section>', 0, 10, 'easy'],
+        [2, '2', 'What is the correct syntax for creating a link in HTML?', '<a href="url">Link text</a>', '<link url="url">Link text</link>', '<a src="url">Link text</a>', '<href="url">Link text</href>', 0, 15, 'medium'],
+        [2, '2', 'What is the purpose of the DOCTYPE declaration?', 'To define CSS styles', 'To declare the HTML version', 'To include JavaScript', 'To create comments', 1, 15, 'medium'],
 
         // Topic 3 - CSS Styling (Course 2, Topic ID 3)
-        ['topic-3-q1', 2, '3', 'What does CSS stand for?', 'Computer Style Sheets', 'Creative Style Sheets', 'Cascading Style Sheets', 'Colorful Style Sheets', 2, 10, 'easy'],
-        ['topic-3-q2', 2, '3', 'Which property is used to change the text color of an element?', 'color', 'text-color', 'font-color', 'background-color', 0, 10, 'easy'],
-        ['topic-3-q3', 2, '3', 'How do you select an element with id "header" in CSS?', '.header', '#header', 'header', '*header', 1, 15, 'medium'],
-        ['topic-3-q4', 2, '3', 'Which CSS property controls the spacing between elements?', 'margin', 'padding', 'spacing', 'gap', 0, 10, 'easy'],
+        [2, '3', 'What does CSS stand for?', 'Computer Style Sheets', 'Creative Style Sheets', 'Cascading Style Sheets', 'Colorful Style Sheets', 2, 10, 'easy'],
+        [2, '3', 'Which property is used to change the text color of an element?', 'color', 'text-color', 'font-color', 'background-color', 0, 10, 'easy'],
+        [2, '3', 'How do you select an element with id "header" in CSS?', '.header', '#header', 'header', '*header', 1, 15, 'medium'],
+        [2, '3', 'Which CSS property controls the spacing between elements?', 'margin', 'padding', 'spacing', 'gap', 0, 10, 'easy'],
 
         // Topic 4 - JavaScript Fundamentals (Course 2, Topic ID 4)
-        ['topic-4-q1', 2, '4', 'Which of the following is the correct way to declare a variable in JavaScript?', 'var myVar = 5;', 'variable myVar = 5;', 'v myVar = 5;', 'declare myVar = 5;', 0, 10, 'easy'],
-        ['topic-4-q2', 2, '4', 'What is the result of 5 + "5" in JavaScript?', '10', '55', 'Error', 'undefined', 1, 15, 'medium'],
-        ['topic-4-q3', 2, '4', 'Which method is used to write content to the browser console?', 'console.write()', 'console.log()', 'console.print()', 'console.output()', 1, 10, 'easy'],
+        [2, '4', 'Which of the following is the correct way to declare a variable in JavaScript?', 'var myVar = 5;', 'variable myVar = 5;', 'v myVar = 5;', 'declare myVar = 5;', 0, 10, 'easy'],
+        [2, '4', 'What is the result of 5 + "5" in JavaScript?', '10', '55', 'Error', 'undefined', 1, 15, 'medium'],
+        [2, '4', 'Which method is used to write content to the browser console?', 'console.write()', 'console.log()', 'console.print()', 'console.output()', 1, 10, 'easy'],
 
         // Topic 5 - Building a Simple Website (Course 2, Topic ID 5)
-        ['topic-5-q1', 2, '5', 'What does DOM stand for?', 'Document Object Model', 'Dynamic Object Management', 'Data Object Model', 'Document Oriented Model', 0, 10, 'easy'],
-        ['topic-5-q2', 2, '5', 'Which method is used to select an element by its ID?', 'getElementById()', 'getElementByID()', 'selectById()', 'findById()', 0, 10, 'easy'],
-        ['topic-5-q3', 2, '5', 'How do you change the text content of an element?', 'element.text = "new text"', 'element.innerHTML = "new text"', 'element.textContent = "new text"', 'element.content = "new text"', 2, 15, 'medium'],
+        [2, '5', 'What does DOM stand for?', 'Document Object Model', 'Dynamic Object Management', 'Data Object Model', 'Document Oriented Model', 0, 10, 'easy'],
+        [2, '5', 'Which method is used to select an element by its ID?', 'getElementById()', 'getElementByID()', 'selectById()', 'findById()', 0, 10, 'easy'],
+        [2, '5', 'How do you change the text content of an element?', 'element.text = "new text"', 'element.innerHTML = "new text"', 'element.textContent = "new text"', 'element.content = "new text"', 2, 15, 'medium'],
 
         // Database Design Course - Introduction to Databases
-        ['topic-db-1-q1', 3, '6', 'What is a database?', 'A collection of files', 'An organized collection of data', 'A programming language', 'A web server', 1, 10, 'easy'],
-        ['topic-db-1-q2', 3, '6', 'What does SQL stand for?', 'Structured Query Language', 'Simple Query Language', 'Standard Query Language', 'System Query Language', 0, 10, 'easy'],
-        ['topic-db-1-q3', 3, '6', 'Which command is used to retrieve data from a database?', 'GET', 'FETCH', 'SELECT', 'RETRIEVE', 2, 15, 'medium'],
+        [3, '6', 'What is a database?', 'A collection of files', 'An organized collection of data', 'A programming language', 'A web server', 1, 10, 'easy'],
+        [3, '6', 'What does SQL stand for?', 'Structured Query Language', 'Simple Query Language', 'Standard Query Language', 'System Query Language', 0, 10, 'easy'],
+        [3, '6', 'Which command is used to retrieve data from a database?', 'GET', 'FETCH', 'SELECT', 'RETRIEVE', 2, 15, 'medium'],
 
         // Database Design Course - SQL Basics
-        ['topic-db-2-q1', 3, '7', 'Which SQL statement is used to extract data from a database?', 'EXTRACT', 'SELECT', 'GET', 'OPEN', 1, 10, 'easy'],
-        ['topic-db-2-q2', 3, '7', 'Which SQL keyword is used to eliminate duplicate rows?', 'UNIQUE', 'DISTINCT', 'DIFFERENT', 'SINGLE', 1, 10, 'easy'],
-        ['topic-db-2-q3', 3, '7', 'What is the correct syntax for an INNER JOIN?', 'SELECT * FROM table1 INNER JOIN table2 ON table1.id = table2.id', 'SELECT * FROM table1 JOIN table2 WHERE table1.id = table2.id', 'SELECT * FROM table1, table2 WHERE table1.id = table2.id', 'SELECT * FROM table1 INNER table2 ON table1.id = table2.id', 0, 15, 'medium'],
+        [3, '7', 'Which SQL statement is used to extract data from a database?', 'EXTRACT', 'SELECT', 'GET', 'OPEN', 1, 10, 'easy'],
+        [3, '7', 'Which SQL keyword is used to eliminate duplicate rows?', 'UNIQUE', 'DISTINCT', 'DIFFERENT', 'SINGLE', 1, 10, 'easy'],
+        [3, '7', 'What is the correct syntax for an INNER JOIN?', 'SELECT * FROM table1 INNER JOIN table2 ON table1.id = table2.id', 'SELECT * FROM table1 JOIN table2 WHERE table1.id = table2.id', 'SELECT * FROM table1, table2 WHERE table1.id = table2.id', 'SELECT * FROM table1 INNER table2 ON table1.id = table2.id', 0, 15, 'medium'],
 
         // Database Design Course - Database Normalization
-        ['topic-db-3-q1', 3, '8', 'What is the main purpose of database normalization?', 'To increase data redundancy', 'To reduce data redundancy and improve data integrity', 'To make queries slower', 'To increase storage space', 1, 10, 'easy'],
-        ['topic-db-3-q2', 3, '8', 'What is First Normal Form (1NF)?', 'Tables must have primary keys', 'Each column must contain atomic values', 'No partial dependencies', 'No transitive dependencies', 1, 15, 'medium'],
-        ['topic-db-3-q3', 3, '8', 'What violates Third Normal Form (3NF)?', 'Composite primary keys', 'Transitive dependencies', 'Atomic values', 'Foreign keys', 1, 15, 'medium'],
+        [3, '8', 'What is the main purpose of database normalization?', 'To increase data redundancy', 'To reduce data redundancy and improve data integrity', 'To make queries slower', 'To increase storage space', 1, 10, 'easy'],
+        [3, '8', 'What is First Normal Form (1NF)?', 'Tables must have primary keys', 'Each column must contain atomic values', 'No partial dependencies', 'No transitive dependencies', 1, 15, 'medium'],
+        [3, '8', 'What violates Third Normal Form (3NF)?', 'Composite primary keys', 'Transitive dependencies', 'Atomic values', 'Foreign keys', 1, 15, 'medium'],
 
         // Database Design Course - Advanced Queries and Optimization
-        ['topic-db-4-q1', 3, '9', 'What is the purpose of database indexing?', 'To slow down queries', 'To improve query performance', 'To increase storage space', 'To make data redundant', 1, 10, 'easy'],
-        ['topic-db-4-q2', 3, '9', 'Which type of index is automatically created for primary keys?', 'Secondary index', 'Clustered index', 'Composite index', 'Partial index', 1, 15, 'medium'],
-        ['topic-db-4-q3', 3, '9', 'What is a subquery?', 'A query that joins multiple tables', 'A query nested inside another query', 'A query that updates data', 'A query that creates indexes', 1, 15, 'medium'],
-        ['topic-db-4-q4', 3, '9', 'Which SQL clause is used to optimize queries by limiting result sets?', 'WHERE', 'HAVING', 'LIMIT', 'ORDER BY', 0, 10, 'easy'],
-        ['topic-db-4-q5', 3, '9', 'What is query execution plan?', 'A list of SQL commands', 'A roadmap showing how the database will execute a query', 'A backup of the database', 'A user interface design', 1, 15, 'medium'],
-        ['topic-db-4-q6', 3, '9', 'Which JOIN type returns all rows from both tables?', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL OUTER JOIN', 3, 15, 'medium'],
-        ['topic-db-4-q7', 3, '9', 'What is the difference between UNION and UNION ALL?', 'No difference', 'UNION removes duplicates, UNION ALL keeps duplicates', 'UNION ALL removes duplicates, UNION keeps duplicates', 'UNION is faster than UNION ALL', 1, 20, 'hard'],
-        ['topic-db-4-q8', 3, '9', 'Which statement about database views is correct?', 'Views store actual data', 'Views are virtual tables based on SQL queries', 'Views cannot be queried', 'Views require more storage space', 1, 15, 'medium']
+        [3, '9', 'What is the purpose of database indexing?', 'To slow down queries', 'To improve query performance', 'To increase storage space', 'To make data redundant', 1, 10, 'easy'],
+        [3, '9', 'Which type of index is automatically created for primary keys?', 'Secondary index', 'Clustered index', 'Composite index', 'Partial index', 1, 15, 'medium'],
+        [3, '9', 'What is a subquery?', 'A query that joins multiple tables', 'A query nested inside another query', 'A query that updates data', 'A query that creates indexes', 1, 15, 'medium'],
+        [3, '9', 'Which SQL clause is used to optimize queries by limiting result sets?', 'WHERE', 'HAVING', 'LIMIT', 'ORDER BY', 0, 10, 'easy'],
+        [3, '9', 'What is query execution plan?', 'A list of SQL commands', 'A roadmap showing how the database will execute a query', 'A backup of the database', 'A user interface design', 1, 15, 'medium'],
+        [3, '9', 'Which JOIN type returns all rows from both tables?', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL OUTER JOIN', 3, 15, 'medium'],
+        [3, '9', 'What is the difference between UNION and UNION ALL?', 'No difference', 'UNION removes duplicates, UNION ALL keeps duplicates', 'UNION ALL removes duplicates, UNION keeps duplicates', 'UNION is faster than UNION ALL', 1, 20, 'hard'],
+        [3, '9', 'Which statement about database views is correct?', 'Views store actual data', 'Views are virtual tables based on SQL queries', 'Views cannot be queried', 'Views require more storage space', 1, 15, 'medium']
       ];
 
       for (const question of sampleQuizQuestions) {
         await pool.execute(
-          'INSERT INTO quiz_questions (question_id, subject_id, node_id, question, option_a, option_b, option_c, option_d, correct_answer, points, difficulty, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO quiz_questions (subject_id, node_id, question, option_a, option_b, option_c, option_d, correct_answer, points, difficulty, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [...question, true]
         );
       }

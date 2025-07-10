@@ -47,7 +47,7 @@ export default function CoursesPage() {
                     ...(activeFilter !== 'all' && { difficulty: activeFilter })
                 });
                 
-                const response = await fetch(`/api/subjects?${params}`);
+                const response = await fetch(`/api/courses?${params}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch courses');
                 }
@@ -83,7 +83,7 @@ export default function CoursesPage() {
         if (!user) return;
         
         try {
-            const response = await fetch('/api/subjects', {
+            const response = await fetch('/api/courses', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ export default function CoursesPage() {
                     ...(activeFilter !== 'all' && { difficulty: activeFilter })
                 });
                 
-                const refreshResponse = await fetch(`/api/subjects?${params}`);
+                const refreshResponse = await fetch(`/api/courses?${params}`);
                 const refreshData = await refreshResponse.json();
                 
                 if (refreshData.success) {

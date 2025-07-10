@@ -98,11 +98,24 @@ export class CourseService {
     }
 
     static async markTopicComplete(userId: number, topicId: number): Promise<void> {
+        // First get the course_id from the topics table
+        const topics = await query(
+            'SELECT course_id FROM topics WHERE id = ?',
+            [topicId]
+        ) as Topic[];
+
+        if (!topics.length) {
+            throw new Error(`Topic ${topicId} not found`);
+        }
+
+        const courseId = topics[0].course_id;
+
+        // Now insert with the course_id
         await query(
-            `INSERT INTO user_topic_progress (user_id, topic_id, completed, completed_at)
-            VALUES (?, ?, true, NOW())
+            `INSERT INTO user_topic_progress (user_id, topic_id, course_id, completed, completed_at)
+            VALUES (?, ?, ?, true, NOW())
             ON DUPLICATE KEY UPDATE completed = true, completed_at = NOW()`,
-            [userId, topicId]
+            [userId, topicId, courseId]
         );
   }
 } 

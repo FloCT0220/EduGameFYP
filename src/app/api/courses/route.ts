@@ -1,109 +1,119 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CourseService } from '@/lib/services/courseService';
-
-// TypeScript interface for course data
-interface CourseData {
-  id: number;
-  title: string;
-  description: string;
-  difficulty: string;
-  estimated_duration?: number;
-  total_lessons?: number;
-  completed_lessons?: number;
-  instructor_name?: string;
-  is_enrolled?: boolean;
-  progress_percentage?: number;
-  total_enrollments?: number;
-}
+import { query } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const difficulty = searchParams.get('difficulty');
-    const category = searchParams.get('category');
+    try {
+        const { searchParams } = new URL(request.url);
+        const userId = searchParams.get('userId');
+        const difficulty = searchParams.get('difficulty');
 
-    let courses;
-    
-    if (userId) {
-      // Get courses with user progress
-      courses = await CourseService.getCoursesWithProgress(parseInt(userId));
-    } else {
-      // Get all courses without user progress
-      const filters = {
-        difficulty: difficulty || undefined,
-        category: category || undefined,
-        isActive: true
-      };
-      courses = await CourseService.getAllCourses(filters);
+        if (!userId) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'User ID is required' 
+            }, { status: 400 });
+        }
+
+        // Build the base query
+        let coursesQuery = `
+            SELECT 
+                c.id,
+                c.title,
+                c.description,
+                c.difficulty_level,
+                c.category,
+                u.username as creator_name,
+                c.enrolled_count,
+                CASE WHEN ue.user_id IS NOT NULL THEN true ELSE false END as enrolled,
+                COALESCE(ue.progress_percentage, 0) as progress_percentage,
+                COALESCE(ue.total_points_earned, 0) as total_points_earned
+            FROM courses c
+            LEFT JOIN users u ON c.created_by = u.id
+            LEFT JOIN user_enrollments ue ON c.id = ue.course_id AND ue.user_id = ?
+            WHERE c.is_published = true
+        `;
+
+        const queryParams: (string | number)[] = [parseInt(userId)];
+
+        // Add difficulty filter if specified
+        if (difficulty && difficulty !== 'all' && difficulty !== 'my-courses') {
+            coursesQuery += ' AND c.difficulty_level = ?';
+            queryParams.push(difficulty);
+        }
+
+        // Add my courses filter
+        if (difficulty === 'my-courses') {
+            coursesQuery += ' AND ue.user_id IS NOT NULL';
+        }
+
+        coursesQuery += ' ORDER BY c.title';
+
+        const courses = await query(coursesQuery, queryParams);
+
+        return NextResponse.json({
+            success: true,
+            courses: courses
+        });
+
+    } catch (error) {
+        console.error('Error fetching courses:', error);
+        return NextResponse.json({ 
+            success: false, 
+            error: 'Failed to fetch courses' 
+        }, { status: 500 });
     }
-
-    // Format courses for frontend
-    const formattedCourses = courses.map((course: CourseData) => ({
-      id: course.id,
-      title: course.title,
-      description: course.description,
-      category: course.difficulty, 
-      difficulty: course.difficulty,
-      duration: course.estimated_duration ? `${course.estimated_duration} hours` : 'Variable',
-      lessons: course.total_lessons || 0,
-      completedLessons: course.completed_lessons || 0,
-      points: 250,
-      instructor: course.instructor_name || 'Unknown',
-      rating: 4.5, 
-      enrolled: course.is_enrolled || false,
-      thumbnail: course.difficulty === 'foundation' ? '📚' : 
-                course.difficulty === 'intermediate' ? '⚡' : '🔷',
-      achievements: [], // Could be fetched from user achievements
-      progress: course.progress_percentage || 0,
-      totalEnrollments: course.total_enrollments || 0
-    }));
-
-    return NextResponse.json({
-      success: true,
-      courses: formattedCourses
-    });
-
-  } catch (error) {
-    console.error('Error fetching courses:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch courses' },
-      { status: 500 }
-    );
-  }
 }
 
+// Handle course enrollment
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { title, description, instructor_id, difficulty, estimated_duration } = body;
+    try {
+        const body = await request.json();
+        const { userId, courseId } = body;
 
-    if (!title || !description || !instructor_id || !difficulty) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+        if (!userId || !courseId) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'User ID and Course ID are required' 
+            }, { status: 400 });
+        }
+
+        // Check if already enrolled
+        const existingEnrollment = await query(
+            'SELECT id FROM user_enrollments WHERE user_id = ? AND course_id = ?',
+            [userId, courseId]
+        ) as { id: number }[];
+
+        if (existingEnrollment.length > 0) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Already enrolled in this course' 
+            }, { status: 400 });
+        }
+
+        // Create enrollment
+        await query(
+            `INSERT INTO user_enrollments 
+             (user_id, course_id, enrolled_at, progress_percentage, total_points_earned)
+             VALUES (?, ?, NOW(), 0, 0)`,
+            [userId, courseId]
+        );
+
+        // Update course enrolled count
+        await query(
+            'UPDATE courses SET enrolled_count = enrolled_count + 1 WHERE id = ?',
+            [courseId]
+        );
+
+        return NextResponse.json({
+            success: true,
+            message: 'Successfully enrolled in course'
+        });
+
+    } catch (error) {
+        console.error('Error enrolling in course:', error);
+        return NextResponse.json({ 
+            success: false, 
+            error: 'Failed to enroll in course' 
+        }, { status: 500 });
     }
-
-    const courseId = await CourseService.createCourse({
-      title,
-      description,
-      instructor_id,
-      difficulty,
-      estimated_duration
-    });
-
-    return NextResponse.json({
-      success: true,
-      courseId,
-      message: 'Course created successfully'
-    });
-
-  } catch (error) {
-    console.error('Error creating course:', error);
-    return NextResponse.json(
-      { error: 'Failed to create course' },
-      { status: 500 }
-    );
-  }
 } 

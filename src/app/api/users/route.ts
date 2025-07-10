@@ -104,6 +104,34 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
     try {
+        // Check for token-based auth first
+        const authHeader = request.headers.get('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            const payload = verifyToken(token);
+            if (payload) {
+                // Get authenticated user's profile
+                const users = await query(
+                    "SELECT id, username, email, role, bio, total_points, level, current_streak, max_streak, created_at, last_login FROM users WHERE id = ?",
+                    [payload.id]
+                );
+                
+                const userList = users as UserProfile[];
+                if (userList.length === 0) {
+                    return NextResponse.json({
+                        success: false,
+                        error: "User not found"
+                    }, { status: 404 });
+                }
+
+                return NextResponse.json({
+                    success: true,
+                    user: userList[0]
+                });
+            }
+        }
+
+        // If no token or invalid token, check for userId parameter (for admin use)
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get('userId');
 

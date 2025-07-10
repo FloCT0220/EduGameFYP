@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { FaClock, FaUsers, FaPlay, FaLock, FaCheck, FaTrophy } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -59,6 +59,7 @@ export default function CoursePage() {
     const { user, isAuthenticated, loading: authLoading } = useAuth();
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const courseId = params.id as string;
 
     const [courseData, setCourseData] = useState<CourseData | null>(null);
@@ -78,6 +79,17 @@ export default function CoursePage() {
             fetchCourseData();
         }
     }, [courseId, user?.id]);
+
+    // Check for refresh parameter and refetch data
+    useEffect(() => {
+        const shouldRefresh = searchParams.get('refresh');
+        if (shouldRefresh && courseId && user?.id) {
+            // Remove the refresh parameter from URL
+            router.replace(`/courses/${courseId}`, { scroll: false });
+            // Refetch course data to get updated topic completion status
+            fetchCourseData();
+        }
+    }, [searchParams, courseId, user?.id, router]);
 
     const fetchCourseData = async () => {
         try {

@@ -1,9 +1,8 @@
 import { query } from '../db';
 
 export interface QuizQuestion {
-  id: number;
-  question_id: string;
-  course_id: number;
+  id: string;
+  subject_id: number;
   node_id: string;
   question: string;
   option_a: string;
@@ -19,7 +18,7 @@ export interface QuizQuestion {
 export interface QuizAttempt {
   id: number;
   user_id: number;
-  course_id: number;
+  subject_id: number;
   node_id: string;
   questions_total: number;
   questions_correct: number;
@@ -44,264 +43,254 @@ export interface QuizAnswer {
   time_taken?: number;
 }
 
-export interface QuizAttemptData {
-  user_id: number;
-  course_id: number;
-  node_id: string;
-  questions_total: number;
-  questions_correct: number;
-  score_percentage: number;
-  points_earned: number;
-  time_bonus: number;
-  streak_bonus: number;
-  total_points: number;
-  max_streak: number;
-  time_taken?: number;
-  completed_at: Date;
+export interface QuizResult {
+  attempt: QuizAttempt;
+  answers: QuizAnswer[];
+  questions: QuizQuestion[];
 }
 
-export interface QuizAnswerData {
-  question_id: string;
-  selected_answer?: number;
-  is_correct: boolean;
-  points_earned: number;
-  time_taken?: number;
+export interface QuizStats {
+  totalAttempts: number;
+  averageScore: number;
+  bestScore: number;
+  totalPointsEarned: number;
+  currentStreak: number;
+  maxStreak: number;
 }
 
+export interface SubmitQuizData {
+  userId: number;
+  subjectId: number;
+  nodeId: string;
+  answers: {
+    questionId: string;
+    selectedAnswer: number;
+    timeTaken?: number;
+  }[];
+  timeTaken?: number;
+}
+
+export interface QuizReviewData {
+  attempt: QuizAttempt;
+  results: {
+    question: QuizQuestion;
+    userAnswer?: number;
+    isCorrect: boolean;
+    pointsEarned: number;
+    timeTaken?: number;
+  }[];
+}
+
+// Service functions
 export class QuizService {
-  // Get quiz questions for a specific node
-  static async getQuizQuestions(courseId: number, nodeId: string): Promise<QuizQuestion[]> {
-    return await query(`
-      SELECT * FROM quiz_questions
-      WHERE subject_id = ? AND node_id = ? AND is_active = true
-      ORDER BY RAND()
-    `, [courseId, nodeId]) as QuizQuestion[];
+  
+  // Get quiz questions for a specific subject and node
+  static async getQuizQuestions(subjectId: number, nodeId: string): Promise<QuizQuestion[]> {
+    const questions = await query(
+      'SELECT * FROM quiz_questions WHERE subject_id = ? AND node_id = ? AND is_active = true ORDER BY RAND() LIMIT 10',
+      [subjectId, nodeId]
+    );
+    return questions as QuizQuestion[];
   }
 
-  // Get cumulative quiz questions (current lesson + all previous lessons)
-  static async getCumulativeQuizQuestions(courseId: number, topicId: number): Promise<QuizQuestion[]> {
-    try {
-      // First, get the current topic's lesson_order
-      const currentTopic = await query(`
-        SELECT lesson_order FROM topics 
-        WHERE id = ? AND course_id = ?
-      `, [topicId, courseId]) as { lesson_order: number }[];
+  // Get all quiz questions for admin
+  static async getAllQuizQuestions(): Promise<QuizQuestion[]> {
+    const questions = await query(
+      'SELECT * FROM quiz_questions ORDER BY subject_id, node_id, id'
+    );
+    return questions as QuizQuestion[];
+  }
 
-      if (currentTopic.length === 0) {
-        return [];
-      }
+  // Get a specific quiz question by id
+  static async getQuizQuestion(id: string): Promise<QuizQuestion | null> {
+    const questions = await query(
+      'SELECT * FROM quiz_questions WHERE id = ? AND is_active = true',
+      [id]
+    );
+    const questionArray = questions as QuizQuestion[];
+    return questionArray.length > 0 ? questionArray[0] : null;
+  }
 
-      const currentLessonOrder = currentTopic[0].lesson_order;
-
-      // Get all topic IDs up to and including the current lesson_order
-      const eligibleTopics = await query(`
-        SELECT id FROM topics 
-        WHERE course_id = ? AND lesson_order <= ? AND is_published = true
-        ORDER BY lesson_order
-      `, [courseId, currentLessonOrder]) as { id: number }[];
-
-      if (eligibleTopics.length === 0) {
-        return [];
-      }
-
-      // Get quiz questions for all eligible topics (simplified approach)
-      const topicIds = eligibleTopics.map(topic => topic.id.toString());
-      const placeholders = topicIds.map(() => '?').join(', ');
+  // Submit quiz attempt
+  static async submitQuizAttempt(data: SubmitQuizData): Promise<QuizResult> {
+    const { userId, subjectId, nodeId, answers, timeTaken } = data;
+    
+    // Get all questions for this quiz
+    const allQuestions = await QuizService.getQuizQuestions(subjectId, nodeId);
+    
+    // Calculate results
+    let correctAnswers = 0;
+    let totalPoints = 0;
+    const results: QuizAnswer[] = [];
+    
+    for (const question of allQuestions) {
+      const userAnswer = answers.find(a => a.questionId === question.id);
+      const isCorrect = userAnswer?.selectedAnswer === question.correct_answer;
+      const pointsEarned = isCorrect ? question.points : 0;
       
-      const questions = await query(`
-        SELECT * FROM quiz_questions
-        WHERE subject_id = ? AND node_id IN (${placeholders}) AND is_active = true
-        ORDER BY RAND()
-      `, [courseId, ...topicIds]) as QuizQuestion[];
-
-      return questions;
-    } catch (error) {
-      console.error('Error in getCumulativeQuizQuestions:', error);
-      // Fallback to single topic if there's an error
-      return await this.getQuizQuestions(courseId, topicId.toString());
+      if (isCorrect) correctAnswers++;
+      totalPoints += pointsEarned;
+      
+      results.push({
+        id: 0, // Will be set after insertion
+        attempt_id: 0, // Will be set after insertion
+        question_id: question.id,
+        selected_answer: userAnswer?.selectedAnswer,
+        is_correct: isCorrect,
+        points_earned: pointsEarned,
+        time_taken: userAnswer?.timeTaken
+      });
     }
-  }
-
-  // Get a specific quiz question by question_id
-  static async getQuizQuestion(questionId: string): Promise<QuizQuestion | null> {
-    const result = await query(`
-      SELECT * FROM quiz_questions
-      WHERE question_id = ? AND is_active = true
-    `, [questionId]) as QuizQuestion[];
     
-    return result.length > 0 ? result[0] : null;
-  }
-
-  // Save quiz attempt
-  static async saveQuizAttempt(attemptData: QuizAttemptData): Promise<number> {
-    const result = await query(`
-      INSERT INTO quiz_attempts 
-      (user_id, course_id, node_id, questions_total, questions_correct, 
-       score_percentage, points_earned, time_bonus, streak_bonus, 
-       total_points, max_streak, time_taken, completed_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      attemptData.user_id,
-      attemptData.course_id,
-      attemptData.node_id,
-      attemptData.questions_total,
-      attemptData.questions_correct,
-      attemptData.score_percentage,
-      attemptData.points_earned,
-      attemptData.time_bonus,
-      attemptData.streak_bonus,
-      attemptData.total_points,
-      attemptData.max_streak,
-      attemptData.time_taken || null,
-      attemptData.completed_at
-    ]) as { insertId: number };
+    const scorePercentage = (correctAnswers / allQuestions.length) * 100;
     
-    return result.insertId;
-  }
-
-  // Save quiz answers
-  static async saveQuizAnswers(attemptId: number, answers: QuizAnswerData[]): Promise<void> {
-    if (answers.length === 0) return;
+    // Create quiz attempt
+    const attemptResult = await query(
+      `INSERT INTO quiz_attempts 
+       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, points_earned, time_bonus, streak_bonus, total_points, max_streak, time_taken, completed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [userId, subjectId, nodeId, allQuestions.length, correctAnswers, scorePercentage, totalPoints, 0, 0, totalPoints, 0, timeTaken]
+    );
     
-    const values = answers.map(answer => [
-      attemptId,
-      answer.question_id,
-      answer.selected_answer ?? null,
-      answer.is_correct,
-      answer.points_earned,
-      answer.time_taken ?? null
-    ]);
+    const attemptId = (attemptResult as any).insertId;
     
-    const placeholders = values.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
-    const flatValues = values.flat();
-    
-    await query(`
-      INSERT INTO quiz_answers 
+    // Insert quiz answers
+    for (const result of results) {
+      await query(
+        `INSERT INTO quiz_answers 
       (attempt_id, question_id, selected_answer, is_correct, points_earned, time_taken)
-      VALUES ${placeholders}
-    `, flatValues);
-  }
-
-  // Get user's quiz attempts for a specific node
-  static async getUserQuizAttempts(
-    userId: number, 
-    courseId: number, 
-    nodeId: string
-  ): Promise<QuizAttempt[]> {
-    return await query(`
-      SELECT * FROM quiz_attempts
-      WHERE user_id = ? AND course_id = ? AND node_id = ?
-      ORDER BY started_at DESC
-    `, [userId, courseId, nodeId]) as QuizAttempt[];
-  }
-
-  // Get user's best quiz attempt for a node
-  static async getUserBestAttempt(
-    userId: number, 
-    courseId: number, 
-    nodeId: string
-  ): Promise<QuizAttempt | null> {
-    const result = await query(`
-      SELECT * FROM quiz_attempts
-      WHERE user_id = ? AND course_id = ? AND node_id = ?
-      ORDER BY score_percentage DESC, total_points DESC
-      LIMIT 1
-    `, [userId, courseId, nodeId]) as QuizAttempt[];
-    
-    return result.length > 0 ? result[0] : null;
-  }
-
-  // Get quiz attempt details with answers
-  static async getQuizAttemptDetails(attemptId: number): Promise<{
-    attempt: QuizAttempt;
-    answers: QuizAnswer[];
-    questions: QuizQuestion[];
-  } | null> {
-    // Get attempt
-    const attempts = await query(`
-      SELECT * FROM quiz_attempts WHERE id = ?
-    `, [attemptId]) as QuizAttempt[];
-    
-    if (attempts.length === 0) return null;
-    
-    const attempt = attempts[0];
-    
-    // Get answers
-    const answers = await query(`
-      SELECT * FROM quiz_answers WHERE attempt_id = ?
-    `, [attemptId]) as QuizAnswer[];
-    
-    // Get questions
-    const questionIds = answers.map(a => a.question_id);
-    if (questionIds.length === 0) {
-      return { attempt, answers: [], questions: [] };
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          attemptId, result.question_id, result.selected_answer,
+          result.is_correct, result.points_earned, result.time_taken
+        ]
+      );
     }
     
-    const placeholders = questionIds.map(() => '?').join(', ');
-    const questions = await query(`
-      SELECT * FROM quiz_questions 
-      WHERE question_id IN (${placeholders})
-    `, questionIds) as QuizQuestion[];
+    // Get the complete attempt record
+    const attempt = await query(
+      'SELECT * FROM quiz_attempts WHERE id = ?',
+      [attemptId]
+    );
     
-    return { attempt, answers, questions };
-  }
-
-  // Get quiz statistics for a node
-  static async getQuizStatistics(courseId: number, nodeId: string): Promise<{
-    total_attempts: number;
-    total_users: number;
-    average_score: number;
-    best_score: number;
-    completion_rate: number;
-  }> {
-    const stats = await query(`
-      SELECT 
-        COUNT(*) as total_attempts,
-        COUNT(DISTINCT user_id) as total_users,
-        AVG(score_percentage) as average_score,
-        MAX(score_percentage) as best_score,
-        (COUNT(CASE WHEN score_percentage >= 70 THEN 1 END) * 100.0 / COUNT(*)) as completion_rate
-      FROM quiz_attempts
-      WHERE course_id = ? AND node_id = ?
-    `, [courseId, nodeId]) as {
-      total_attempts: number;
-      total_users: number;
-      average_score: number;
-      best_score: number;
-      completion_rate: number;
-    }[];
-
-    return stats[0] || {
-      total_attempts: 0,
-      total_users: 0,
-      average_score: 0,
-      best_score: 0,
-      completion_rate: 0
+    return {
+      attempt: (attempt as QuizAttempt[])[0],
+      answers: results,
+      questions: allQuestions
     };
   }
 
-  // Create a new quiz question
-  static async createQuizQuestion(questionData: {
-    question_id: string;
-    course_id: number;
-    node_id: string;
-    question: string;
-    option_a: string;
-    option_b: string;
-    option_c: string;
-    option_d: string;
-    correct_answer: number;
-    points?: number;
-    difficulty?: 'easy' | 'medium' | 'hard';
-  }): Promise<number> {
-    const result = await query(`
-      INSERT INTO quiz_questions 
-      (question_id, course_id, node_id, question, option_a, option_b, 
-       option_c, option_d, correct_answer, points, difficulty)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      questionData.question_id,
-      questionData.course_id,
+  // Get quiz review data
+  static async getQuizReview(attemptId: number): Promise<QuizReviewData | null> {
+    // Get attempt details
+    const attempts = await query(
+      'SELECT * FROM quiz_attempts WHERE id = ?',
+      [attemptId]
+    );
+    
+    if ((attempts as QuizAttempt[]).length === 0) {
+      return null;
+    }
+    
+    const attempt = (attempts as QuizAttempt[])[0];
+    
+    // Get quiz answers with questions
+    const answersData = await query(
+      `SELECT 
+        qa.question_id,
+        qa.selected_answer,
+        qa.is_correct,
+        qa.points_earned,
+        qa.time_taken,
+        qq.question,
+        qq.option_a,
+        qq.option_b,
+        qq.option_c,
+        qq.option_d,
+        qq.correct_answer,
+        qq.points,
+        qq.difficulty
+      FROM quiz_answers qa
+      JOIN quiz_questions qq ON qa.question_id = qq.id
+      WHERE qa.attempt_id = ?
+      ORDER BY qq.id`,
+      [attemptId]
+    );
+    
+    const results: QuizReviewData['results'] = [];
+    
+    for (const row of answersData as any[]) {
+      const question: QuizQuestion = {
+        id: row.question_id,
+        subject_id: attempt.subject_id,
+        node_id: attempt.node_id,
+        question: row.question,
+        option_a: row.option_a,
+        option_b: row.option_b,
+        option_c: row.option_c,
+        option_d: row.option_d,
+        correct_answer: row.correct_answer,
+        points: row.points,
+        difficulty: row.difficulty,
+        is_active: true
+      };
+      
+      results.push({
+        question,
+        userAnswer: row.selected_answer,
+        isCorrect: row.is_correct,
+        pointsEarned: row.points_earned,
+        timeTaken: row.time_taken
+      });
+    }
+    
+    return {
+      attempt,
+      results
+    };
+  }
+
+  // Get quiz statistics for a user
+  static async getQuizStats(userId: number): Promise<QuizStats> {
+    const stats = await query(
+      `SELECT 
+        COUNT(*) as totalAttempts,
+        AVG(score_percentage) as averageScore,
+        MAX(score_percentage) as bestScore,
+        SUM(points_earned) as totalPointsEarned,
+        MAX(max_streak) as maxStreak
+      FROM quiz_attempts
+      WHERE user_id = ?`,
+      [userId]
+    );
+    
+    // Get current streak from user table
+    const userStats = await query(
+      'SELECT current_streak FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    const statsData = (stats as any[])[0];
+    const userData = (userStats as any[])[0];
+    
+    return {
+      totalAttempts: statsData.totalAttempts || 0,
+      averageScore: statsData.averageScore || 0,
+      bestScore: statsData.bestScore || 0,
+      totalPointsEarned: statsData.totalPointsEarned || 0,
+      currentStreak: userData?.current_streak || 0,
+      maxStreak: statsData.maxStreak || 0
+    };
+  }
+
+  // Admin functions
+  static async createQuizQuestion(questionData: Omit<QuizQuestion, 'id'>): Promise<QuizQuestion> {
+    const result = await query(
+      `INSERT INTO quiz_questions 
+       (subject_id, node_id, question, option_a, option_b, option_c, option_d, correct_answer, points, difficulty, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        questionData.subject_id,
       questionData.node_id,
       questionData.question,
       questionData.option_a,
@@ -309,77 +298,48 @@ export class QuizService {
       questionData.option_c,
       questionData.option_d,
       questionData.correct_answer,
-      questionData.points || 10,
-      questionData.difficulty || 'easy'
-    ]) as { insertId: number };
-    
-    return result.insertId;
-  }
-
-  // Update quiz question
-  static async updateQuizQuestion(
-    questionId: string, 
-    updateData: Partial<QuizQuestion>
-  ): Promise<void> {
-    const fields = Object.keys(updateData).filter(key => 
-      key !== 'id' && key !== 'question_id'
+        questionData.points,
+        questionData.difficulty,
+        questionData.is_active
+      ]
     );
-    if (fields.length === 0) return;
-
-    const setClause = fields.map(field => `${field} = ?`).join(', ');
-    const values = fields.map(field => updateData[field as keyof QuizQuestion] ?? null);
     
-    await query(`
-      UPDATE quiz_questions 
-      SET ${setClause}
-      WHERE question_id = ?
-    `, [...values, questionId]);
+    const insertId = (result as any).insertId;
+    const newQuestion = await QuizService.getQuizQuestion(insertId.toString());
+    return newQuestion!;
   }
 
-  // Delete quiz question (soft delete)
-  static async deleteQuizQuestion(questionId: string): Promise<void> {
-    await query(`
-      UPDATE quiz_questions 
-      SET is_active = false
-      WHERE question_id = ?
-    `, [questionId]);
+  static async updateQuizQuestion(id: string, questionData: Partial<QuizQuestion>): Promise<QuizQuestion | null> {
+    const updateFields = [];
+    const updateValues = [];
+    
+    for (const [key, value] of Object.entries(questionData)) {
+      if (value !== undefined && key !== 'id') {
+        updateFields.push(`${key} = ?`);
+        updateValues.push(value);
+      }
+    }
+    
+    if (updateFields.length === 0) {
+      return await QuizService.getQuizQuestion(id);
+    }
+    
+    updateValues.push(id);
+    
+    await query(
+      `UPDATE quiz_questions SET ${updateFields.join(', ')} WHERE id = ?`,
+      updateValues
+    );
+    
+    return await QuizService.getQuizQuestion(id);
   }
 
-  // Get user's quiz performance summary
-  static async getUserQuizPerformance(userId: number): Promise<{
-    total_attempts: number;
-    total_questions_answered: number;
-    total_correct_answers: number;
-    average_score: number;
-    total_points_earned: number;
-    best_streak: number;
-  }> {
-    const performance = await query(`
-      SELECT 
-        COUNT(qa.id) as total_attempts,
-        SUM(qa.questions_total) as total_questions_answered,
-        SUM(qa.questions_correct) as total_correct_answers,
-        AVG(qa.score_percentage) as average_score,
-        SUM(qa.total_points) as total_points_earned,
-        MAX(qa.max_streak) as best_streak
-      FROM quiz_attempts qa
-      WHERE qa.user_id = ?
-    `, [userId]) as {
-      total_attempts: number;
-      total_questions_answered: number;
-      total_correct_answers: number;
-      average_score: number;
-      total_points_earned: number;
-      best_streak: number;
-    }[];
-
-    return performance[0] || {
-      total_attempts: 0,
-      total_questions_answered: 0,
-      total_correct_answers: 0,
-      average_score: 0,
-      total_points_earned: 0,
-      best_streak: 0
-    };
+  static async deleteQuizQuestion(id: string): Promise<boolean> {
+    const result = await query(
+      'DELETE FROM quiz_questions WHERE id = ?',
+      [id]
+    );
+    
+    return (result as any).affectedRows > 0;
   }
 } 

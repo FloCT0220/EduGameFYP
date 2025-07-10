@@ -1,375 +1,303 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { FaClock, FaTrophy, FaArrowLeft, FaCheck, FaTimes, FaSpinner, FaLightbulb, FaRedo } from 'react-icons/fa';
-import toast from 'react-hot-toast';
-
-// Mock user context
-const useUser = () => {
-    return { user: { id: 1, username: 'student' } };
-};
-
-interface QuizAttempt {
-    id: number;
-    user_id: number;
-    subject_id: number;
-    node_id: string;
-    questions_total: number;
-    questions_correct: number;
-    score_percentage: number;
-    points_earned: number;
-    time_bonus: number;
-    streak_bonus: number;
-    total_points: number;
-    time_taken: number;
-    completed_at: string;
-}
-
-interface QuizAnswer {
-    id: number;
-    attempt_id: number;
-    question_id: string;
-    selected_answer: number | null;
-    is_correct: boolean;
-    points_earned: number;
-    time_taken: number;
-}
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface QuizQuestion {
-    id: number;
-    question_id: string;
-    subject_id: number;
-    node_id: string;
-    question: string;
-    option_a: string;
-    option_b: string;
-    option_c: string;
-    option_d: string;
-    correct_answer: number;
-    points: number;
-    difficulty: string;
-    explanation: string;
+  id: number;
+  question: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: number;
+  points: number;
+  difficulty: string;
+  subject_id: number;
+  node_id: string;
+}
+
+interface QuizReviewResult {
+  question: QuizQuestion;
+  userAnswer: number | null;
+  isCorrect: boolean;
+  pointsEarned: number;
+  timeTaken: number | null;
+  correctAnswer: number;
+  options: string[];
+}
+
+interface QuizAttempt {
+  id: number;
+  user_id: number;
+  subject_id: number;
+  node_id: string;
+  questions_total: number;
+  questions_correct: number;
+  score_percentage: number;
+  points_earned: number;
+  time_taken: number | null;
+  completed_at: string;
 }
 
 interface QuizReviewData {
-    attempt: QuizAttempt;
-    answers: QuizAnswer[];
-    questions: QuizQuestion[];
-    topic: {
-        id: number;
-        title: string;
-    };
+  attempt: QuizAttempt;
+  results: QuizReviewResult[];
+  summary: {
+    totalQuestions: number;
+    correctAnswers: number;
+    scorePercentage: number;
+    pointsEarned: number;
+    timeTaken: number | null;
+  };
 }
 
-export default function QuizReviewPage() {
-    const { user } = useUser();
-    const router = useRouter();
-    const params = useParams();
-    const courseId = params.id as string;
-    const topicId = params.topicId as string;
-    const attemptId = params.attemptId as string;
+export default function QuizReview({ params }: { params: { id: string; topicId: string; attemptId: string } }) {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [reviewData, setReviewData] = useState<QuizReviewData | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const [reviewData, setReviewData] = useState<QuizReviewData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [currentQuestion, setCurrentQuestion] = useState(0);
-
-    useEffect(() => {
-        if (courseId && topicId && attemptId && user?.id) {
-            fetchReviewData();
-        }
-    }, [courseId, topicId, attemptId, user?.id]);
-
-    const fetchReviewData = async () => {
-        try {
-            const response = await fetch(`/api/quiz/review/${attemptId}?userId=${user?.id}&courseId=${courseId}&topicId=${topicId}`);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success) {
-                    setReviewData(data.reviewData);
-                } else {
-                    toast.error(data.error || 'Failed to load quiz review');
-                    router.push(`/courses/${courseId}/topics/${topicId}`);
-                }
-            } else {
-                toast.error('Quiz attempt not found');
-                router.push(`/courses/${courseId}/topics/${topicId}`);
-            }
-        } catch (error) {
-            console.error('Error fetching review data:', error);
-            toast.error('Error loading quiz review');
-            router.push(`/courses/${courseId}/topics/${topicId}`);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleBackToTopic = () => {
-        router.push(`/courses/${courseId}/topics/${topicId}`);
-    };
-
-    const handleRetakeQuiz = () => {
-        router.push(`/courses/${courseId}/topics/${topicId}`);
-    };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-                <div className="text-center">
-                    <FaSpinner className="animate-spin text-4xl text-blue-600 mx-auto mb-4" />
-                    <p className="text-lg font-medium text-gray-600">Loading quiz review...</p>
-                </div>
-            </div>
-        );
+  useEffect(() => {
+    if (user) {
+      fetchReviewData();
     }
+  }, [user]);
 
-    if (!reviewData) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 flex items-center justify-center">
-                <div className="text-center p-8">
-                    <h2 className="text-2xl font-bold text-red-600 mb-4">Review Not Available</h2>
-                    <button
-                        onClick={handleBackToTopic}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        Back to Topic
-                    </button>
-                </div>
-            </div>
-        );
+  const fetchReviewData = async () => {
+    try {
+      const response = await fetch(`/api/quiz/review/${params.attemptId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch review data');
+      }
+
+      const data = await response.json();
+      setReviewData(data);
+    } catch (error) {
+      console.error('Error fetching review data:', error);
+      setError('Failed to load quiz review. Please try again.');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const { attempt, answers, questions, topic } = reviewData;
-    const currentQuestionData = questions[currentQuestion];
-    const currentAnswer = answers.find(a => a.question_id === currentQuestionData.question_id);
+  const handleNext = () => {
+    if (reviewData && currentQuestionIndex < reviewData.results.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
 
-    const getOptionLetter = (index: number) => String.fromCharCode(65 + index);
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
 
-    const renderOption = (option: string, index: number) => {
-        const isSelected = currentAnswer?.selected_answer === index;
-        const isCorrect = currentQuestionData.correct_answer === index;
-        const isUserWrong = isSelected && !isCorrect;
+  const goToQuestion = (index: number) => {
+    setCurrentQuestionIndex(index);
+  };
 
-        let optionClasses = 'w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ';
-        
-        if (isCorrect) {
-            optionClasses += 'border-green-500 bg-green-50 text-green-900';
-        } else if (isUserWrong) {
-            optionClasses += 'border-red-500 bg-red-50 text-red-900';
-        } else if (isSelected) {
-            optionClasses += 'border-blue-500 bg-blue-50 text-blue-900';
-        } else {
-            optionClasses += 'border-gray-200 bg-white text-gray-700';
-        }
+  const handleBackToTopic = () => {
+    router.push(`/courses/${params.id}/topics/${params.topicId}`);
+  };
 
-        return (
-            <div key={index} className={optionClasses}>
-                <div className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-3 ${
-                        isCorrect 
-                            ? 'border-green-500 bg-green-500' 
-                            : isUserWrong
-                            ? 'border-red-500 bg-red-500'
-                            : isSelected
-                            ? 'border-blue-500 bg-blue-500'
-                            : 'border-gray-300'
-                    }`}>
-                        {isCorrect ? (
-                            <FaCheck className="text-white text-xs" />
-                        ) : isUserWrong ? (
-                            <FaTimes className="text-white text-xs" />
-                        ) : isSelected ? (
-                            <FaCheck className="text-white text-xs" />
-                        ) : null}
-                    </div>
-                    <span className="font-medium">{getOptionLetter(index)}.</span>
-                    <span className="ml-2">{option}</span>
-                    {isCorrect && (
-                        <FaCheck className="ml-auto text-green-600" />
-                    )}
-                    {isUserWrong && (
-                        <FaTimes className="ml-auto text-red-600" />
-                    )}
-                </div>
-            </div>
-        );
-    };
-
+  if (loading) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
-            {/* Header */}
-            <div className="bg-white shadow-sm border-b">
-                <div className="max-w-4xl mx-auto px-6 py-4">
-                    <button
-                        onClick={handleBackToTopic}
-                        className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-2 font-medium transition-colors"
-                    >
-                        <FaArrowLeft />
-                        Back to Topic
-                    </button>
-                    
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">📝 Quiz Review</h1>
-                            <p className="text-lg text-gray-600">{topic.title}</p>
-                            <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                                <div className="flex items-center gap-1">
-                                    <FaClock />
-                                    <span>Completed: {new Date(attempt.completed_at).toLocaleDateString()}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <FaTrophy />
-                                    <span>{attempt.total_points} points earned</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className={`text-center p-4 rounded-lg ${
-                            attempt.score_percentage >= 80 
-                                ? 'bg-green-50 border border-green-200' 
-                                : 'bg-red-50 border border-red-200'
-                        }`}>
-                            <div className={`text-3xl font-bold mb-1 ${
-                                attempt.score_percentage >= 80 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                                {attempt.score_percentage}%
-                            </div>
-                            <div className="text-sm text-gray-600">
-                                {attempt.questions_correct}/{attempt.questions_total} Correct
-                            </div>
-                            <div className={`text-xs font-medium mt-1 ${
-                                attempt.score_percentage >= 80 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                                {attempt.score_percentage >= 80 ? 'PASSED' : 'FAILED'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Review Content */}
-            <div className="max-w-4xl mx-auto px-6 py-8">
-                {/* Question Navigation */}
-                <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            Question {currentQuestion + 1} of {questions.length}
-                        </h2>
-                        <div className="flex gap-2">
-                            {questions.map((_, index) => {
-                                const answer = answers.find(a => a.question_id === questions[index].question_id);
-                                const isCorrect = answer?.is_correct;
-                                
-                                return (
-                                    <button
-                                        key={index}
-                                        onClick={() => setCurrentQuestion(index)}
-                                        className={`w-10 h-10 rounded-full font-bold text-sm transition-all ${
-                                            index === currentQuestion
-                                                ? 'bg-blue-600 text-white scale-110'
-                                                : isCorrect
-                                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                                : 'bg-red-100 text-red-800 hover:bg-red-200'
-                                        }`}
-                                    >
-                                        {index + 1}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                    
-                    {/* Progress Bar */}
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
-                        ></div>
-                    </div>
-                </div>
-
-                {/* Current Question */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                currentQuestionData.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
-                                currentQuestionData.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                            }`}>
-                                {currentQuestionData.difficulty}
-                            </span>
-                            <span className="text-sm text-gray-600">
-                                <FaTrophy className="inline mr-1" />
-                                {currentQuestionData.points} points
-                            </span>
-                            <span className={`text-sm font-medium px-2 py-1 rounded ${
-                                currentAnswer?.is_correct 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-red-100 text-red-800'
-                            }`}>
-                                {currentAnswer?.is_correct ? 'Correct' : 'Incorrect'}
-                            </span>
-                        </div>
-                        
-                        <h3 className="text-xl font-semibold text-gray-900 mb-6">
-                            {currentQuestionData.question}
-                        </h3>
-                    </div>
-
-                    {/* Options */}
-                    <div className="space-y-3 mb-6">
-                        {[
-                            currentQuestionData.option_a,
-                            currentQuestionData.option_b,
-                            currentQuestionData.option_c,
-                            currentQuestionData.option_d
-                        ].map((option, index) => renderOption(option, index))}
-                    </div>
-
-                    {/* Explanation */}
-                    {currentQuestionData.explanation && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                            <div className="flex items-center gap-2 mb-2">
-                                <FaLightbulb className="text-blue-600" />
-                                <span className="font-medium text-blue-900">Explanation</span>
-                            </div>
-                            <p className="text-blue-800">{currentQuestionData.explanation}</p>
-                        </div>
-                    )}
-
-                    {/* Navigation */}
-                    <div className="flex justify-between items-center">
-                        <button
-                            onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
-                            disabled={currentQuestion === 0}
-                            className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            Previous
-                        </button>
-                        
-                        <div className="flex gap-3">
-                            {attempt.score_percentage < 80 && (
-                                <button
-                                    onClick={handleRetakeQuiz}
-                                    className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
-                                >
-                                    <FaRedo />
-                                    Retake Quiz
-                                </button>
-                            )}
-                            
-                            <button
-                                onClick={() => setCurrentQuestion(Math.min(questions.length - 1, currentQuestion + 1))}
-                                disabled={currentQuestion === questions.length - 1}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {currentQuestion === questions.length - 1 ? 'Review Complete' : 'Next Question'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!reviewData) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-gray-500">No review data available.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentQuestion = reviewData.results[currentQuestionIndex];
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <button
+          onClick={handleBackToTopic}
+          className="mb-4 text-blue-600 hover:text-blue-800 font-medium"
+        >
+          ← Back to Topic
+        </button>
+        
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Quiz Review</h1>
+        
+        {/* Summary Stats */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Quiz Summary</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{reviewData.summary.correctAnswers}</div>
+              <div className="text-sm text-gray-600">Correct</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-600">{reviewData.summary.totalQuestions}</div>
+              <div className="text-sm text-gray-600">Total</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{reviewData.summary.scorePercentage.toFixed(1)}%</div>
+              <div className="text-sm text-gray-600">Score</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{reviewData.summary.pointsEarned}</div>
+              <div className="text-sm text-gray-600">Points</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Question Navigation */}
+      <div className="mb-6">
+        <div className="flex flex-wrap gap-2 justify-center">
+          {reviewData.results.map((result, index) => (
+            <button
+              key={index}
+              onClick={() => goToQuestion(index)}
+              className={`w-10 h-10 rounded-full border-2 font-medium transition-colors ${
+                index === currentQuestionIndex
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : result.isCorrect
+                  ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200'
+                  : 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200'
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Question Review */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">
+            Question {currentQuestionIndex + 1} of {reviewData.results.length}
+          </h3>
+          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+            currentQuestion.isCorrect
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {currentQuestion.isCorrect ? 'Correct' : 'Incorrect'}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-gray-900 text-lg mb-4">{currentQuestion.question.question}</p>
+          
+          <div className="space-y-3">
+            {currentQuestion.options.map((option, index) => {
+              const isCorrect = index === currentQuestion.correctAnswer;
+              const isSelected = index === currentQuestion.userAnswer;
+              
+              return (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg border ${
+                    isCorrect
+                      ? 'bg-green-50 border-green-300'
+                      : isSelected
+                      ? 'bg-red-50 border-red-300'
+                      : 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium mr-3 ${
+                        isCorrect
+                          ? 'bg-green-600 text-white'
+                          : isSelected
+                          ? 'bg-red-600 text-white'
+                          : 'bg-gray-300 text-gray-600'
+                      }`}>
+                        {String.fromCharCode(65 + index)}
+                      </span>
+                      <span className={`${
+                        isCorrect ? 'text-green-800' : isSelected ? 'text-red-800' : 'text-gray-700'
+                      }`}>
+                        {option}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {isCorrect && (
+                        <span className="text-green-600 text-sm">✓ Correct</span>
+                      )}
+                      {isSelected && !isCorrect && (
+                        <span className="text-red-600 text-sm">✗ Your answer</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Question Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-900">{currentQuestion.pointsEarned}</div>
+            <div className="text-sm text-gray-600">Points Earned</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-900">{currentQuestion.question.points}</div>
+            <div className="text-sm text-gray-600">Total Points</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-900 capitalize">{currentQuestion.question.difficulty}</div>
+            <div className="text-sm text-gray-600">Difficulty</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Controls */}
+      <div className="flex justify-between items-center">
+        <button
+          onClick={handlePrevious}
+          disabled={currentQuestionIndex === 0}
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Previous
+        </button>
+        
+        <span className="text-gray-600">
+          {currentQuestionIndex + 1} of {reviewData.results.length}
+        </span>
+        
+        <button
+          onClick={handleNext}
+          disabled={currentQuestionIndex === reviewData.results.length - 1}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
 } 

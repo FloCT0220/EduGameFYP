@@ -6,10 +6,10 @@ import { FaClock, FaTrophy, FaArrowLeft, FaCheck, FaSpinner } from 'react-icons/
 import { getSession } from '@/lib/session';
 import toast from 'react-hot-toast';
 
-// Mock user context
-const useUser = () => {
-    return { user: { id: 1, username: 'student' } };
-};
+interface User {
+    id: number;
+    username: string;
+}
 
 interface Topic {
     id: number;
@@ -37,12 +37,12 @@ interface QuizAnswer {
 }
 
 export default function TopicContentPage() {
-    const { user } = useUser();
     const router = useRouter();
     const params = useParams();
     const courseId = params.id as string;
     const topicId = params.topicId as string;
 
+    const [user, setUser] = useState<User | null>(null);
     const [topic, setTopic] = useState<Topic | null>(null);
     const [questions, setQuestions] = useState<QuizQuestion[]>([]);
     const [loading, setLoading] = useState(true);
@@ -60,6 +60,43 @@ export default function TopicContentPage() {
     } | null>(null);
 
     const [readingStartTime, setReadingStartTime] = useState<number>(Date.now());
+
+    useEffect(() => {
+        const initializeUser = async () => {
+            const token = getSession('authToken');
+            if (!token) {
+                router.push('/login');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        setUser(data.user);
+                    } else {
+                        toast.error('Failed to load user data');
+                        router.push('/login');
+                    }
+                } else {
+                    toast.error('Failed to authenticate');
+                    router.push('/login');
+                }
+            } catch (error) {
+                console.error('Error fetching user:', error);
+                toast.error('Error loading user data');
+                router.push('/login');
+            }
+        };
+
+        initializeUser();
+    }, [router]);
 
     useEffect(() => {
         if (courseId && topicId && user?.id) {
@@ -151,6 +188,7 @@ export default function TopicContentPage() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
+                    userId: user?.id,  // Add user ID
                     courseId: parseInt(courseId),
                     topicId: topicId,
                     answers: answers,
@@ -184,7 +222,9 @@ export default function TopicContentPage() {
     };
 
     const handleBackToCourse = () => {
-        router.push(`/courses/${courseId}`);
+        // Add refresh parameter if topic was just completed
+        const refreshParam = quizResults?.passed ? '?refresh=true' : '';
+        router.push(`/courses/${courseId}${refreshParam}`);
     };
 
     const handleRetryQuiz = () => {
