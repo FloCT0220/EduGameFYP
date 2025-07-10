@@ -8,7 +8,7 @@ interface Course {
   description: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   category: string;
-  thumbnail_url: string;
+  thumbnail_url: string | null;
   is_active: boolean;
   enrolled_count: number;
 }
@@ -26,7 +26,8 @@ export default function AdminSubjects() {
     description: '',
     difficulty: 'beginner' as Difficulty,
     category: '',
-    thumbnail_url: ''
+    thumbnail_url: '',
+    is_published: false
   });
 
   useEffect(() => {
@@ -75,7 +76,8 @@ export default function AdminSubjects() {
           description: '',
           difficulty: 'beginner',
           category: '',
-          thumbnail_url: ''
+          thumbnail_url: '',
+          is_published: false
         });
         fetchCourses();
       }
@@ -91,7 +93,8 @@ export default function AdminSubjects() {
       description: course.description,
       difficulty: course.difficulty as Difficulty,
       category: course.category,
-      thumbnail_url: course.thumbnail_url
+      thumbnail_url: course.thumbnail_url || '',
+      is_published: course.is_active
     });
     setShowForm(true);
   };
@@ -208,11 +211,30 @@ export default function AdminSubjects() {
                       </label>
                       <input
                         type="url"
-                        value={formData.thumbnail_url}
-                        onChange={(e) => setFormData({...formData, thumbnail_url: e.target.value})}
+                        value={formData.thumbnail_url || ''}
+                        onChange={(e) => setFormData({...formData, thumbnail_url: e.target.value || ''})}
                         className="w-full p-2 border border-gray-300 rounded-lg"
                         placeholder="https://example.com/image.jpg"
                       />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700">
+                        Published
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, is_published: !formData.is_published})}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                          formData.is_published ? 'bg-blue-600' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            formData.is_published ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
                     </div>
                   </div>
                   
@@ -227,7 +249,8 @@ export default function AdminSubjects() {
                           description: '',
                           difficulty: 'beginner',
                           category: '',
-                          thumbnail_url: ''
+                          thumbnail_url: '',
+                          is_published: false
                         });
                       }}
                       className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"

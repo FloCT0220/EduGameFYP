@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
                 c.difficulty_level,
                 c.category,
                 u.username as creator_name,
-                c.enrolled_count,
+                (SELECT COUNT(*) FROM user_enrollments WHERE course_id = c.id) as enrolled_count,
                 CASE WHEN ue.user_id IS NOT NULL THEN true ELSE false END as enrolled,
                 COALESCE(ue.progress_percentage, 0) as progress_percentage,
                 COALESCE(ue.total_points_earned, 0) as total_points_earned
@@ -96,12 +96,6 @@ export async function POST(request: NextRequest) {
              (user_id, course_id, enrolled_at, progress_percentage, total_points_earned)
              VALUES (?, ?, NOW(), 0, 0)`,
             [userId, courseId]
-        );
-
-        // Update course enrolled count
-        await query(
-            'UPDATE courses SET enrolled_count = enrolled_count + 1 WHERE id = ?',
-            [courseId]
         );
 
         return NextResponse.json({

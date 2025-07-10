@@ -85,7 +85,6 @@ const createTables = async () => {
       thumbnail_url VARCHAR(255),
       is_published BOOLEAN DEFAULT FALSE,
       created_by INT,
-      enrolled_count INT DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,

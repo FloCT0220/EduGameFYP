@@ -29,7 +29,7 @@ const navigationItems = [
   { href: '/admin/subjects', icon: FaBook, label: 'Course Materials', description: 'Upload & curate content' },
   { href: '/admin/quizzes', icon: FaQuestionCircle, label: 'Assessments', description: 'Manage quizzes & tests' },
   { href: '/admin/coding-challenges', icon: FaCode, label: 'Coding Challenges', description: 'Programming exercises' },
-  { href: '/admin/achievements', icon: FaTrophy, label: 'Gamification', description: 'Rewards & badges' },
+  { href: '/admin/achievements', icon: FaTrophy, label: 'Achievements', description: 'Rewards & badges' },
   { href: '/admin/analytics', icon: FaChartBar, label: 'Analytics', description: 'Platform-wide insights' },
   { href: '/admin/setup', icon: FaCog, label: 'Settings', description: 'System configuration' }
 ];

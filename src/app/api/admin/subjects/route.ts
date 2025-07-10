@@ -22,18 +22,18 @@ export async function GET() {
   try {
     const courses = await query(`
       SELECT 
-        id,
-        title,
-        description,
-        difficulty_level as difficulty,
-        category,
-        thumbnail_url,
-        is_published as is_active,
-        enrolled_count,
-        created_at,
-        updated_at
-      FROM courses 
-      ORDER BY title
+        c.id,
+        c.title,
+        c.description,
+        c.difficulty_level as difficulty,
+        c.category,
+        c.thumbnail_url,
+        c.is_published as is_active,
+        (SELECT COUNT(*) FROM user_enrollments WHERE course_id = c.id) as enrolled_count,
+        c.created_at,
+        c.updated_at
+      FROM courses c
+      ORDER BY c.title
     `) as Course[];
 
     return NextResponse.json(courses);
@@ -49,12 +49,12 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description, difficulty, category, thumbnail_url } = body;
+    const { title, description, difficulty, category, thumbnail_url, is_published } = body;
 
     const result = await query(`
       INSERT INTO courses (title, description, difficulty_level, category, thumbnail_url, is_published)
       VALUES (?, ?, ?, ?, ?, ?)
-    `, [title, description, difficulty, category, thumbnail_url, true]) as InsertResult;
+    `, [title, description, difficulty, category, thumbnail_url, is_published]) as InsertResult;
 
     return NextResponse.json({ success: true, id: result.insertId });
   } catch (error) {
