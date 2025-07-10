@@ -6,21 +6,22 @@ export async function PUT(
   { params }: { params: { subjectId: string } }
 ) {
   try {
-    const subjectId = parseInt(params.subjectId);
+    const awaitedParams = await params;
+    const courseId = parseInt(awaitedParams.subjectId);
     const body = await request.json();
-    const { title, description, difficulty, estimated_duration, icon, color_theme } = body;
+    const { title, description, difficulty, category, thumbnail_url } = body;
 
     await query(`
-      UPDATE subjects 
-      SET title = ?, description = ?, difficulty = ?, estimated_duration = ?, icon = ?, color_theme = ?, updated_at = NOW()
+      UPDATE courses 
+      SET title = ?, description = ?, difficulty_level = ?, category = ?, thumbnail_url = ?, updated_at = NOW()
       WHERE id = ?
-    `, [title, description, difficulty, estimated_duration, icon, color_theme, subjectId]);
+    `, [title, description, difficulty, category, thumbnail_url, courseId]);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating subject:', error);
+    console.error('Error updating course:', error);
     return NextResponse.json(
-      { error: 'Failed to update subject' },
+      { error: 'Failed to update course' },
       { status: 500 }
     );
   }
@@ -31,15 +32,16 @@ export async function DELETE(
   { params }: { params: { subjectId: string } }
 ) {
   try {
-    const subjectId = parseInt(params.subjectId);
+    const awaitedParams = await params;
+    const courseId = parseInt(awaitedParams.subjectId);
 
-    await query('DELETE FROM subjects WHERE id = ?', [subjectId]);
+    await query('DELETE FROM courses WHERE id = ?', [courseId]);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting subject:', error);
+    console.error('Error deleting course:', error);
     return NextResponse.json(
-      { error: 'Failed to delete subject' },
+      { error: 'Failed to delete course' },
       { status: 500 }
     );
   }

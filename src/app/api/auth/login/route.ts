@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateUser, generateToken } from '@/lib/auth';
+import { initializeDatabase } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize database on first login attempt
+    await initializeDatabase();
+    
     const { email, password } = await request.json();
 
     if (!email || !password) {

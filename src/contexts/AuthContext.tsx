@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getSession, setSession, removeSession, getSessionExpiry, refreshSession } from '@/lib/session';
 
 interface User {
   id: number;
@@ -15,7 +16,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ user: User | null; success: boolean }>;
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;
@@ -34,13 +35,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
+      const token = getSession('authToken');
+      const expiryTime = getSessionExpiry('authToken');
+      
+      if (!token || !expiryTime) {
         setLoading(false);
         return;
       }
 
-      // Verify token with server
+      // Check if session has expired
+      const now = new Date().getTime();
+      
+      if (now > expiryTime) {
+        // Session expired, clear storage
+        removeSession('authToken');
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Session is still valid, verify with server
       const response = await fetch('/api/auth/verify', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -50,21 +64,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData.user);
+        
+        // Refresh the session expiry time (5 minutes from now)
+        refreshSession('authToken', 5);
       } else {
-        // Token invalid, clear it
-        localStorage.removeItem('authToken');
+        // Token invalid, clear session
+        removeSession('authToken');
         setUser(null);
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
-      localStorage.removeItem('authToken');
+      removeSession('authToken');
       setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ user: User | null; success: boolean }> => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -77,18 +94,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-        localStorage.setItem('authToken', data.token);
-        return true;
+        
+        // Set session with 5-minute expiry
+        setSession('authToken', data.token, 5);
+        
+        return { user: data.user, success: true };
       }
-      return false;
+      return { user: null, success: false };
     } catch (error) {
       console.error('Login error:', error);
-      return false;
+      return { user: null, success: false };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken');
+    removeSession('authToken');
     setUser(null);
   };
 

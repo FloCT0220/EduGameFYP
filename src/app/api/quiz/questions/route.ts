@@ -5,8 +5,34 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const courseId = searchParams.get('courseId');
-    const topicId = searchParams.get('topicId'); // Changed from nodeId to topicId for clarity
+    const topicId = searchParams.get('topicId');
 
+    // If no parameters provided, return all questions for admin management
+    if (!courseId && !topicId) {
+      const { query } = await import('@/lib/db');
+      const questions = await query(`
+        SELECT 
+          id,
+          question_id,
+          subject_id,
+          node_id,
+          question,
+          option_a,
+          option_b,
+          option_c,
+          option_d,
+          correct_answer,
+          points,
+          difficulty,
+          is_active
+        FROM quiz_questions 
+        ORDER BY created_at DESC
+      `);
+
+      return NextResponse.json(questions);
+    }
+
+    // Original logic for specific course/topic
     if (!courseId || !topicId) {
       return NextResponse.json(
         { error: 'Course ID and Topic ID are required' },
@@ -33,8 +59,7 @@ export async function GET(request: NextRequest) {
       points: question.points,
       difficulty: question.difficulty,
       // Don't send correct answer to frontend for security
-      correctAnswer: undefined,
-      explanation: question.explanation
+      correctAnswer: undefined
     }));
 
     return NextResponse.json({
@@ -65,8 +90,7 @@ export async function POST(request: NextRequest) {
       option_d,
       correct_answer,
       points,
-      difficulty,
-      explanation
+      difficulty
     } = body;
 
     if (!question_id || !course_id || !node_id || !question || 
@@ -96,8 +120,7 @@ export async function POST(request: NextRequest) {
       option_d,
       correct_answer,
       points,
-      difficulty,
-      explanation
+      difficulty
     });
 
     return NextResponse.json({

@@ -24,21 +24,13 @@ export default function Navigation() {
         return null; // Don't show navigation on landing and auth pages
     }
 
-    // Check if we should show sidebar (on main app pages)
-    const shouldShowSidebar = pathname === '/dashboard' || 
-                             pathname === '/courses' || 
-                             pathname.startsWith('/courses/') ||
-                             pathname === '/coding-sim' ||
-                             pathname === '/leaderboard' ||
-                             pathname === '/profile' ||
-                             pathname.startsWith('/admin/dashboard');
-
-    if (!shouldShowSidebar) {
-        return null; // Don't show sidebar on other pages
+    // Don't show navigation on admin pages (admin layout has its own sidebar)
+    if (pathname.startsWith('/admin/')) {
+        return null;
     }
 
     return (
-        <nav className="fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-blue-900 to-blue-800 shadow-2xl z-50 md:block hidden">
+        <nav className="fixed top-0 left-0 h-screen w-64 bg-gradient-to-b from-blue-900 to-blue-800 shadow-2xl z-40 block">
             <div className="flex flex-col h-full">
                 {/* Logo/Header */}
                 <div className="flex items-center p-4 border-b border-blue-700">
@@ -64,6 +56,7 @@ export default function Navigation() {
                             const isActive = pathname === item.path || 
                                            (item.path === '/dashboard' && pathname === '/dashboard') ||
                                            (item.path === '/courses' && pathname.startsWith('/courses')) ||
+                                           (item.path === '/coding-sim' && pathname === '/coding-sim') ||
                                            (item.path === '/leaderboard' && pathname === '/leaderboard');
                             
                             return (

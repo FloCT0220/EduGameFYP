@@ -50,10 +50,11 @@ export default function Dashboard() {
 
     // Redirect to login if not authenticated
     useEffect(() => {
-        if (!authLoading && !isAuthenticated) {
+        // Only redirect if auth check is complete AND user is not authenticated
+        if (!authLoading && !user && !isAuthenticated) {
             router.push('/login');
         }
-    }, [authLoading, isAuthenticated, router]);
+    }, [authLoading, user, isAuthenticated, router]);
 
     // Fetch dashboard data from API
     useEffect(() => {

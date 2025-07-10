@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { getSession } from '@/lib/session';
 import PointsDisplay from '@/components/gamification/PointsDisplay';
 
 interface UserProfile {
@@ -52,10 +53,11 @@ export default function ProfilePage() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    // Only redirect if auth check is complete AND user is not authenticated
+    if (!authLoading && !user && !isAuthenticated) {
       router.push('/login');
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, user, isAuthenticated, router]);
 
   // Fetch profile data
   useEffect(() => {
@@ -114,7 +116,7 @@ export default function ProfilePage() {
 
   const handleSaveProfile = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getSession('authToken');
       const response = await fetch('/api/users', {
         method: 'PUT',
         headers: {

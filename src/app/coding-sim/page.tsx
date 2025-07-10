@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { getSession } from "@/lib/session";
 import dynamic from "next/dynamic";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
@@ -157,7 +158,7 @@ export default function CodingSimPage() {
 
   const fetchChallenges = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getSession('authToken');
       const params = new URLSearchParams({
         page: '1',
         limit: '50',
@@ -190,7 +191,7 @@ export default function CodingSimPage() {
   const fetchChallengeDetails = async (challengeId: number) => {
     setChallengeLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getSession('authToken');
       const response = await fetch(`/api/coding-challenges/${challengeId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -220,7 +221,7 @@ export default function CodingSimPage() {
     setOutput('');
     
     try {
-      const token = localStorage.getItem('authToken');
+      const token = getSession('authToken');
       const response = await fetch('/api/coding-challenges/submit', {
         method: 'POST',
         headers: {

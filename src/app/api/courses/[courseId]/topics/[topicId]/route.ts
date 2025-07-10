@@ -23,6 +23,7 @@ export async function GET(
                 t.id,
                 t.title,
                 t.content,
+                t.structured_content,
                 t.lesson_order,
                 t.points_reward as points,
                 t.duration_minutes as estimated_time,
@@ -33,14 +34,14 @@ export async function GET(
 
         const topicResult = await query(topicQuery, [parseInt(courseId), parseInt(topicId)]);
 
-        if (!topicResult || topicResult.length === 0) {
+        if (!topicResult || !Array.isArray(topicResult) || topicResult.length === 0) {
             return NextResponse.json(
                 { error: 'Topic not found' },
                 { status: 404 }
             );
         }
 
-        const topicData = topicResult[0];
+        const topicData = topicResult[0] as any;
 
         // Check if user has completed this topic
         const progressQuery = `
@@ -50,7 +51,8 @@ export async function GET(
         `;
 
         const progressResult = await query(progressQuery, [parseInt(userId), parseInt(courseId), parseInt(topicId)]);
-        const isCompleted = progressResult.length > 0 && progressResult[0].completed;
+        const progressArray = Array.isArray(progressResult) ? progressResult : [];
+        const isCompleted = progressArray.length > 0 && (progressArray[0] as any).completed;
         
         // Get last quiz attempt ID if completed
         let lastAttemptId = null;
@@ -66,20 +68,31 @@ export async function GET(
             `;
             
             const lastAttemptResult = await query(lastAttemptQuery, [parseInt(userId), parseInt(courseId), topicId]);
-            if (lastAttemptResult && lastAttemptResult.length > 0) {
-                lastAttemptId = lastAttemptResult[0].id;
-                pointsEarned = lastAttemptResult[0].total_points || progressResult[0].points_earned || 0;
+            const lastAttemptArray = Array.isArray(lastAttemptResult) ? lastAttemptResult : [];
+            if (lastAttemptArray.length > 0) {
+                lastAttemptId = (lastAttemptArray[0] as any).id;
+                pointsEarned = (lastAttemptArray[0] as any).total_points || (progressArray[0] as any)?.points_earned || 0;
             }
         }
 
         // Get duration in minutes
         const durationMinutes = topicData.estimated_time || 30;
 
-        // Create enhanced content if it's basic
-        let enhancedContent = topicData.content;
-        if (!enhancedContent || enhancedContent.length < 200) {
-            enhancedContent = generateEnhancedContent(topicData.title, topicData.content);
+        // Parse structured content
+        let structuredContent: StructuredContent | undefined;
+        
+        if (topicData.structured_content) {
+            try {
+                structuredContent = typeof topicData.structured_content === 'string' 
+                    ? JSON.parse(topicData.structured_content) 
+                    : topicData.structured_content;
+            } catch (error) {
+                console.error('Error parsing structured content:', error);
+            }
         }
+        
+        // Generate enhanced content using structured content
+        const enhancedContent = generateEnhancedContent(topicData.title, topicData.content || '', structuredContent);
 
         const topic = {
             id: topicData.id,
@@ -108,15 +121,24 @@ export async function GET(
     }
 }
 
-function generateEnhancedContent(title: string, basicContent: string): string {
-    // This is a simple content enhancement - in a real app, you'd have rich content stored
-    const sections = [
+interface ContentSection {
+    title: string;
+    content: string;
+}
+
+interface StructuredContent {
+    sections: ContentSection[];
+}
+
+function generateEnhancedContent(title: string, basicContent: string, structuredContent?: StructuredContent): string {
+    // Use structured content if available, otherwise create default sections
+    const sections = structuredContent?.sections || [
         {
             title: "Introduction",
             content: basicContent || `Welcome to ${title}! In this lesson, we'll explore the fundamental concepts and practical applications.`
         },
         {
-            title: "Key Concepts",
+            title: "Key Concepts", 
             content: `Let's dive into the core principles that make ${title} so important in modern development.`
         },
         {
@@ -140,22 +162,6 @@ function generateEnhancedContent(title: string, basicContent: string): string {
             </h2>
             <div style="color: #4b5563; line-height: 1.6; font-size: 1.1rem;">
                 <p>${section.content}</p>
-                ${section.title === "Key Concepts" ? `
-                    <ul style="margin-top: 1rem; padding-left: 1.5rem;">
-                        <li style="margin-bottom: 0.5rem;">Understanding the fundamentals</li>
-                        <li style="margin-bottom: 0.5rem;">Practical implementation strategies</li>
-                        <li style="margin-bottom: 0.5rem;">Common patterns and approaches</li>
-                    </ul>
-                ` : ''}
-                ${section.title === "Practical Examples" ? `
-                    <div style="background-color: #f3f4f6; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; border-left: 4px solid #3b82f6;">
-                        <code style="font-family: 'Courier New', monospace; color: #1f2937;">
-                            // Example implementation<br/>
-                            const example = "${title.toLowerCase().replace(/\s+/g, '')}";<br/>
-                            console.log("Learning:", example);
-                        </code>
-                    </div>
-                ` : ''}
             </div>
         </div>
     `).join('');

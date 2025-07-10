@@ -86,8 +86,7 @@ export async function GET(
                 qq.option_d,
                 qq.correct_answer,
                 qq.points,
-                qq.difficulty,
-                qq.explanation
+                qq.difficulty
             FROM quiz_questions qq
             WHERE qq.subject_id = ? AND qq.node_id = ? AND qq.is_active = true
             ORDER BY qq.id

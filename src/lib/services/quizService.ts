@@ -13,7 +13,6 @@ export interface QuizQuestion {
   correct_answer: number;
   points: number;
   difficulty: 'easy' | 'medium' | 'hard';
-  explanation?: string;
   is_active: boolean;
 }
 
@@ -294,13 +293,12 @@ export class QuizService {
     correct_answer: number;
     points?: number;
     difficulty?: 'easy' | 'medium' | 'hard';
-    explanation?: string;
   }): Promise<number> {
     const result = await query(`
       INSERT INTO quiz_questions 
       (question_id, course_id, node_id, question, option_a, option_b, 
-       option_c, option_d, correct_answer, points, difficulty, explanation)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       option_c, option_d, correct_answer, points, difficulty)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       questionData.question_id,
       questionData.course_id,
@@ -312,8 +310,7 @@ export class QuizService {
       questionData.option_d,
       questionData.correct_answer,
       questionData.points || 10,
-      questionData.difficulty || 'easy',
-      questionData.explanation || null
+      questionData.difficulty || 'easy'
     ]) as { insertId: number };
     
     return result.insertId;

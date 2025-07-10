@@ -224,6 +224,17 @@ async function updateLearningStreak(userId: number, pointsEarned: number) {
     try {
         const today = new Date().toISOString().split('T')[0];
         
+        // Check if this is the first activity of the day
+        const existingStreakQuery = `
+            SELECT activities_completed 
+            FROM learning_streaks 
+            WHERE user_id = ? AND streak_date = ?
+        `;
+        
+        const existingStreak = await query(existingStreakQuery, [userId, today]);
+        const isFirstActivityToday = !existingStreak || !Array.isArray(existingStreak) || existingStreak.length === 0;
+        
+        // Update or insert today's streak record
         const streakQuery = `
             INSERT INTO learning_streaks (user_id, streak_date, activities_completed, points_earned)
             VALUES (?, ?, 1, ?)
@@ -234,15 +245,17 @@ async function updateLearningStreak(userId: number, pointsEarned: number) {
 
         await query(streakQuery, [userId, today, pointsEarned]);
 
-        // Update user's current streak
-        const streakUpdateQuery = `
-            UPDATE users 
-            SET current_streak = current_streak + 1,
-                max_streak = GREATEST(max_streak, current_streak + 1)
-            WHERE id = ?
-        `;
+        // Only update user's current streak if this is the first activity of the day
+        if (isFirstActivityToday) {
+            const streakUpdateQuery = `
+                UPDATE users 
+                SET current_streak = current_streak + 1,
+                    max_streak = GREATEST(max_streak, current_streak + 1)
+                WHERE id = ?
+            `;
 
-        await query(streakUpdateQuery, [userId]);
+            await query(streakUpdateQuery, [userId]);
+        }
 
     } catch (error) {
         console.error('Error updating learning streak:', error);

@@ -60,13 +60,25 @@ export default function AdminQuizzes() {
         fetch('/api/subjects/skill-trees')
       ]);
       
-      const questionsData = await questionsResponse.json();
-      const skillTreesData = await skillTreesResponse.json();
+      if (questionsResponse.ok) {
+        const questionsData = await questionsResponse.json();
+        setQuestions(Array.isArray(questionsData) ? questionsData : []);
+      } else {
+        console.error('Failed to fetch questions:', questionsResponse.statusText);
+        setQuestions([]);
+      }
       
-      setQuestions(questionsData);
-      setSkillTrees(skillTreesData);
+      if (skillTreesResponse.ok) {
+        const skillTreesData = await skillTreesResponse.json();
+        setSkillTrees(Array.isArray(skillTreesData) ? skillTreesData : []);
+      } else {
+        console.error('Failed to fetch skill trees:', skillTreesResponse.statusText);
+        setSkillTrees([]);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
+      setQuestions([]);
+      setSkillTrees([]);
     } finally {
       setIsLoading(false);
     }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { getSession } from "@/lib/session";
 
 interface CodingChallenge {
   id: number;
@@ -88,7 +89,7 @@ export default function AdminCodingChallengesPage() {
 
   const fetchChallenges = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getSession('authToken');
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '10',
@@ -115,7 +116,7 @@ export default function AdminCodingChallengesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getSession('authToken');
       const url = selectedChallenge 
         ? `/api/admin/coding-challenges/${selectedChallenge.id}` 
         : '/api/admin/coding-challenges';
@@ -156,7 +157,7 @@ export default function AdminCodingChallengesPage() {
     if (!confirm('Are you sure you want to delete this challenge?')) return;
     
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getSession('authToken');
       const response = await fetch(`/api/admin/coding-challenges/${challengeId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
@@ -175,7 +176,7 @@ export default function AdminCodingChallengesPage() {
 
   const handleEdit = async (challenge: CodingChallenge) => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getSession('authToken');
       const response = await fetch(`/api/admin/coding-challenges/${challenge.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });

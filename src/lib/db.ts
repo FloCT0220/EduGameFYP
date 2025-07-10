@@ -100,18 +100,18 @@ const createTables = async () => {
       course_id INT NOT NULL,
       title VARCHAR(200) NOT NULL,
       content TEXT,
+      structured_content JSON,
       lesson_order INT NOT NULL,
       video_url VARCHAR(255),
       duration_minutes INT DEFAULT 15,
       points_reward INT DEFAULT 10,
       is_published BOOLEAN DEFAULT TRUE,
-      parent_topic_id INT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-      FOREIGN KEY (parent_topic_id) REFERENCES topics(id) ON DELETE SET NULL,
       INDEX idx_course_order (course_id, lesson_order),
-      INDEX idx_published (is_published)
+      INDEX idx_published (is_published),
+      UNIQUE KEY unique_course_lesson_order (course_id, lesson_order)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
     // User topic progress table
@@ -148,7 +148,6 @@ const createTables = async () => {
       correct_answer INT NOT NULL CHECK (correct_answer BETWEEN 0 AND 3),
       points INT DEFAULT 10,
       difficulty ENUM('easy', 'medium', 'hard') DEFAULT 'easy',
-      explanation TEXT,
       is_active BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_subject_node (subject_id, node_id),
@@ -427,13 +426,8 @@ const createTables = async () => {
   }
 };
 
-// Enhanced query function with auto-initialization
+// Enhanced query function (no auto-initialization)
 export const query = async (sql: string, params?: (string | number | boolean | null | Date)[]) => {
-  // Initialize database on first query
-  if (!isInitialized) {
-    await initializeDatabase();
-  }
-
   try {
     const pool = createPool();
     const [results] = await pool.execute(sql, params);
@@ -445,11 +439,6 @@ export const query = async (sql: string, params?: (string | number | boolean | n
 };
 
 export const beginTransaction = async () => {
-  // Initialize database if needed
-  if (!isInitialized) {
-    await initializeDatabase();
-  }
-
   const pool = createPool();
   const connection = await pool.getConnection();
   await connection.beginTransaction();
@@ -476,4 +465,4 @@ export const checkConnection = async () => {
   }
 };
 
-export default { query, createPool, beginTransaction, initializeDatabase, resetDatabase, checkConnection }; 
+export default { query, createPool, beginTransaction, initializeDatabase, resetDatabase, checkConnection };

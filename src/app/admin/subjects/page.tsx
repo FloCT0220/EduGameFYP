@@ -2,52 +2,51 @@
 
 import { useEffect, useState } from 'react';
 
-interface Subject {
+interface Course {
   id: number;
   title: string;
   description: string;
-  difficulty: 'foundation' | 'intermediate' | 'advanced';
-  estimated_duration: number;
-  icon: string;
-  color_theme: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  category: string;
+  thumbnail_url: string;
   is_active: boolean;
+  enrolled_count: number;
 }
 
 // Define a type for difficulty
-type Difficulty = 'foundation' | 'intermediate' | 'advanced';
+type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 
 export default function AdminSubjects() {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    difficulty: 'foundation' as Difficulty,
-    estimated_duration: 1,
-    icon: '📚',
-    color_theme: '#3B82F6'
+    difficulty: 'beginner' as Difficulty,
+    category: '',
+    thumbnail_url: ''
   });
 
   useEffect(() => {
-    fetchSubjects();
+    fetchCourses();
   }, []);
 
-  const fetchSubjects = async () => {
+  const fetchCourses = async () => {
     try {
       const response = await fetch('/api/admin/subjects');
       const data = await response.json();
       
       if (Array.isArray(data)) {
-        setSubjects(data);
+        setCourses(data);
       } else {
         console.error('Unexpected API response structure:', data);
-        setSubjects([]);
+        setCourses([]);
       }
     } catch (error) {
-      console.error('Error fetching subjects:', error);
-      setSubjects([]);
+      console.error('Error fetching courses:', error);
+      setCourses([]);
     } finally {
       setIsLoading(false);
     }
@@ -56,11 +55,11 @@ export default function AdminSubjects() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = editingSubject 
-        ? `/api/admin/subjects/${editingSubject.id}`
+      const url = editingCourse 
+        ? `/api/admin/subjects/${editingCourse.id}`
         : '/api/admin/subjects';
       
-      const method = editingSubject ? 'PUT' : 'POST';
+      const method = editingCourse ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
         method,
@@ -70,37 +69,35 @@ export default function AdminSubjects() {
 
       if (response.ok) {
         setShowForm(false);
-        setEditingSubject(null);
+        setEditingCourse(null);
         setFormData({
           title: '',
           description: '',
-          difficulty: 'foundation',
-          estimated_duration: 1,
-          icon: '📚',
-          color_theme: '#3B82F6'
+          difficulty: 'beginner',
+          category: '',
+          thumbnail_url: ''
         });
-        fetchSubjects();
+        fetchCourses();
       }
     } catch (error) {
-      console.error('Error saving subject:', error);
+      console.error('Error saving course:', error);
     }
   };
 
-  const handleEdit = (subject: Subject) => {
-    setEditingSubject(subject);
+  const handleEdit = (course: Course) => {
+    setEditingCourse(course);
     setFormData({
-      title: subject.title,
-      description: subject.description,
-      difficulty: subject.difficulty as Difficulty,
-      estimated_duration: subject.estimated_duration,
-      icon: subject.icon,
-      color_theme: subject.color_theme
+      title: course.title,
+      description: course.description,
+      difficulty: course.difficulty as Difficulty,
+      category: course.category,
+      thumbnail_url: course.thumbnail_url
     });
     setShowForm(true);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this subject?')) return;
+    if (!confirm('Are you sure you want to delete this course?')) return;
     
     try {
       const response = await fetch(`/api/admin/subjects/${id}`, {
@@ -108,10 +105,10 @@ export default function AdminSubjects() {
       });
       
       if (response.ok) {
-        fetchSubjects();
+        fetchCourses();
       }
     } catch (error) {
-      console.error('Error deleting subject:', error);
+      console.error('Error deleting course:', error);
     }
   };
 
@@ -132,12 +129,12 @@ export default function AdminSubjects() {
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Manage Subjects</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Manage Courses</h1>
             <button
               onClick={() => setShowForm(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Add Subject
+              Add Course
             </button>
           </div>
 
@@ -146,7 +143,7 @@ export default function AdminSubjects() {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-lg w-full max-w-md">
                 <h2 className="text-xl font-semibold mb-4">
-                  {editingSubject ? 'Edit Subject' : 'Add Subject'}
+                  {editingCourse ? 'Edit Course' : 'Add Course'}
                 </h2>
                 <form onSubmit={handleSubmit}>
                   <div className="space-y-4">
@@ -185,7 +182,7 @@ export default function AdminSubjects() {
                         onChange={(e) => setFormData({...formData, difficulty: e.target.value as Difficulty})}
                         className="w-full p-2 border border-gray-300 rounded-lg"
                       >
-                        <option value="foundation">Foundation</option>
+                        <option value="beginner">Beginner</option>
                         <option value="intermediate">Intermediate</option>
                         <option value="advanced">Advanced</option>
                       </select>
@@ -193,28 +190,28 @@ export default function AdminSubjects() {
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Estimated Duration (hours)
+                        Category
                       </label>
                       <input
-                        type="number"
-                        value={formData.estimated_duration}
-                        onChange={(e) => setFormData({...formData, estimated_duration: parseInt(e.target.value)})}
+                        type="text"
+                        value={formData.category}
+                        onChange={(e) => setFormData({...formData, category: e.target.value})}
                         className="w-full p-2 border border-gray-300 rounded-lg"
-                        min="1"
+                        placeholder="e.g., Programming, Web Development"
                         required
                       />
                     </div>
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Icon
+                        Thumbnail URL
                       </label>
                       <input
-                        type="text"
-                        value={formData.icon}
-                        onChange={(e) => setFormData({...formData, icon: e.target.value})}
+                        type="url"
+                        value={formData.thumbnail_url}
+                        onChange={(e) => setFormData({...formData, thumbnail_url: e.target.value})}
                         className="w-full p-2 border border-gray-300 rounded-lg"
-                        placeholder="📚"
+                        placeholder="https://example.com/image.jpg"
                       />
                     </div>
                   </div>
@@ -224,14 +221,13 @@ export default function AdminSubjects() {
                       type="button"
                       onClick={() => {
                         setShowForm(false);
-                        setEditingSubject(null);
+                        setEditingCourse(null);
                         setFormData({
                           title: '',
                           description: '',
-                          difficulty: 'foundation',
-                          estimated_duration: 1,
-                          icon: '📚',
-                          color_theme: '#3B82F6'
+                          difficulty: 'beginner',
+                          category: '',
+                          thumbnail_url: ''
                         });
                       }}
                       className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -242,7 +238,7 @@ export default function AdminSubjects() {
                       type="submit"
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
-                      {editingSubject ? 'Update' : 'Create'}
+                      {editingCourse ? 'Update' : 'Create'}
                     </button>
                   </div>
                 </form>
@@ -250,90 +246,95 @@ export default function AdminSubjects() {
             </div>
           )}
 
-          {/* Subjects List */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Subject
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Difficulty
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Duration
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {subjects.map((subject) => (
-                    <tr key={subject.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <span className="text-2xl mr-3">{subject.icon}</span>
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {subject.title}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {subject.description.substring(0, 50)}...
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          subject.difficulty === 'foundation' ? 'bg-green-100 text-green-800' :
-                          subject.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {subject.difficulty}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {subject.estimated_duration}h
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          subject.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {subject.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEdit(subject)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(subject.id)}
-                          className="text-red-600 hover:text-red-900 mr-3"
-                        >
-                          Delete
-                        </button>
-                        <button
-                          onClick={() => window.location.href = `/admin/subjects/${subject.id}/nodes`}
-                          className="text-purple-600 hover:text-purple-900"
-                        >
-                          Manage Nodes
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          {/* Courses Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.map((course) => (
+              <div key={course.id} className="bg-white rounded-lg shadow-md p-6">
+                                 <div className="flex justify-between items-start mb-4">
+                   <h3 className="text-xl font-semibold text-gray-900">{course.title}</h3>
+                   <div className="flex space-x-2">
+                     <button
+                       onClick={() => window.location.href = `/admin/subjects/${course.id}/nodes`}
+                       className="text-purple-600 hover:text-purple-800 text-sm"
+                     >
+                       Topics
+                     </button>
+                     <button
+                       onClick={() => handleEdit(course)}
+                       className="text-blue-600 hover:text-blue-800"
+                     >
+                       Edit
+                     </button>
+                     <button
+                       onClick={() => handleDelete(course.id)}
+                       className="text-red-600 hover:text-red-800"
+                     >
+                       Delete
+                     </button>
+                   </div>
+                 </div>
+                
+                <p className="text-gray-600 mb-3">{course.description}</p>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Difficulty:</span>
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      course.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
+                      course.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Category:</span>
+                    <span className="text-gray-900">{course.category}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Enrolled:</span>
+                    <span className="text-gray-900">{course.enrolled_count} students</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Status:</span>
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      course.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {course.is_active ? 'Published' : 'Draft'}
+                    </span>
+                  </div>
+                </div>
+                
+                {course.thumbnail_url && (
+                  <div className="mt-4">
+                    <img 
+                      src={course.thumbnail_url} 
+                      alt={course.title}
+                      className="w-full h-32 object-cover rounded-lg"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
+
+          {courses.length === 0 && !isLoading && (
+            <div className="text-center py-12">
+              <div className="text-gray-500 text-lg">No courses found</div>
+              <button
+                onClick={() => setShowForm(true)}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Create your first course
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

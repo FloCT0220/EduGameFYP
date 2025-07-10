@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { FaClock, FaTrophy, FaArrowLeft, FaCheck, FaSpinner, FaLightbulb } from 'react-icons/fa';
+import { FaClock, FaTrophy, FaArrowLeft, FaCheck, FaSpinner } from 'react-icons/fa';
+import { getSession } from '@/lib/session';
 import toast from 'react-hot-toast';
 
 // Mock user context
@@ -28,7 +29,6 @@ interface QuizQuestion {
     options: string[];
     points: number;
     difficulty: string;
-    explanation?: string;
 }
 
 interface QuizAnswer {
@@ -58,7 +58,7 @@ export default function TopicContentPage() {
         passed: boolean;
         attemptId?: number;
     } | null>(null);
-    const [showExplanation, setShowExplanation] = useState(false);
+
     const [readingStartTime, setReadingStartTime] = useState<number>(Date.now());
 
     useEffect(() => {
@@ -132,7 +132,6 @@ export default function TopicContentPage() {
     const handleNextQuestion = () => {
         if (currentQuestion < questions.length - 1) {
             setCurrentQuestion(prev => prev + 1);
-            setShowExplanation(false);
         } else {
             handleSubmitQuiz();
         }
@@ -143,7 +142,7 @@ export default function TopicContentPage() {
         try {
             const timeSpent = Math.floor((Date.now() - readingStartTime) / 1000 / 60); // in minutes
             
-            const token = localStorage.getItem('authToken');
+            const token = getSession('authToken');
             
             const response = await fetch(`/api/quiz/submit`, {
                 method: 'POST',
@@ -194,7 +193,6 @@ export default function TopicContentPage() {
         setAnswers([]);
         setQuizCompleted(false);
         setQuizResults(null);
-        setShowExplanation(false);
     };
 
     if (loading) {
@@ -360,26 +358,8 @@ export default function TopicContentPage() {
                             ))}
                         </div>
 
-                        {/* Explanation */}
-                        {showExplanation && currentQuestionData.explanation && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <FaLightbulb className="text-blue-600" />
-                                    <span className="font-medium text-blue-900">Explanation</span>
-                                </div>
-                                <p className="text-blue-800">{currentQuestionData.explanation}</p>
-                            </div>
-                        )}
-
                         {/* Navigation */}
-                        <div className="flex justify-between items-center">
-                            <button
-                                onClick={() => setShowExplanation(!showExplanation)}
-                                className="px-4 py-2 text-blue-600 hover:text-blue-800 transition-colors"
-                                disabled={!currentQuestionData.explanation}
-                            >
-                                {showExplanation ? 'Hide' : 'Show'} Explanation
-                            </button>
+                        <div className="flex justify-end items-center">
                             
                             <div className="flex gap-3">
                                 <button
@@ -503,7 +483,7 @@ export default function TopicContentPage() {
                             🎉 Topic Completed!
                         </h2>
                         <p className="text-gray-600 mb-6">
-                            Great job! You've successfully completed this topic and earned {topic.points_earned || topic.points_reward} points.
+                            Great job! You&apos;ve successfully completed this topic and earned {topic.points_earned || topic.points_reward} points.
                         </p>
                         
                         <div className="flex items-center justify-center gap-8 mb-6">
