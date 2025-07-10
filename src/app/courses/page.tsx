@@ -307,29 +307,22 @@ export default function CoursesPage() {
                                 </div>
                             </div>
                             
-                            <div className="flex gap-2">
+                            <div>
                                 {course.enrolled ? (
                                     <button 
                                         onClick={() => window.location.href = `/courses/${course.id}`}
-                                        className="flex-1 btn btn-primary"
+                                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                                     >
                                         Continue Learning
                                     </button>
                                 ) : (
                                     <button 
                                         onClick={() => handleEnrollment(course.id)}
-                                        className="flex-1 btn btn-success"
+                                        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                                     >
                                         Enroll Now
                                     </button>
                                 )}
-                                
-                                <button 
-                                    onClick={() => window.location.href = `/courses/${course.id}`}
-                                    className="px-3 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                                >
-                                    👁️
-                                </button>
                             </div>
                         </div>
                     ))}
