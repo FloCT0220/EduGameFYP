@@ -19,14 +19,6 @@ interface ChallengeAnswer {
 // Define a type for difficulty
 type Difficulty = 'easy' | 'intermediate' | 'hard';
 
-interface Category {
-  id: number;
-  name: string;
-  description: string;
-  color: string;
-  sort_order: number;
-}
-
 const DIFFICULTY_OPTIONS = [
   { value: 'easy', label: 'Easy', color: 'bg-green-100 text-green-800' },
   { value: 'intermediate', label: 'Intermediate', color: 'bg-yellow-100 text-yellow-800' },
@@ -41,14 +33,12 @@ export default function AddCodingChallenge() {
   const router = useRouter();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [difficulties, setDifficulties] = useState<Category[]>([]);
-  const [languages, setLanguages] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    difficulty_id: 1, // Default to first difficulty
+    difficulty: 'easy' as Difficulty,
     points: 10,
-    supported_languages: [1], // Default to first language
+    supported_languages: ['python'],
     tags: [''],
     is_active: true
   });

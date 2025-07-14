@@ -267,28 +267,12 @@ const createTables = async () => {
       INDEX idx_date (streak_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // Lookup tables for categories and options
-    `CREATE TABLE IF NOT EXISTS categories (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(100) NOT NULL,
-      description TEXT,
-      type ENUM('difficulty', 'language', 'tag', 'achievement', 'subject') NOT NULL,
-      color VARCHAR(20) DEFAULT 'blue',
-      is_active BOOLEAN DEFAULT TRUE,
-      sort_order INT DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE KEY unique_name_type (name, type),
-      INDEX idx_type (type),
-      INDEX idx_active (is_active),
-      INDEX idx_sort_order (sort_order)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
     // Coding challenges table
     `CREATE TABLE IF NOT EXISTS coding_challenges (
       id INT AUTO_INCREMENT PRIMARY KEY,
       title VARCHAR(200) NOT NULL,
       description TEXT,
-      difficulty_id INT NOT NULL,
+      difficulty ENUM('easy', 'intermediate', 'hard') DEFAULT 'easy',
       points INT DEFAULT 10,
       supported_languages JSON,
       tags JSON,
@@ -297,8 +281,7 @@ const createTables = async () => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-      FOREIGN KEY (difficulty_id) REFERENCES categories(id),
-      INDEX idx_difficulty (difficulty_id),
+      INDEX idx_difficulty (difficulty),
       INDEX idx_active (is_active),
       INDEX idx_created_by (created_by)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
@@ -307,16 +290,15 @@ const createTables = async () => {
     `CREATE TABLE IF NOT EXISTS coding_challenge_answers (
       id INT AUTO_INCREMENT PRIMARY KEY,
       challenge_id INT NOT NULL,
-      language_id INT NOT NULL,
+      programming_language VARCHAR(50) NOT NULL,
       code_snippets JSON NOT NULL,
       correct_answer JSON NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (challenge_id) REFERENCES coding_challenges(id) ON DELETE CASCADE,
-      FOREIGN KEY (language_id) REFERENCES categories(id),
       INDEX idx_challenge (challenge_id),
-      INDEX idx_language (language_id),
-      UNIQUE KEY unique_challenge_language (challenge_id, language_id)
+      INDEX idx_language (programming_language),
+      UNIQUE KEY unique_challenge_language (challenge_id, programming_language)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
     // Challenge submissions table
@@ -324,17 +306,15 @@ const createTables = async () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,
       challenge_id INT NOT NULL,
-      language_id INT NOT NULL,
+      programming_language VARCHAR(50) NOT NULL,
       submitted_answer JSON NOT NULL,
       is_correct BOOLEAN NOT NULL,
       points_earned INT DEFAULT 0,
       submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (challenge_id) REFERENCES coding_challenges(id) ON DELETE CASCADE,
-      FOREIGN KEY (language_id) REFERENCES categories(id),
       INDEX idx_user (user_id),
       INDEX idx_challenge (challenge_id),
-      INDEX idx_language (language_id),
       INDEX idx_correct (is_correct),
       INDEX idx_submitted_at (submitted_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
@@ -346,6 +326,9 @@ const createTables = async () => {
       challenges_attempted INT DEFAULT 0,
       challenges_solved INT DEFAULT 0,
       total_submissions INT DEFAULT 0,
+      easy_solved INT DEFAULT 0,
+      intermediate_solved INT DEFAULT 0,
+      hard_solved INT DEFAULT 0,
       total_coding_points INT DEFAULT 0,
       average_attempts DECIMAL(3,1) DEFAULT 0.0,
       best_streak INT DEFAULT 0,
@@ -355,22 +338,6 @@ const createTables = async () => {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       UNIQUE KEY unique_user_stats (user_id),
       INDEX idx_user (user_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-    // User coding stats by difficulty
-    `CREATE TABLE IF NOT EXISTS user_coding_stats_by_difficulty (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT NOT NULL,
-      difficulty_id INT NOT NULL,
-      challenges_solved INT DEFAULT 0,
-      total_points INT DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (difficulty_id) REFERENCES categories(id),
-      UNIQUE KEY unique_user_difficulty (user_id, difficulty_id),
-      INDEX idx_user (user_id),
-      INDEX idx_difficulty (difficulty_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
   ];
@@ -406,67 +373,6 @@ const createTables = async () => {
 
   } catch (error) {
     console.log('ℹ️ Error checking/adding columns:', error);
-  }
-
-  // Populate categories table with default data
-  await populateCategories();
-};
-
-// Function to populate categories table with default data
-const populateCategories = async () => {
-  try {
-    const pool = createPool();
-    
-    // Check if categories table has data
-    const [existingCategories] = await pool.execute('SELECT COUNT(*) as count FROM categories');
-    const count = (existingCategories as mysql.RowDataPacket[])[0].count;
-    
-    if (count > 0) {
-      console.log('ℹ️ Categories table already has data, skipping population');
-      return;
-    }
-
-    // Default categories data
-    const defaultCategories = [
-      // Difficulties
-      { name: 'Easy', description: 'Beginner level challenges', type: 'difficulty', color: 'green', sort_order: 1 },
-      { name: 'Intermediate', description: 'Intermediate level challenges', type: 'difficulty', color: 'yellow', sort_order: 2 },
-      { name: 'Hard', description: 'Advanced level challenges', type: 'difficulty', color: 'red', sort_order: 3 },
-      
-      // Programming Languages
-      { name: 'Python', description: 'Python programming language', type: 'language', color: 'blue', sort_order: 1 },
-      { name: 'JavaScript', description: 'JavaScript programming language', type: 'language', color: 'yellow', sort_order: 2 },
-      { name: 'Java', description: 'Java programming language', type: 'language', color: 'orange', sort_order: 3 },
-      { name: 'C++', description: 'C++ programming language', type: 'language', color: 'purple', sort_order: 4 },
-      { name: 'C', description: 'C programming language', type: 'language', color: 'gray', sort_order: 5 },
-      { name: 'TypeScript', description: 'TypeScript programming language', type: 'language', color: 'blue', sort_order: 6 },
-      { name: 'Go', description: 'Go programming language', type: 'language', color: 'cyan', sort_order: 7 },
-      { name: 'Rust', description: 'Rust programming language', type: 'language', color: 'orange', sort_order: 8 },
-      
-      // Common Tags
-      { name: 'Arrays', description: 'Array-related challenges', type: 'tag', color: 'blue', sort_order: 1 },
-      { name: 'Strings', description: 'String manipulation challenges', type: 'tag', color: 'green', sort_order: 2 },
-      { name: 'Hash Table', description: 'Hash table challenges', type: 'tag', color: 'purple', sort_order: 3 },
-      { name: 'Two Pointers', description: 'Two pointer technique challenges', type: 'tag', color: 'yellow', sort_order: 4 },
-      { name: 'Dynamic Programming', description: 'Dynamic programming challenges', type: 'tag', color: 'red', sort_order: 5 },
-      { name: 'Graph', description: 'Graph algorithm challenges', type: 'tag', color: 'indigo', sort_order: 6 },
-      { name: 'Tree', description: 'Tree data structure challenges', type: 'tag', color: 'green', sort_order: 7 },
-      { name: 'Binary Search', description: 'Binary search challenges', type: 'tag', color: 'orange', sort_order: 8 },
-      { name: 'Sorting', description: 'Sorting algorithm challenges', type: 'tag', color: 'pink', sort_order: 9 },
-      { name: 'Greedy', description: 'Greedy algorithm challenges', type: 'tag', color: 'teal', sort_order: 10 },
-    ];
-
-    // Insert default categories
-    for (const category of defaultCategories) {
-      await pool.execute(`
-        INSERT INTO categories (name, description, type, color, sort_order)
-        VALUES (?, ?, ?, ?, ?)
-      `, [category.name, category.description, category.type, category.color, category.sort_order]);
-    }
-
-    console.log('✅ Categories table populated with default data');
-  } catch (error) {
-    console.error('❌ Error populating categories:', error);
   }
 };
 
@@ -509,21 +415,4 @@ export const checkConnection = async () => {
   }
 };
 
-// Utility function to get categories by type
-export const getCategoriesByType = async (type: string) => {
-  try {
-    const categories = await query(`
-      SELECT id, name, description, color, sort_order
-      FROM categories 
-      WHERE type = ? AND is_active = true
-      ORDER BY sort_order, name
-    `, [type]);
-    
-    return categories;
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    return [];
-  }
-};
-
-export default { query, createPool, beginTransaction, initializeDatabase, resetDatabase, checkConnection, getCategoriesByType };
+export default { query, createPool, beginTransaction, initializeDatabase, resetDatabase, checkConnection };

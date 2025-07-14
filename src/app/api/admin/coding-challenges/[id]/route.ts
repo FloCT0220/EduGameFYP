@@ -20,7 +20,6 @@ interface ChallengeData extends RowDataPacket {
 }
 
 interface ChallengeAnswerData extends RowDataPacket {
-  language_id: number;
   programming_language: string;
   code_snippets: string;
   correct_answer: string;
@@ -46,12 +45,9 @@ export async function GET(
     const challengeQuery = `
       SELECT 
         c.*,
-        u.username as created_by_username,
-        cat.name as difficulty_name,
-        cat.color as difficulty_color
+        u.username as created_by_username
       FROM coding_challenges c
       LEFT JOIN users u ON c.created_by = u.id
-      LEFT JOIN categories cat ON c.difficulty_id = cat.id
       WHERE c.id = ?
     `;
     
@@ -66,14 +62,12 @@ export async function GET(
     // Get challenge answers
     const answersQuery = `
       SELECT 
-        cca.language_id,
-        cat.name as programming_language,
-        cca.code_snippets,
-        cca.correct_answer
-      FROM coding_challenge_answers cca
-      LEFT JOIN categories cat ON cca.language_id = cat.id
-      WHERE cca.challenge_id = ?
-      ORDER BY cat.sort_order, cat.name
+        programming_language,
+        code_snippets,
+        correct_answer
+      FROM coding_challenge_answers
+      WHERE challenge_id = ?
+      ORDER BY programming_language
     `;
     
     const answers = await query(answersQuery, [challengeId]);
@@ -85,7 +79,6 @@ export async function GET(
     const response = {
       ...challengeData,
       challenge_answers: Array.isArray(answers) ? (answers as ChallengeAnswerData[]).map(answer => ({
-        language_id: answer.language_id,
         programming_language: answer.programming_language,
         code_snippets: typeof answer.code_snippets === 'string' 
           ? JSON.parse(answer.code_snippets) 
@@ -122,7 +115,7 @@ export async function PUT(
     const {
       title,
       description,
-      difficulty_id,
+      difficulty,
       points,
       supported_languages,
       tags,
@@ -131,21 +124,21 @@ export async function PUT(
     } = body;
 
     // Validate required fields
-    if (!title || !description || !difficulty_id || !supported_languages) {
+    if (!title || !description || !difficulty || !supported_languages) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Update challenge
     await query(`
       UPDATE coding_challenges SET
-        title = ?, description = ?, difficulty_id = ?,
+        title = ?, description = ?, difficulty = ?,
         points = ?, supported_languages = ?, tags = ?,
         is_active = ?, updated_at = NOW()
       WHERE id = ?
     `, [
       title,
       description,
-      difficulty_id,
+      difficulty,
       points || 10,
       JSON.stringify(supported_languages),
       JSON.stringify(tags || []),
@@ -162,11 +155,11 @@ export async function PUT(
       for (const answer of challenge_answers) {
         await query(`
           INSERT INTO coding_challenge_answers 
-          (challenge_id, language_id, code_snippets, correct_answer)
+          (challenge_id, programming_language, code_snippets, correct_answer)
           VALUES (?, ?, ?, ?)
         `, [
           challengeId,
-          answer.language_id,
+          answer.programming_language,
           JSON.stringify(answer.code_snippets),
           JSON.stringify(answer.correct_answer)
         ]);

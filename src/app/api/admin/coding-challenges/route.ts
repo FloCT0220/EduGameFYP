@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const queryParams: (string | number)[] = [];
     
     if (difficulty) {
-      whereClause += ' AND cat.name = ?';
+      whereClause += ' AND c.difficulty = ?';
       queryParams.push(difficulty);
     }
     
@@ -47,12 +47,9 @@ export async function GET(request: NextRequest) {
       SELECT 
         c.*,
         u.username as created_by_username,
-        cat.name as difficulty_name,
-        cat.color as difficulty_color,
         (SELECT COUNT(*) FROM coding_submissions WHERE challenge_id = c.id) as submissions_count
       FROM coding_challenges c
       LEFT JOIN users u ON c.created_by = u.id
-      LEFT JOIN categories cat ON c.difficulty_id = cat.id
       ${whereClause}
       ORDER BY c.created_at DESC
       LIMIT ? OFFSET ?
@@ -89,7 +86,7 @@ export async function POST(request: NextRequest) {
     const {
       title,
       description,
-      difficulty_id,
+      difficulty,
       points,
       supported_languages,
       tags,
@@ -97,20 +94,20 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!title || !description || !difficulty_id || !supported_languages) {
+    if (!title || !description || !difficulty || !supported_languages) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Insert challenge
     const challengeResult = await query(`
       INSERT INTO coding_challenges (
-        title, description, difficulty_id,
+        title, description, difficulty,
         points, supported_languages, tags, created_by
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [
       title,
       description,
-      difficulty_id,
+      difficulty,
       points || 10,
       JSON.stringify(supported_languages),
       JSON.stringify(tags || []),
@@ -124,11 +121,11 @@ export async function POST(request: NextRequest) {
       for (const answer of challenge_answers) {
         await query(`
           INSERT INTO coding_challenge_answers 
-          (challenge_id, language_id, code_snippets, correct_answer)
+          (challenge_id, programming_language, code_snippets, correct_answer)
           VALUES (?, ?, ?, ?)
         `, [
           challengeId,
-          answer.language_id,
+          answer.programming_language,
           JSON.stringify(answer.code_snippets),
           JSON.stringify(answer.correct_answer)
         ]);

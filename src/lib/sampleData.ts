@@ -291,24 +291,13 @@ export const insertDefaultData = async () => {
           ]
         ];
 
-        // Get category IDs for difficulties and languages
-        const [difficulties] = await pool.execute('SELECT id, name FROM categories WHERE type = "difficulty"');
-        const [languages] = await pool.execute('SELECT id, name FROM categories WHERE type = "language"');
-        
-        const difficultyMap = new Map<string, number>();
-        const languageMap = new Map<string, number>();
-        
-        (difficulties as { id: number; name: string }[]).forEach(d => difficultyMap.set(d.name.toLowerCase(), d.id));
-        (languages as { id: number; name: string }[]).forEach(l => languageMap.set(l.name.toLowerCase(), l.id));
-
-        // Insert coding challenges with category IDs
+        // Insert coding challenges
         for (const challenge of codingChallenges) {
-          const difficultyId = difficultyMap.get(challenge[2].toLowerCase()) || 1; // Default to Easy
           await pool.execute(
             `INSERT INTO coding_challenges 
-            (title, description, difficulty_id, points, supported_languages, tags, created_by, is_active) 
+            (title, description, difficulty, points, supported_languages, tags, created_by, is_active) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [challenge[0], challenge[1], difficultyId, challenge[3], challenge[4], challenge[5], challenge[6], challenge[7]]
+            challenge
           );
         }
         console.log('✅ Coding challenges created');
@@ -415,15 +404,13 @@ export const insertDefaultData = async () => {
           ]), JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'])]
         ];
 
-        // Insert challenge answers with language IDs
+        // Insert challenge answers
         for (const answer of challengeAnswers) {
-          const languageName = answer[1] as string;
-          const languageId = languageMap.get(languageName.toLowerCase()) || 1; // Default to Python
           await pool.execute(
             `INSERT INTO coding_challenge_answers 
-            (challenge_id, language_id, code_snippets, correct_answer) 
+            (challenge_id, programming_language, code_snippets, correct_answer) 
             VALUES (?, ?, ?, ?)`,
-            [answer[0], languageId, answer[2], answer[3]]
+            answer
           );
         }
         console.log('✅ Challenge answers created');
