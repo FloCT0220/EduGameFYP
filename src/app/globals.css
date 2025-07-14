@@ -279,6 +279,28 @@ input::placeholder, textarea::placeholder {
 .animate-bounce { animation: bounce 1s infinite; }
 .animate-glow { animation: glow 2s ease-in-out infinite alternate; }
 
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   h1 { font-size: 1.875rem; }

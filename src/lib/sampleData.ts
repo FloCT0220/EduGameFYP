@@ -167,62 +167,62 @@ export const insertDefaultData = async () => {
     if ((quizQuestionsExist as mysql.RowDataPacket[]).length === 0) {
       const sampleQuizQuestions = [
         // Topic 1 - Understanding Variables and Data Types (Course 1, Topic ID 1)
-        [1, '1', 'What is a variable in programming?', 'A constant value that never changes', 'A named storage location for data', 'A mathematical function', 'A type of programming language', 1, 10, 'easy'],
-        [1, '1', 'Which of the following is a primitive data type?', 'Array', 'Object', 'Integer', 'Function', 2, 10, 'easy'],
-        [1, '1', 'What is the difference between a variable and a constant?', 'There is no difference', 'Variables can change, constants cannot', 'Constants can change, variables cannot', 'Both can change freely', 1, 15, 'medium'],
-        [1, '1', 'Which naming convention is considered best practice for variables?', 'using spaces', 'camelCase or snake_case', 'ALL_CAPS', 'random-symbols', 1, 15, 'medium'],
+        [1, '1', 'What is a variable in programming?', JSON.stringify(['A constant value that never changes', 'A named storage location for data', 'A mathematical function', 'A type of programming language']), 1, 10, 'easy'],
+        [1, '1', 'Which of the following is a primitive data type?', JSON.stringify(['Array', 'Object', 'Integer', 'Function']), 2, 10, 'easy'],
+        [1, '1', 'What is the difference between a variable and a constant?', JSON.stringify(['There is no difference', 'Variables can change, constants cannot', 'Constants can change, variables cannot', 'Both can change freely']), 1, 15, 'medium'],
+        [1, '1', 'Which naming convention is considered best practice for variables?', JSON.stringify(['using spaces', 'camelCase or snake_case', 'ALL_CAPS', 'random-symbols']), 1, 15, 'medium'],
 
         // Topic 2 - HTML Basics (Course 2, Topic ID 2)
-        [2, '2', 'What does HTML stand for?', 'Hyper Text Markup Language', 'High Tech Modern Language', 'Home Tool Markup Language', 'Hyperlink Text Markup Language', 0, 10, 'easy'],
-        [2, '2', 'Which HTML tag is used to define the main content of a document?', '<body>', '<main>', '<content>', '<section>', 0, 10, 'easy'],
-        [2, '2', 'What is the correct syntax for creating a link in HTML?', '<a href="url">Link text</a>', '<link url="url">Link text</link>', '<a src="url">Link text</a>', '<href="url">Link text</href>', 0, 15, 'medium'],
-        [2, '2', 'What is the purpose of the DOCTYPE declaration?', 'To define CSS styles', 'To declare the HTML version', 'To include JavaScript', 'To create comments', 1, 15, 'medium'],
+        [2, '2', 'What does HTML stand for?', JSON.stringify(['Hyper Text Markup Language', 'High Tech Modern Language', 'Home Tool Markup Language', 'Hyperlink Text Markup Language']), 0, 10, 'easy'],
+        [2, '2', 'Which HTML tag is used to define the main content of a document?', JSON.stringify(['<body>', '<main>', '<content>', '<section>']), 0, 10, 'easy'],
+        [2, '2', 'What is the correct syntax for creating a link in HTML?', JSON.stringify(['<a href="url">Link text</a>', '<link url="url">Link text</link>', '<a src="url">Link text</a>', '<href="url">Link text</href>']), 0, 15, 'medium'],
+        [2, '2', 'What is the purpose of the DOCTYPE declaration?', JSON.stringify(['To define CSS styles', 'To declare the HTML version', 'To include JavaScript', 'To create comments']), 1, 15, 'medium'],
 
         // Topic 3 - CSS Styling (Course 2, Topic ID 3)
-        [2, '3', 'What does CSS stand for?', 'Computer Style Sheets', 'Creative Style Sheets', 'Cascading Style Sheets', 'Colorful Style Sheets', 2, 10, 'easy'],
-        [2, '3', 'Which property is used to change the text color of an element?', 'color', 'text-color', 'font-color', 'background-color', 0, 10, 'easy'],
-        [2, '3', 'How do you select an element with id "header" in CSS?', '.header', '#header', 'header', '*header', 1, 15, 'medium'],
-        [2, '3', 'Which CSS property controls the spacing between elements?', 'margin', 'padding', 'spacing', 'gap', 0, 10, 'easy'],
+        [2, '3', 'What does CSS stand for?', JSON.stringify(['Computer Style Sheets', 'Creative Style Sheets', 'Cascading Style Sheets', 'Colorful Style Sheets']), 2, 10, 'easy'],
+        [2, '3', 'Which property is used to change the text color of an element?', JSON.stringify(['color', 'text-color', 'font-color', 'background-color']), 0, 10, 'easy'],
+        [2, '3', 'How do you select an element with id "header" in CSS?', JSON.stringify(['.header', '#header', 'header', '*header']), 1, 15, 'medium'],
+        [2, '3', 'Which CSS property controls the spacing between elements?', JSON.stringify(['margin', 'padding', 'spacing', 'gap']), 0, 10, 'easy'],
 
         // Topic 4 - JavaScript Fundamentals (Course 2, Topic ID 4)
-        [2, '4', 'Which of the following is the correct way to declare a variable in JavaScript?', 'var myVar = 5;', 'variable myVar = 5;', 'v myVar = 5;', 'declare myVar = 5;', 0, 10, 'easy'],
-        [2, '4', 'What is the result of 5 + "5" in JavaScript?', '10', '55', 'Error', 'undefined', 1, 15, 'medium'],
-        [2, '4', 'Which method is used to write content to the browser console?', 'console.write()', 'console.log()', 'console.print()', 'console.output()', 1, 10, 'easy'],
+        [2, '4', 'Which of the following is the correct way to declare a variable in JavaScript?', JSON.stringify(['var myVar = 5;', 'variable myVar = 5;', 'v myVar = 5;', 'declare myVar = 5;']), 0, 10, 'easy'],
+        [2, '4', 'What is the result of 5 + "5" in JavaScript?', JSON.stringify(['10', '55', 'Error', 'undefined']), 1, 15, 'medium'],
+        [2, '4', 'Which method is used to write content to the browser console?', JSON.stringify(['console.write()', 'console.log()', 'console.print()', 'console.output()']), 1, 10, 'easy'],
 
         // Topic 5 - Building a Simple Website (Course 2, Topic ID 5)
-        [2, '5', 'What does DOM stand for?', 'Document Object Model', 'Dynamic Object Management', 'Data Object Model', 'Document Oriented Model', 0, 10, 'easy'],
-        [2, '5', 'Which method is used to select an element by its ID?', 'getElementById()', 'getElementByID()', 'selectById()', 'findById()', 0, 10, 'easy'],
-        [2, '5', 'How do you change the text content of an element?', 'element.text = "new text"', 'element.innerHTML = "new text"', 'element.textContent = "new text"', 'element.content = "new text"', 2, 15, 'medium'],
+        [2, '5', 'What does DOM stand for?', JSON.stringify(['Document Object Model', 'Dynamic Object Management', 'Data Object Model', 'Document Oriented Model']), 0, 10, 'easy'],
+        [2, '5', 'Which method is used to select an element by its ID?', JSON.stringify(['getElementById()', 'getElementByID()', 'selectById()', 'findById()']), 0, 10, 'easy'],
+        [2, '5', 'How do you change the text content of an element?', JSON.stringify(['element.text = "new text"', 'element.innerHTML = "new text"', 'element.textContent = "new text"', 'element.content = "new text"']), 2, 15, 'medium'],
 
         // Database Design Course - Introduction to Databases
-        [3, '6', 'What is a database?', 'A collection of files', 'An organized collection of data', 'A programming language', 'A web server', 1, 10, 'easy'],
-        [3, '6', 'What does SQL stand for?', 'Structured Query Language', 'Simple Query Language', 'Standard Query Language', 'System Query Language', 0, 10, 'easy'],
-        [3, '6', 'Which command is used to retrieve data from a database?', 'GET', 'FETCH', 'SELECT', 'RETRIEVE', 2, 15, 'medium'],
+        [3, '6', 'What is a database?', JSON.stringify(['A collection of files', 'An organized collection of data', 'A programming language', 'A web server']), 1, 10, 'easy'],
+        [3, '6', 'What does SQL stand for?', JSON.stringify(['Structured Query Language', 'Simple Query Language', 'Standard Query Language', 'System Query Language']), 0, 10, 'easy'],
+        [3, '6', 'Which command is used to retrieve data from a database?', JSON.stringify(['GET', 'FETCH', 'SELECT', 'RETRIEVE']), 2, 15, 'medium'],
 
         // Database Design Course - SQL Basics
-        [3, '7', 'Which SQL statement is used to extract data from a database?', 'EXTRACT', 'SELECT', 'GET', 'OPEN', 1, 10, 'easy'],
-        [3, '7', 'Which SQL keyword is used to eliminate duplicate rows?', 'UNIQUE', 'DISTINCT', 'DIFFERENT', 'SINGLE', 1, 10, 'easy'],
-        [3, '7', 'What is the correct syntax for an INNER JOIN?', 'SELECT * FROM table1 INNER JOIN table2 ON table1.id = table2.id', 'SELECT * FROM table1 JOIN table2 WHERE table1.id = table2.id', 'SELECT * FROM table1, table2 WHERE table1.id = table2.id', 'SELECT * FROM table1 INNER table2 ON table1.id = table2.id', 0, 15, 'medium'],
+        [3, '7', 'Which SQL statement is used to extract data from a database?', JSON.stringify(['EXTRACT', 'SELECT', 'GET', 'OPEN']), 1, 10, 'easy'],
+        [3, '7', 'Which SQL keyword is used to eliminate duplicate rows?', JSON.stringify(['UNIQUE', 'DISTINCT', 'DIFFERENT', 'SINGLE']), 1, 10, 'easy'],
+        [3, '7', 'What is the correct syntax for an INNER JOIN?', JSON.stringify(['SELECT * FROM table1 INNER JOIN table2 ON table1.id = table2.id', 'SELECT * FROM table1 JOIN table2 WHERE table1.id = table2.id', 'SELECT * FROM table1, table2 WHERE table1.id = table2.id', 'SELECT * FROM table1 INNER table2 ON table1.id = table2.id']), 0, 15, 'medium'],
 
         // Database Design Course - Database Normalization
-        [3, '8', 'What is the main purpose of database normalization?', 'To increase data redundancy', 'To reduce data redundancy and improve data integrity', 'To make queries slower', 'To increase storage space', 1, 10, 'easy'],
-        [3, '8', 'What is First Normal Form (1NF)?', 'Tables must have primary keys', 'Each column must contain atomic values', 'No partial dependencies', 'No transitive dependencies', 1, 15, 'medium'],
-        [3, '8', 'What violates Third Normal Form (3NF)?', 'Composite primary keys', 'Transitive dependencies', 'Atomic values', 'Foreign keys', 1, 15, 'medium'],
+        [3, '8', 'What is the main purpose of database normalization?', JSON.stringify(['To increase data redundancy', 'To reduce data redundancy and improve data integrity', 'To make queries slower', 'To increase storage space']), 1, 10, 'easy'],
+        [3, '8', 'What is First Normal Form (1NF)?', JSON.stringify(['Tables must have primary keys', 'Each column must contain atomic values', 'No partial dependencies', 'No transitive dependencies']), 1, 15, 'medium'],
+        [3, '8', 'What violates Third Normal Form (3NF)?', JSON.stringify(['Composite primary keys', 'Transitive dependencies', 'Atomic values', 'Foreign keys']), 1, 15, 'medium'],
 
         // Database Design Course - Advanced Queries and Optimization
-        [3, '9', 'What is the purpose of database indexing?', 'To slow down queries', 'To improve query performance', 'To increase storage space', 'To make data redundant', 1, 10, 'easy'],
-        [3, '9', 'Which type of index is automatically created for primary keys?', 'Secondary index', 'Clustered index', 'Composite index', 'Partial index', 1, 15, 'medium'],
-        [3, '9', 'What is a subquery?', 'A query that joins multiple tables', 'A query nested inside another query', 'A query that updates data', 'A query that creates indexes', 1, 15, 'medium'],
-        [3, '9', 'Which SQL clause is used to optimize queries by limiting result sets?', 'WHERE', 'HAVING', 'LIMIT', 'ORDER BY', 0, 10, 'easy'],
-        [3, '9', 'What is query execution plan?', 'A list of SQL commands', 'A roadmap showing how the database will execute a query', 'A backup of the database', 'A user interface design', 1, 15, 'medium'],
-        [3, '9', 'Which JOIN type returns all rows from both tables?', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL OUTER JOIN', 3, 15, 'medium'],
-        [3, '9', 'What is the difference between UNION and UNION ALL?', 'No difference', 'UNION removes duplicates, UNION ALL keeps duplicates', 'UNION ALL removes duplicates, UNION keeps duplicates', 'UNION is faster than UNION ALL', 1, 20, 'hard'],
-        [3, '9', 'Which statement about database views is correct?', 'Views store actual data', 'Views are virtual tables based on SQL queries', 'Views cannot be queried', 'Views require more storage space', 1, 15, 'medium']
+        [3, '9', 'What is the purpose of database indexing?', JSON.stringify(['To slow down queries', 'To improve query performance', 'To increase storage space', 'To make data redundant']), 1, 10, 'easy'],
+        [3, '9', 'Which type of index is automatically created for primary keys?', JSON.stringify(['Secondary index', 'Clustered index', 'Composite index', 'Partial index']), 1, 15, 'medium'],
+        [3, '9', 'What is a subquery?', JSON.stringify(['A query that joins multiple tables', 'A query nested inside another query', 'A query that updates data', 'A query that creates indexes']), 1, 15, 'medium'],
+        [3, '9', 'Which SQL clause is used to optimize queries by limiting result sets?', JSON.stringify(['WHERE', 'HAVING', 'LIMIT', 'ORDER BY']), 0, 10, 'easy'],
+        [3, '9', 'What is query execution plan?', JSON.stringify(['A list of SQL commands', 'A roadmap showing how the database will execute a query', 'A backup of the database', 'A user interface design']), 1, 15, 'medium'],
+        [3, '9', 'Which JOIN type returns all rows from both tables?', JSON.stringify(['INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL OUTER JOIN']), 3, 15, 'medium'],
+        [3, '9', 'What is the difference between UNION and UNION ALL?', JSON.stringify(['No difference', 'UNION removes duplicates, UNION ALL keeps duplicates', 'UNION ALL removes duplicates, UNION keeps duplicates', 'UNION is faster than UNION ALL']), 1, 20, 'hard'],
+        [3, '9', 'Which statement about database views is correct?', JSON.stringify(['Views store actual data', 'Views are virtual tables based on SQL queries', 'Views cannot be queried', 'Views require more storage space']), 1, 15, 'medium']
       ];
 
       for (const question of sampleQuizQuestions) {
         await pool.execute(
-          'INSERT INTO quiz_questions (subject_id, node_id, question, option_a, option_b, option_c, option_d, correct_answer, points, difficulty, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO quiz_questions (subject_id, node_id, question, answers, correct_answer, points, difficulty, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
           [...question, true]
         );
       }
@@ -247,211 +247,186 @@ export const insertDefaultData = async () => {
           [
             'Two Sum',
             'Find two numbers in an array that add up to a target sum.',
-            'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.',
             'easy',
-            10, 20, 50, 300, 256,
+            10,
             JSON.stringify(['python', 'javascript', 'java', 'cpp', 'c']),
-            JSON.stringify({
-              python: 'def two_sum(nums, target):\n    # Your solution here\n    pass',
-              javascript: 'function twoSum(nums, target) {\n    // Your solution here\n}',
-              java: 'public int[] twoSum(int[] nums, int target) {\n    // Your solution here\n    return new int[0];\n}',
-              cpp: '#include <vector>\nusing namespace std;\n\nvector<int> twoSum(vector<int>& nums, int target) {\n    // Your solution here\n    return {};\n}',
-              c: '#include <stdio.h>\n#include <stdlib.h>\n\nint* twoSum(int* nums, int numsSize, int target, int* returnSize) {\n    // Your solution here\n    return NULL;\n}'
-            }),
-            '1 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9\n-10^9 <= target <= 10^9\nOnly one valid answer exists.',
-            JSON.stringify([
-              { input: '[2,7,11,15], target=9', output: '[0,1]', explanation: 'nums[0] + nums[1] = 2 + 7 = 9' },
-              { input: '[3,2,4], target=6', output: '[1,2]', explanation: 'nums[1] + nums[2] = 2 + 4 = 6' }
-            ]),
-            'Try using a hash map to store the numbers you\'ve seen and their indices.',
             JSON.stringify(['array', 'hash-table', 'easy']),
-            adminId, true
-          ],
-          [
-            'Add Two Numbers',
-            'Add two numbers represented as linked lists.',
-            'You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list.\n\nYou may assume the two numbers do not contain any leading zero, except the number 0 itself.',
-            'intermediate',
-            10, 20, 50, 300, 256,
-            JSON.stringify(['python', 'javascript', 'java', 'cpp']),
-            JSON.stringify({
-              python: 'class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\ndef add_two_numbers(l1, l2):\n    # Your solution here\n    pass',
-              javascript: 'function ListNode(val, next) {\n    this.val = (val===undefined ? 0 : val)\n    this.next = (next===undefined ? null : next)\n}\n\nfunction addTwoNumbers(l1, l2) {\n    // Your solution here\n}',
-              java: 'public class ListNode {\n    int val;\n    ListNode next;\n    ListNode() {}\n    ListNode(int val) { this.val = val; }\n    ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n}\n\npublic ListNode addTwoNumbers(ListNode l1, ListNode l2) {\n    // Your solution here\n    return null;\n}',
-              cpp: 'struct ListNode {\n    int val;\n    ListNode *next;\n    ListNode() : val(0), next(nullptr) {}\n    ListNode(int x) : val(x), next(nullptr) {}\n    ListNode(int x, ListNode *next) : val(x), next(next) {}\n};\n\nListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {\n    // Your solution here\n    return nullptr;\n}'
-            }),
-            'The number of nodes in each linked list is in the range [1, 100].\n0 <= Node.val <= 9\nIt is guaranteed that the list represents a number that does not have leading zeros.',
-            JSON.stringify([
-              { input: 'l1 = [2,4,3], l2 = [5,6,4]', output: '[7,0,8]', explanation: '342 + 465 = 807' },
-              { input: 'l1 = [0], l2 = [0]', output: '[0]', explanation: '0 + 0 = 0' }
-            ]),
-            'Remember to handle the carry when the sum of two digits is greater than 9.',
-            JSON.stringify(['linked-list', 'math', 'recursion', 'intermediate']),
             adminId, true
           ],
           [
             'Reverse String',
             'Write a function that reverses a string.',
-            'Write a function that reverses a string. The input string is given as an array of characters s.\n\nYou must do this by modifying the input array in-place with O(1) extra memory.',
             'easy',
-            10, 20, 50, 300, 256,
+            10,
             JSON.stringify(['python', 'javascript', 'java', 'cpp', 'c']),
-            JSON.stringify({
-              python: 'def reverse_string(s):\n    # Your solution here\n    pass',
-              javascript: 'function reverseString(s) {\n    // Your solution here\n}',
-              java: 'public void reverseString(char[] s) {\n    // Your solution here\n}',
-              cpp: '#include <vector>\nusing namespace std;\n\nvoid reverseString(vector<char>& s) {\n    // Your solution here\n}',
-              c: '#include <stdio.h>\n\nvoid reverseString(char* s, int sSize) {\n    // Your solution here\n}'
-            }),
-            '1 <= s.length <= 10^5\ns[i] is a printable ascii character.',
-            JSON.stringify([
-              { input: 's = ["h","e","l","l","o"]', output: '["o","l","l","e","h"]', explanation: 'Reverse the array of characters' },
-              { input: 's = ["H","a","n","n","a","h"]', output: '["h","a","n","n","a","H"]', explanation: 'Reverse the array of characters' }
-            ]),
-            'Use two pointers approach - one from the start and one from the end.',
             JSON.stringify(['two-pointers', 'string', 'easy']),
+            adminId, true
+          ],
+          [
+            'Add Two Numbers',
+            'Add two numbers represented as linked lists.',
+            'intermediate',
+            20,
+            JSON.stringify(['python', 'javascript', 'java', 'cpp']),
+            JSON.stringify(['linked-list', 'math', 'recursion', 'intermediate']),
             adminId, true
           ],
           [
             'Maximum Subarray',
             'Find the contiguous subarray with the largest sum.',
-            'Given an integer array nums, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.\n\nA subarray is a contiguous part of an array.',
             'intermediate',
-            10, 20, 50, 300, 256,
+            20,
             JSON.stringify(['python', 'javascript', 'java', 'cpp']),
-            JSON.stringify({
-              python: 'def max_subarray(nums):\n    # Your solution here\n    pass',
-              javascript: 'function maxSubArray(nums) {\n    // Your solution here\n}',
-              java: 'public int maxSubArray(int[] nums) {\n    // Your solution here\n    return 0;\n}',
-              cpp: '#include <vector>\nusing namespace std;\n\nint maxSubArray(vector<int>& nums) {\n    // Your solution here\n    return 0;\n}'
-            }),
-            '1 <= nums.length <= 10^5\n-10^4 <= nums[i] <= 10^4',
-            JSON.stringify([
-              { input: 'nums = [-2,1,-3,4,-1,2,1,-5,4]', output: '6', explanation: '[4,-1,2,1] has the largest sum = 6' },
-              { input: 'nums = [1]', output: '1', explanation: 'Single element' }
-            ]),
-            'Consider using Kadane\'s algorithm for an efficient O(n) solution.',
             JSON.stringify(['array', 'divide-and-conquer', 'dynamic-programming', 'intermediate']),
             adminId, true
           ],
           [
             'Binary Tree Inorder Traversal',
             'Return the inorder traversal of a binary tree.',
-            'Given the root of a binary tree, return the inorder traversal of its nodes\' values.\n\nInorder traversal visits nodes in this order: left subtree, root, right subtree.',
             'hard',
-            10, 20, 50, 300, 256,
+            50,
             JSON.stringify(['python', 'javascript', 'java', 'cpp']),
-            JSON.stringify({
-              python: 'class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef inorder_traversal(root):\n    # Your solution here\n    pass',
-              javascript: 'function TreeNode(val, left, right) {\n    this.val = (val===undefined ? 0 : val)\n    this.left = (left===undefined ? null : left)\n    this.right = (right===undefined ? null : right)\n}\n\nfunction inorderTraversal(root) {\n    // Your solution here\n}',
-              java: 'public class TreeNode {\n    int val;\n    TreeNode left;\n    TreeNode right;\n    TreeNode() {}\n    TreeNode(int val) { this.val = val; }\n    TreeNode(int val, TreeNode left, TreeNode right) {\n        this.val = val;\n        this.left = left;\n        this.right = right;\n    }\n}\n\npublic List<Integer> inorderTraversal(TreeNode root) {\n    // Your solution here\n    return new ArrayList<>();\n}',
-              cpp: 'struct TreeNode {\n    int val;\n    TreeNode *left;\n    TreeNode *right;\n    TreeNode() : val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}\n    TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}\n};\n\nvector<int> inorderTraversal(TreeNode* root) {\n    // Your solution here\n    return {};\n}'
-            }),
-            'The number of nodes in the tree is in the range [0, 100].\n-100 <= Node.val <= 100',
-            JSON.stringify([
-              { input: 'root = [1,null,2,3]', output: '[1,3,2]', explanation: 'Inorder: left, root, right' },
-              { input: 'root = []', output: '[]', explanation: 'Empty tree' }
-            ]),
-            'Try both recursive and iterative approaches. For iterative, use a stack.',
             JSON.stringify(['stack', 'tree', 'depth-first-search', 'binary-tree', 'hard']),
             adminId, true
           ]
         ];
 
-        // Insert coding challenges
+        // Get category IDs for difficulties and languages
+        const [difficulties] = await pool.execute('SELECT id, name FROM categories WHERE type = "difficulty"');
+        const [languages] = await pool.execute('SELECT id, name FROM categories WHERE type = "language"');
+        
+        const difficultyMap = new Map<string, number>();
+        const languageMap = new Map<string, number>();
+        
+        (difficulties as { id: number; name: string }[]).forEach(d => difficultyMap.set(d.name.toLowerCase(), d.id));
+        (languages as { id: number; name: string }[]).forEach(l => languageMap.set(l.name.toLowerCase(), l.id));
+
+        // Insert coding challenges with category IDs
         for (const challenge of codingChallenges) {
+          const difficultyId = difficultyMap.get(challenge[2].toLowerCase()) || 1; // Default to Easy
           await pool.execute(
             `INSERT INTO coding_challenges 
-            (title, description, problem_statement, difficulty, points_easy, points_intermediate, points_hard, 
-             time_limit, memory_limit, supported_languages, function_signature, constraints, examples, hints, tags, created_by, is_active) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            challenge
+            (title, description, difficulty_id, points, supported_languages, tags, created_by, is_active) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [challenge[0], challenge[1], difficultyId, challenge[3], challenge[4], challenge[5], challenge[6], challenge[7]]
           );
         }
         console.log('✅ Coding challenges created');
 
-        // Insert test cases for each challenge
-        const testCases = [
-          // Two Sum (Challenge 1)
-          [1, '[2,7,11,15]\n9', '[0,1]', true, false, 1.0],
-          [1, '[3,2,4]\n6', '[1,2]', true, false, 1.0],
-          [1, '[3,3]\n6', '[0,1]', false, true, 1.0],
-          [1, '[1,2,3,4,5]\n9', '[3,4]', false, true, 1.0],
-          [1, '[-1,-2,-3,-4,-5]\n-8', '[2,4]', false, true, 1.0],
-
-          // Add Two Numbers (Challenge 2)
-          [2, '[2,4,3]\n[5,6,4]', '[7,0,8]', true, false, 1.0],
-          [2, '[0]\n[0]', '[0]', true, false, 1.0],
-          [2, '[9,9,9,9,9,9,9]\n[9,9,9,9]', '[8,9,9,9,0,0,0,1]', false, true, 1.0],
-          [2, '[1,2,3]\n[4,5,6]', '[5,7,9]', false, true, 1.0],
-
-          // Reverse String (Challenge 3)
-          [3, '["h","e","l","l","o"]', '["o","l","l","e","h"]', true, false, 1.0],
-          [3, '["H","a","n","n","a","h"]', '["h","a","n","n","a","H"]', true, false, 1.0],
-          [3, '["a"]', '["a"]', false, true, 1.0],
-          [3, '["a","b"]', '["b","a"]', false, true, 1.0],
-          [3, '["1","2","3","4","5"]', '["5","4","3","2","1"]', false, true, 1.0],
-
-          // Maximum Subarray (Challenge 4)
-          [4, '[-2,1,-3,4,-1,2,1,-5,4]', '6', true, false, 1.0],
-          [4, '[1]', '1', true, false, 1.0],
-          [4, '[5,4,-1,7,8]', '23', false, true, 1.0],
-          [4, '[-2,-1]', '-1', false, true, 1.0],
-          [4, '[-1,-2,-3,-4]', '-1', false, true, 1.0],
-
-          // Binary Tree Inorder Traversal (Challenge 5)
-          [5, '[1,null,2,3]', '[1,3,2]', true, false, 1.0],
-          [5, '[]', '[]', true, false, 1.0],
-          [5, '[1]', '[1]', false, true, 1.0],
-          [5, '[1,2,3,4,5,null,6]', '[4,2,5,1,3,6]', false, true, 1.0],
-          [5, '[1,2,3,null,null,4,5]', '[2,1,4,3,5]', false, true, 1.0]
+        // Insert challenge answers for different languages
+        const challengeAnswers = [
+          // Two Sum (Challenge 1) - Python
+          [1, 'python', JSON.stringify([
+            { id: '1', code: 'for i in range(len(nums)):' },
+            { id: '2', code: 'for j in range(i + 1, len(nums)):' },
+            { id: '3', code: 'if nums[i] + nums[j] == target:' },
+            { id: '4', code: 'return [i, j]' },
+            { id: '5', code: 'return []' },
+            { id: '6', code: 'for i in range(len(nums) - 1):' },
+            { id: '7', code: 'if nums[i] == target:' },
+            { id: '8', code: 'return i' }
+          ]), JSON.stringify(['1', '2', '3', '4'])],
+          
+          // Two Sum (Challenge 1) - JavaScript
+          [1, 'javascript', JSON.stringify([
+            { id: '1', code: 'for (let i = 0; i < nums.length; i++) {' },
+            { id: '2', code: 'for (let j = i + 1; j < nums.length; j++) {' },
+            { id: '3', code: 'if (nums[i] + nums[j] === target) {' },
+            { id: '4', code: 'return [i, j];' },
+            { id: '5', code: 'return [];' },
+            { id: '6', code: 'for (let i = 0; i < nums.length - 1; i++) {' },
+            { id: '7', code: 'if (nums[i] === target) {' },
+            { id: '8', code: 'return i;' }
+          ]), JSON.stringify(['1', '2', '3', '4'])],
+          
+          // Reverse String (Challenge 2) - Python
+          [2, 'python', JSON.stringify([
+            { id: '1', code: 'left = 0' },
+            { id: '2', code: 'right = len(s) - 1' },
+            { id: '3', code: 'while left < right:' },
+            { id: '4', code: 's[left], s[right] = s[right], s[left]' },
+            { id: '5', code: 'left += 1' },
+            { id: '6', code: 'right -= 1' },
+            { id: '7', code: 'return s' },
+            { id: '8', code: 'for i in range(len(s)):' },
+            { id: '9', code: 's[i] = s[-i-1]' }
+          ]), JSON.stringify(['1', '2', '3', '4', '5', '6', '7'])],
+          
+          // Reverse String (Challenge 2) - JavaScript
+          [2, 'javascript', JSON.stringify([
+            { id: '1', code: 'let left = 0;' },
+            { id: '2', code: 'let right = s.length - 1;' },
+            { id: '3', code: 'while (left < right) {' },
+            { id: '4', code: '[s[left], s[right]] = [s[right], s[left]];' },
+            { id: '5', code: 'left++;' },
+            { id: '6', code: 'right--;' },
+            { id: '7', code: 'return s;' },
+            { id: '8', code: 'for (let i = 0; i < s.length; i++) {' },
+            { id: '9', code: 's[i] = s[s.length - 1 - i];' }
+          ]), JSON.stringify(['1', '2', '3', '4', '5', '6', '7'])],
+          
+          // Add Two Numbers (Challenge 3) - Python
+          [3, 'python', JSON.stringify([
+            { id: '1', code: 'dummy = ListNode(0)' },
+            { id: '2', code: 'current = dummy' },
+            { id: '3', code: 'carry = 0' },
+            { id: '4', code: 'while l1 or l2 or carry:' },
+            { id: '5', code: 'x = l1.val if l1 else 0' },
+            { id: '6', code: 'y = l2.val if l2 else 0' },
+            { id: '7', code: 'sum_val = x + y + carry' },
+            { id: '8', code: 'carry = sum_val // 10' },
+            { id: '9', code: 'current.next = ListNode(sum_val % 10)' },
+            { id: '10', code: 'current = current.next' },
+            { id: '11', code: 'if l1: l1 = l1.next' },
+            { id: '12', code: 'if l2: l2 = l2.next' },
+            { id: '13', code: 'return dummy.next' },
+            { id: '14', code: 'result = []' },
+            { id: '15', code: 'return result' }
+          ]), JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'])],
+          
+          // Maximum Subarray (Challenge 4) - Python
+          [4, 'python', JSON.stringify([
+            { id: '1', code: 'max_current = nums[0]' },
+            { id: '2', code: 'max_global = nums[0]' },
+            { id: '3', code: 'for i in range(1, len(nums)):' },
+            { id: '4', code: 'max_current = max(nums[i], max_current + nums[i])' },
+            { id: '5', code: 'max_global = max(max_global, max_current)' },
+            { id: '6', code: 'return max_global' },
+            { id: '7', code: 'sum = 0' },
+            { id: '8', code: 'for num in nums:' },
+            { id: '9', code: 'sum += num' }
+          ]), JSON.stringify(['1', '2', '3', '4', '5', '6'])],
+          
+          // Binary Tree Inorder Traversal (Challenge 5) - Python
+          [5, 'python', JSON.stringify([
+            { id: '1', code: 'result = []' },
+            { id: '2', code: 'stack = []' },
+            { id: '3', code: 'current = root' },
+            { id: '4', code: 'while current or stack:' },
+            { id: '5', code: 'while current:' },
+            { id: '6', code: 'stack.append(current)' },
+            { id: '7', code: 'current = current.left' },
+            { id: '8', code: 'current = stack.pop()' },
+            { id: '9', code: 'result.append(current.val)' },
+            { id: '10', code: 'current = current.right' },
+            { id: '11', code: 'return result' },
+            { id: '12', code: 'if not root:' },
+            { id: '13', code: 'return []' }
+          ]), JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'])]
         ];
 
-        for (const testCase of testCases) {
+        // Insert challenge answers with language IDs
+        for (const answer of challengeAnswers) {
+          const languageName = answer[1] as string;
+          const languageId = languageMap.get(languageName.toLowerCase()) || 1; // Default to Python
           await pool.execute(
-            'INSERT INTO coding_test_cases (challenge_id, input_data, expected_output, is_sample, is_hidden, weight) VALUES (?, ?, ?, ?, ?, ?)',
-            testCase
+            `INSERT INTO coding_challenge_answers 
+            (challenge_id, language_id, code_snippets, correct_answer) 
+            VALUES (?, ?, ?, ?)`,
+            [answer[0], languageId, answer[2], answer[3]]
           );
         }
-        console.log('✅ Test cases created');
-
-        // Create sample submissions
-        const [studentUser] = await pool.execute(
-          'SELECT id FROM users WHERE role = "student" LIMIT 1'
-        ) as [mysql.RowDataPacket[], mysql.FieldPacket[]];
-
-        if (studentUser.length > 0) {
-          const studentId = studentUser[0].id;
-
-          const sampleSubmissions = [
-            // Student submissions for Two Sum
-            [studentId, 1, 'python', 'def two_sum(nums, target):\n    for i in range(len(nums)):\n        for j in range(i+1, len(nums)):\n            if nums[i] + nums[j] == target:\n                return [i, j]\n    return []', 'accepted', 45, 32, 5, 5, 100.0, 10, null, '[0,1]'],
-            
-            // Student submissions for Reverse String
-            [studentId, 3, 'javascript', 'function reverseString(s) {\n    let left = 0;\n    let right = s.length - 1;\n    while (left < right) {\n        [s[left], s[right]] = [s[right], s[left]];\n        left++;\n        right--;\n    }\n}', 'accepted', 12, 16, 5, 5, 100.0, 10, null, 'void']
-          ];
-
-          for (const submission of sampleSubmissions) {
-            await pool.execute(
-              `INSERT INTO coding_submissions 
-              (user_id, challenge_id, language, source_code, status, execution_time, memory_used, 
-               test_cases_passed, test_cases_total, score, points_earned, error_message, output_data) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              submission
-            );
-          }
-          console.log('✅ Sample submissions created');
-
-          // Initialize user coding stats
-          await pool.execute(
-            `INSERT INTO user_coding_stats 
-            (user_id, challenges_attempted, challenges_solved, total_submissions, easy_solved, 
-             intermediate_solved, hard_solved, total_coding_points, average_attempts, best_streak, current_streak) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [studentId, 2, 2, 2, 2, 0, 0, 20, 1.0, 2, 2]
-          );
-          console.log('✅ User coding stats initialized');
-        }
+        console.log('✅ Challenge answers created');
       }
     }
 
@@ -460,3 +435,46 @@ export const insertDefaultData = async () => {
     console.error('❌ Error inserting default data:', error);
   }
 }; 
+
+// Sample coding challenges with new JSON structure
+export const sampleCodingChallenges = [
+  {
+    title: 'Two Sum',
+    description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
+    difficulty: 'easy',
+    points: 10,
+    supported_languages: ['python', 'javascript', 'java'],
+    tags: ['arrays', 'hash-table'],
+    code_snippets: [
+      { id: '1', code: 'for i in range(len(nums)):', isCorrect: true },
+      { id: '2', code: 'for j in range(i + 1, len(nums)):', isCorrect: true },
+      { id: '3', code: 'if nums[i] + nums[j] == target:', isCorrect: true },
+      { id: '4', code: 'return [i, j]', isCorrect: true },
+      { id: '5', code: 'return []', isCorrect: true },
+      { id: '6', code: 'for i in range(len(nums) - 1):', isCorrect: false },
+      { id: '7', code: 'if nums[i] == target:', isCorrect: false },
+      { id: '8', code: 'return i', isCorrect: false }
+    ],
+    correct_answer: ['1', '2', '3', '4']
+  },
+  {
+    title: 'Reverse String',
+    description: 'Write a function that reverses a string.',
+    difficulty: 'easy',
+    points: 5,
+    supported_languages: ['python', 'javascript'],
+    tags: ['strings', 'two-pointers'],
+    code_snippets: [
+      { id: '1', code: 'left = 0', isCorrect: true },
+      { id: '2', code: 'right = len(s) - 1', isCorrect: true },
+      { id: '3', code: 'while left < right:', isCorrect: true },
+      { id: '4', code: 's[left], s[right] = s[right], s[left]', isCorrect: true },
+      { id: '5', code: 'left += 1', isCorrect: true },
+      { id: '6', code: 'right -= 1', isCorrect: true },
+      { id: '7', code: 'return s', isCorrect: true },
+      { id: '8', code: 'for i in range(len(s)):', isCorrect: false },
+      { id: '9', code: 's[i] = s[-i-1]', isCorrect: false }
+    ],
+    correct_answer: ['1', '2', '3', '4', '5', '6', '7']
+  }
+]; 

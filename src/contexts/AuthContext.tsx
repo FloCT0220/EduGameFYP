@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(userData.user);
         
         // Refresh the session expiry time (5 minutes from now)
-        refreshSession('authToken', 5);
+        refreshSession('authToken', 30);
       } else {
         // Token invalid, clear session
         removeSession('authToken');

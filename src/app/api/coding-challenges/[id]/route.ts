@@ -1,101 +1,113 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { verifyToken } from '@/lib/auth';
+import { parseCodingChallengeListFields } from '@/lib/utils';
 
-// GET /api/coding-challenges/[id] - Get a specific challenge for students
+interface ChallengeRow {
+  id: number;
+  title: string;
+  description: string;
+  difficulty: string;
+  points: number;
+  supported_languages: string;
+  tags: string;
+  created_at: string;
+}
+
+interface CodeSnippet {
+  id: string;
+  code: string;
+}
+
+interface AnswerRow {
+  code_snippets: CodeSnippet[];
+  correct_answer: string[];
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    const user = verifyToken(token || '');
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { id } = await params;
+    const challengeId = parseInt(id);
+    const { searchParams } = new URL(request.url);
+    const language = searchParams.get('language') || 'python';
+
+    if (isNaN(challengeId)) {
+      return NextResponse.json(
+        { error: 'Invalid challenge ID' },
+        { status: 400 }
+      );
     }
 
-    const challengeId = parseInt(params.id);
-    
     // Get challenge details
-    const challengeQuery = `
+    const challenges = await query(`
       SELECT 
-        c.id,
-        c.title,
-        c.description,
-        c.problem_statement,
-        c.difficulty,
-        c.points_easy,
-        c.points_intermediate,
-        c.points_hard,
-        c.time_limit,
-        c.memory_limit,
-        c.supported_languages,
-        c.function_signature,
-        c.constraints,
-        c.examples,
-        c.hints,
-        c.tags
-      FROM coding_challenges c
-      WHERE c.id = ? AND c.is_active = TRUE
-    `;
-    
-    const challenges = await query(challengeQuery, [challengeId]);
-    
-    if (!Array.isArray(challenges) || challenges.length === 0) {
-      return NextResponse.json({ error: 'Challenge not found' }, { status: 404 });
+        cc.id,
+        cc.title,
+        cc.description,
+        cc.difficulty,
+        cc.points,
+        cc.supported_languages,
+        cc.tags,
+        cc.created_at
+      FROM coding_challenges cc
+      WHERE cc.id = ? AND cc.is_active = true
+    `, [challengeId]);
+
+    if (!challenges || (challenges as ChallengeRow[]).length === 0) {
+      return NextResponse.json(
+        { error: 'Challenge not found' },
+        { status: 404 }
+      );
     }
-    
-    const challenge = challenges[0] as any;
-    
-    // Get sample test cases (visible to students)
-    const testCasesQuery = `
-      SELECT input_data, expected_output
-      FROM coding_test_cases 
-      WHERE challenge_id = ? AND is_sample = TRUE
-      ORDER BY id ASC
-    `;
-    
-    const testCases = await query(testCasesQuery, [challengeId]);
-    
-    // Get user's submission history for this challenge
-    const submissionsQuery = `
-      SELECT 
-        id,
-        language,
-        status,
-        score,
-        execution_time,
-        memory_used,
-        test_cases_passed,
-        test_cases_total,
-        points_earned,
-        submitted_at
-      FROM coding_submissions
-      WHERE challenge_id = ? AND user_id = ?
-      ORDER BY submitted_at DESC
-      LIMIT 10
-    `;
-    
-    const submissions = await query(submissionsQuery, [challengeId, user.id]);
-    
-    // Parse JSON fields and format response
-    const challengeData = {
-      ...challenge,
-      supported_languages: JSON.parse(challenge.supported_languages || '[]'),
-      function_signature: JSON.parse(challenge.function_signature || '{}'),
-      examples: JSON.parse(challenge.examples || '[]'),
-      tags: JSON.parse(challenge.tags || '[]'),
-      sample_test_cases: Array.isArray(testCases) ? testCases.map((tc: any) => ({
-        input_data: JSON.parse(tc.input_data || '{}'),
-        expected_output: tc.expected_output
-      })) : [],
-      user_submissions: submissions || []
+
+    const challenge = (challenges as ChallengeRow[])[0];
+
+    // Get code snippets and correct answer for the selected language
+    const answers = await query(`
+      SELECT code_snippets, correct_answer
+      FROM coding_challenge_answers
+      WHERE challenge_id = ? AND programming_language = ?
+    `, [challengeId, language]) as AnswerRow[];
+
+    let codeSnippets: CodeSnippet[] = [];
+    let correctAnswer: string[] = [];
+
+    if (answers && answers.length > 0) {
+      // Handle both string and object formats from database
+      const codeSnippetsData = answers[0].code_snippets;
+      const correctAnswerData = answers[0].correct_answer;
+      
+      if (typeof codeSnippetsData === 'string') {
+        codeSnippets = JSON.parse(codeSnippetsData || '[]');
+      } else {
+        codeSnippets = codeSnippetsData || [];
+      }
+      
+      if (typeof correctAnswerData === 'string') {
+        correctAnswer = JSON.parse(correctAnswerData || '[]');
+      } else {
+        correctAnswer = correctAnswerData || [];
+      }
+    }
+
+    // Parse JSON fields using utility function
+    const parsedChallenge = parseCodingChallengeListFields(challenge as unknown as Record<string, unknown>);
+
+    // Add code snippets and correct answer to the response
+    const response = {
+      ...parsedChallenge,
+      code_snippets: codeSnippets,
+      correct_answer: correctAnswer
     };
-    
-    return NextResponse.json(challengeData);
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching coding challenge:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch coding challenge' },
+      { status: 500 }
+    );
   }
 } 

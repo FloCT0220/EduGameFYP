@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
       query('SELECT COUNT(*) as count FROM coding_challenges WHERE is_active = TRUE'),
       query(`
         SELECT 
-          COUNT(CASE WHEN status = 'accepted' THEN 1 END) * 100.0 / COUNT(*) as success_rate
+          COUNT(CASE WHEN is_correct = true THEN 1 END) * 100.0 / COUNT(*) as success_rate
         FROM coding_submissions
       `),
       query('SELECT SUM(total_points) as total FROM users')
@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
           UNION ALL
           SELECT user_id, enrolled_at as created_at, NULL as completed_at FROM user_enrollments WHERE enrolled_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
           UNION ALL
-          SELECT user_id, submitted_at as created_at, CASE WHEN status = 'accepted' THEN submitted_at END as completed_at 
+          SELECT user_id, submitted_at as created_at, CASE WHEN is_correct = true THEN submitted_at END as completed_at 
           FROM coding_submissions WHERE submitted_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
         ) as activities
         GROUP BY DATE(created_at)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { parseQuizQuestionFields } from '@/lib/utils';
 import mysql from 'mysql2/promise';
 
 interface QuizQuestion extends mysql.RowDataPacket {
@@ -7,10 +8,8 @@ interface QuizQuestion extends mysql.RowDataPacket {
   subject_id: number;
   node_id: number;
   question: string;
-  options_0: string;
-  options_1: string;
-  options_2: string;
-  options_3: string;
+  answers: string;
+  correct_answer: number;
   points: number;
   difficulty: string;
   is_active: boolean;
@@ -38,10 +37,8 @@ export async function GET(request: NextRequest) {
           subject_id,
           node_id,
           question,
-          option_a as options_0,
-          option_b as options_1,
-          option_c as options_2,
-          option_d as options_3,
+          answers,
+          correct_answer,
           points,
           difficulty,
           is_active,
@@ -55,13 +52,16 @@ export async function GET(request: NextRequest) {
 
       // Transform the questions for student view
       if (Array.isArray(questions)) {
-        questions = questions.map(q => ({
-          id: q.id,
-          question: q.question,
-          options: [q.options_0, q.options_1, q.options_2, q.options_3],
-          points: q.points,
-          difficulty: q.difficulty
-        }));
+        questions = questions.map(q => {
+          const parsedQuestion = parseQuizQuestionFields(q);
+          return {
+            id: q.id,
+            question: q.question,
+            options: parsedQuestion.answers as string[],
+            points: q.points,
+            difficulty: q.difficulty
+          };
+        });
       }
 
       return NextResponse.json({ 
@@ -76,10 +76,7 @@ export async function GET(request: NextRequest) {
           subject_id,
           node_id,
           question,
-          option_a,
-          option_b,
-          option_c,
-          option_d,
+          answers,
           correct_answer,
           points,
           difficulty,
@@ -88,6 +85,11 @@ export async function GET(request: NextRequest) {
         FROM quiz_questions 
         ORDER BY created_at DESC`
       );
+
+      // Parse JSON fields for admin view
+      if (Array.isArray(questions)) {
+        questions = (questions as QuizQuestion[]).map(q => parseQuizQuestionFields(q));
+      }
 
       return NextResponse.json(questions);
     }
@@ -107,20 +109,21 @@ export async function POST(request: NextRequest) {
       subject_id,
       node_id,
       question,
-      option_a,
-      option_b,
-      option_c,
-      option_d,
+      answers,
       correct_answer,
       points,
       difficulty
     } = body;
 
     // Validate required fields
-    if (!subject_id || !node_id || !question ||
-        !option_a || !option_b || !option_c || !option_d ||
+    if (!subject_id || !node_id || !question || !answers || 
         correct_answer === undefined || !points || !difficulty) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Validate answers is an array with 4 elements
+    if (!Array.isArray(answers) || answers.length !== 4) {
+      return NextResponse.json({ error: 'answers must be an array with exactly 4 elements' }, { status: 400 });
     }
 
     // Validate correct_answer is between 0 and 3
@@ -130,16 +133,13 @@ export async function POST(request: NextRequest) {
 
     const result = await query(
       `INSERT INTO quiz_questions 
-       (subject_id, node_id, question, option_a, option_b, option_c, option_d, correct_answer, points, difficulty, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (subject_id, node_id, question, answers, correct_answer, points, difficulty, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         subject_id,
         node_id,
         question,
-        option_a,
-        option_b,
-        option_c,
-        option_d,
+        JSON.stringify(answers),
         correct_answer,
         points,
         difficulty,

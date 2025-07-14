@@ -1,0 +1,477 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { getSession } from '@/lib/session';
+
+interface CodeSnippet {
+  id: string;
+  code: string;
+}
+
+interface ChallengeAnswer {
+  programming_language: string;
+  code_snippets: CodeSnippet[];
+  correct_answer: string[];
+}
+
+// Define a type for difficulty
+type Difficulty = 'easy' | 'intermediate' | 'hard';
+
+interface Category {
+  id: number;
+  name: string;
+  description: string;
+  color: string;
+  sort_order: number;
+}
+
+const DIFFICULTY_OPTIONS = [
+  { value: 'easy', label: 'Easy', color: 'bg-green-100 text-green-800' },
+  { value: 'intermediate', label: 'Intermediate', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'hard', label: 'Hard', color: 'bg-red-100 text-red-800' }
+];
+
+const LANGUAGE_OPTIONS = [
+  'python', 'javascript', 'java', 'cpp', 'c', 'typescript', 'go', 'rust'
+];
+
+export default function AddCodingChallenge() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [difficulties, setDifficulties] = useState<Category[]>([]);
+  const [languages, setLanguages] = useState<Category[]>([]);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    difficulty_id: 1, // Default to first difficulty
+    points: 10,
+    supported_languages: [1], // Default to first language
+    tags: [''],
+    is_active: true
+  });
+
+  // Challenge answers state
+  const [challengeAnswers, setChallengeAnswers] = useState<ChallengeAnswer[]>([
+    {
+      programming_language: 'python',
+      code_snippets: [
+        { id: '1', code: 'for i in range(len(nums)):' },
+        { id: '2', code: 'for j in range(i + 1, len(nums)):' },
+        { id: '3', code: 'if nums[i] + nums[j] == target:' },
+        { id: '4', code: 'return [i, j]' },
+        { id: '5', code: 'return []' }
+      ],
+      correct_answer: ['1', '2', '3', '4']
+    }
+  ]);
+
+  useEffect(() => {
+    if (user?.role !== 'admin') {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const token = getSession('authToken');
+      const payload = {
+        ...formData,
+        tags: formData.tags.filter(tag => tag.trim()),
+        challenge_answers: challengeAnswers
+      };
+
+      const response = await fetch('/api/admin/coding-challenges', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        router.push('/admin/coding-challenges');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Error creating challenge');
+      }
+    } catch (error) {
+      console.error('Error creating challenge:', error);
+      alert('Error creating challenge');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addLanguageAnswer = () => {
+    setChallengeAnswers(prev => [...prev, {
+      programming_language: 'javascript',
+      code_snippets: [
+        { id: '1', code: 'for (let i = 0; i < nums.length; i++) {' },
+        { id: '2', code: 'for (let j = i + 1; j < nums.length; j++) {' },
+        { id: '3', code: 'if (nums[i] + nums[j] === target) {' },
+        { id: '4', code: 'return [i, j];' },
+        { id: '5', code: 'return [];' }
+      ],
+      correct_answer: ['1', '2', '3', '4']
+    }]);
+  };
+
+  const updateLanguageAnswer = (index: number, field: keyof ChallengeAnswer, value: string | string[]) => {
+    setChallengeAnswers(prev => prev.map((answer, i) => 
+      i === index ? { ...answer, [field]: value } : answer
+    ));
+  };
+
+  const removeLanguageAnswer = (index: number) => {
+    setChallengeAnswers(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addCodeSnippet = (answerIndex: number) => {
+    setChallengeAnswers(prev => prev.map((answer, i) => 
+      i === answerIndex ? {
+        ...answer,
+        code_snippets: [...answer.code_snippets, { 
+          id: `${answer.code_snippets.length + 1}`, 
+          code: '// New code snippet' 
+        }]
+      } : answer
+    ));
+  };
+
+  const updateCodeSnippet = (answerIndex: number, snippetIndex: number, field: keyof CodeSnippet, value: string) => {
+    setChallengeAnswers(prev => prev.map((answer, i) => 
+      i === answerIndex ? {
+        ...answer,
+        code_snippets: answer.code_snippets.map((snippet, j) => 
+          j === snippetIndex ? { ...snippet, [field]: value } : snippet
+        )
+      } : answer
+    ));
+  };
+
+  const removeCodeSnippet = (answerIndex: number, snippetIndex: number) => {
+    setChallengeAnswers(prev => prev.map((answer, i) => 
+      i === answerIndex ? {
+        ...answer,
+        code_snippets: answer.code_snippets.filter((_, j) => j !== snippetIndex)
+      } : answer
+    ));
+  };
+
+  if (user?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
+              <p className="text-gray-600">You need admin privileges to access this page.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Add Coding Challenge</h1>
+            <button
+              onClick={() => router.push('/admin/coding-challenges')}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Back to Challenges
+            </button>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Basic Information */}
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      rows={4}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Difficulty
+                    </label>
+                    <select
+                      value={formData.difficulty}
+                      onChange={(e) => setFormData({...formData, difficulty: e.target.value as Difficulty})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      {DIFFICULTY_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Points
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.points}
+                      onChange={(e) => setFormData({...formData, points: parseInt(e.target.value)})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Supported Languages
+                    </label>
+                    <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto border rounded-lg p-4">
+                      {LANGUAGE_OPTIONS.map(lang => (
+                        <label key={lang} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.supported_languages.includes(lang)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  supported_languages: [...prev.supported_languages, lang]
+                                }));
+                              } else {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  supported_languages: prev.supported_languages.filter(l => l !== lang)
+                                }));
+                              }
+                            }}
+                            className="mr-3"
+                          />
+                          <span className="text-sm">{lang}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tags
+                    </label>
+                    <div className="space-y-3">
+                      {formData.tags.map((tag, index) => (
+                        <div key={index} className="flex gap-3">
+                          <input
+                            type="text"
+                            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            value={tag}
+                            onChange={(e) => {
+                              const newTags = [...formData.tags];
+                              newTags[index] = e.target.value;
+                              setFormData(prev => ({ ...prev, tags: newTags }));
+                            }}
+                            placeholder="Tag name"
+                          />
+                          {formData.tags.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newTags = formData.tags.filter((_, i) => i !== index);
+                                setFormData(prev => ({ ...prev, tags: newTags }));
+                              }}
+                              className="px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, tags: [...prev.tags, ''] }))}
+                        className="text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        + Add Tag
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">
+                      Active (visible to students)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({...formData, is_active: !formData.is_active})}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        formData.is_active ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          formData.is_active ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Challenge Answers */}
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Challenge Answers</h2>
+                  
+                  {challengeAnswers.map((answer, answerIndex) => (
+                    <div key={answerIndex} className="border rounded-lg p-6 bg-gray-50">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-medium text-lg">Language: {answer.programming_language}</h3>
+                        {challengeAnswers.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeLanguageAnswer(answerIndex)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Programming Language
+                          </label>
+                          <select
+                            value={answer.programming_language}
+                            onChange={(e) => updateLanguageAnswer(answerIndex, 'programming_language', e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            {LANGUAGE_OPTIONS.map(lang => (
+                              <option key={lang} value={lang}>{lang}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Code Snippets
+                          </label>
+                          <div className="space-y-3">
+                            {answer.code_snippets.map((snippet, snippetIndex) => (
+                              <div key={snippetIndex} className="flex gap-3">
+                                <input
+                                  type="text"
+                                  placeholder="Snippet ID"
+                                  value={snippet.id}
+                                  onChange={(e) => updateCodeSnippet(answerIndex, snippetIndex, 'id', e.target.value)}
+                                  className="w-24 p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Code snippet"
+                                  value={snippet.code}
+                                  onChange={(e) => updateCodeSnippet(answerIndex, snippetIndex, 'code', e.target.value)}
+                                  className="flex-1 p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                                {answer.code_snippets.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeCodeSnippet(answerIndex, snippetIndex)}
+                                    className="px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => addCodeSnippet(answerIndex)}
+                              className="text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              + Add Snippet
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Correct Answer (snippet IDs in order)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="1,2,3,4"
+                            value={answer.correct_answer.join(',')}
+                            onChange={(e) => updateLanguageAnswer(answerIndex, 'correct_answer', e.target.value.split(',').map(id => id.trim()))}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <button
+                    type="button"
+                    onClick={addLanguageAnswer}
+                    className="text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    + Add Language Answer
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-4 mt-8 pt-6 border-t">
+                <button
+                  type="button"
+                  onClick={() => router.push('/admin/coding-challenges')}
+                  className="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Creating...' : 'Create Challenge'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+} 

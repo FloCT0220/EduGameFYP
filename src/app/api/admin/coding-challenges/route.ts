@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const queryParams: (string | number)[] = [];
     
     if (difficulty) {
-      whereClause += ' AND c.difficulty = ?';
+      whereClause += ' AND cat.name = ?';
       queryParams.push(difficulty);
     }
     
@@ -47,16 +47,18 @@ export async function GET(request: NextRequest) {
       SELECT 
         c.*,
         u.username as created_by_username,
-        (SELECT COUNT(*) FROM coding_test_cases WHERE challenge_id = c.id) as test_cases_count,
+        cat.name as difficulty_name,
+        cat.color as difficulty_color,
         (SELECT COUNT(*) FROM coding_submissions WHERE challenge_id = c.id) as submissions_count
       FROM coding_challenges c
       LEFT JOIN users u ON c.created_by = u.id
+      LEFT JOIN categories cat ON c.difficulty_id = cat.id
       ${whereClause}
       ORDER BY c.created_at DESC
       LIMIT ? OFFSET ?
     `;
     
-    const challenges = await query(challengesQuery, [...queryParams, limit, offset]);
+    const challenges = await query(challengesQuery, [...queryParams, limit.toString(), offset.toString()]);
     
     return NextResponse.json({
       challenges,
@@ -87,71 +89,48 @@ export async function POST(request: NextRequest) {
     const {
       title,
       description,
-      problem_statement,
-      difficulty,
-      points_easy,
-      points_intermediate,
-      points_hard,
-      time_limit,
-      memory_limit,
+      difficulty_id,
+      points,
       supported_languages,
-      function_signature,
-      constraints,
-      examples,
-      hints,
       tags,
-      test_cases
+      challenge_answers
     } = body;
 
     // Validate required fields
-    if (!title || !description || !problem_statement || !difficulty || !supported_languages) {
+    if (!title || !description || !difficulty_id || !supported_languages) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Insert challenge
     const challengeResult = await query(`
       INSERT INTO coding_challenges (
-        title, description, problem_statement, difficulty,
-        points_easy, points_intermediate, points_hard,
-        time_limit, memory_limit, supported_languages,
-        function_signature, constraints, examples, hints, tags,
-        created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        title, description, difficulty_id,
+        points, supported_languages, tags, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [
       title,
       description,
-      problem_statement,
-      difficulty,
-      points_easy || 10,
-      points_intermediate || 20,
-      points_hard || 50,
-      time_limit || 300,
-      memory_limit || 256,
+      difficulty_id,
+      points || 10,
       JSON.stringify(supported_languages),
-      JSON.stringify(function_signature || {}),
-      constraints || '',
-      JSON.stringify(examples || []),
-      hints || '',
       JSON.stringify(tags || []),
       user.id
     ]) as { insertId: number };
 
     const challengeId = challengeResult.insertId;
 
-    // Insert test cases if provided
-    if (test_cases && test_cases.length > 0) {
-      for (const testCase of test_cases) {
+    // Insert challenge answers if provided
+    if (challenge_answers && Array.isArray(challenge_answers)) {
+      for (const answer of challenge_answers) {
         await query(`
-          INSERT INTO coding_test_cases (
-            challenge_id, input_data, expected_output, is_sample, is_hidden, weight
-          ) VALUES (?, ?, ?, ?, ?, ?)
+          INSERT INTO coding_challenge_answers 
+          (challenge_id, language_id, code_snippets, correct_answer)
+          VALUES (?, ?, ?, ?)
         `, [
           challengeId,
-          JSON.stringify(testCase.input_data),
-          testCase.expected_output,
-          testCase.is_sample || false,
-          testCase.is_hidden !== false, // default to true
-          testCase.weight || 1.0
+          answer.language_id,
+          JSON.stringify(answer.code_snippets),
+          JSON.stringify(answer.correct_answer)
         ]);
       }
     }

@@ -1,11 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
+import { parseCodingChallengeListFields } from '@/lib/utils';
+import { RowDataPacket } from 'mysql2';
+
+interface ChallengeData extends RowDataPacket {
+  id: number;
+  title: string;
+  description: string;
+  difficulty: string;
+  points: number;
+  supported_languages: string;
+  tags: string;
+  created_by: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+  created_by_username?: string;
+}
+
+interface ChallengeAnswerData extends RowDataPacket {
+  language_id: number;
+  programming_language: string;
+  code_snippets: string;
+  correct_answer: string;
+}
 
 // GET /api/admin/coding-challenges/[id] - Get a specific coding challenge
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -15,15 +39,19 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const challengeId = parseInt(params.id);
+    const { id } = await params;
+    const challengeId = parseInt(id);
     
     // Get challenge details
     const challengeQuery = `
       SELECT 
         c.*,
-        u.username as created_by_username
+        u.username as created_by_username,
+        cat.name as difficulty_name,
+        cat.color as difficulty_color
       FROM coding_challenges c
       LEFT JOIN users u ON c.created_by = u.id
+      LEFT JOIN categories cat ON c.difficulty_id = cat.id
       WHERE c.id = ?
     `;
     
@@ -33,31 +61,42 @@ export async function GET(
       return NextResponse.json({ error: 'Challenge not found' }, { status: 404 });
     }
     
-    const challenge = challenges[0];
+    const challenge = challenges[0] as ChallengeData;
     
-    // Get test cases
-    const testCasesQuery = `
-      SELECT * FROM coding_test_cases 
-      WHERE challenge_id = ? 
-      ORDER BY is_sample DESC, id ASC
+    // Get challenge answers
+    const answersQuery = `
+      SELECT 
+        cca.language_id,
+        cat.name as programming_language,
+        cca.code_snippets,
+        cca.correct_answer
+      FROM coding_challenge_answers cca
+      LEFT JOIN categories cat ON cca.language_id = cat.id
+      WHERE cca.challenge_id = ?
+      ORDER BY cat.sort_order, cat.name
     `;
     
-    const testCases = await query(testCasesQuery, [challengeId]);
+    const answers = await query(answersQuery, [challengeId]);
     
-    // Parse JSON fields
-    const challengeData = {
-      ...challenge,
-      supported_languages: JSON.parse(challenge.supported_languages || '[]'),
-      function_signature: JSON.parse(challenge.function_signature || '{}'),
-      examples: JSON.parse(challenge.examples || '[]'),
-      tags: JSON.parse(challenge.tags || '[]'),
-      test_cases: Array.isArray(testCases) ? testCases.map((tc: { input_data: string; [key: string]: unknown }) => ({
-        ...tc,
-        input_data: JSON.parse(tc.input_data || '{}')
+    // Parse JSON fields using utility function
+    const challengeData = parseCodingChallengeListFields(challenge as Record<string, unknown>);
+    
+    // Add challenge answers to the response
+    const response = {
+      ...challengeData,
+      challenge_answers: Array.isArray(answers) ? (answers as ChallengeAnswerData[]).map(answer => ({
+        language_id: answer.language_id,
+        programming_language: answer.programming_language,
+        code_snippets: typeof answer.code_snippets === 'string' 
+          ? JSON.parse(answer.code_snippets) 
+          : answer.code_snippets,
+        correct_answer: typeof answer.correct_answer === 'string' 
+          ? JSON.parse(answer.correct_answer) 
+          : answer.correct_answer
       })) : []
     };
     
-    return NextResponse.json(challengeData);
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching coding challenge:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -67,7 +106,7 @@ export async function GET(
 // PUT /api/admin/coding-challenges/[id] - Update a coding challenge
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -77,83 +116,60 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const challengeId = parseInt(params.id);
+    const { id } = await params;
+    const challengeId = parseInt(id);
     const body = await request.json();
     const {
       title,
       description,
-      problem_statement,
-      difficulty,
-      points_easy,
-      points_intermediate,
-      points_hard,
-      time_limit,
-      memory_limit,
+      difficulty_id,
+      points,
       supported_languages,
-      function_signature,
-      constraints,
-      examples,
-      hints,
       tags,
-      test_cases,
-      is_active
+      is_active,
+      challenge_answers
     } = body;
 
     // Validate required fields
-    if (!title || !description || !problem_statement || !difficulty || !supported_languages) {
+    if (!title || !description || !difficulty_id || !supported_languages) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Update challenge
     await query(`
       UPDATE coding_challenges SET
-        title = ?, description = ?, problem_statement = ?, difficulty = ?,
-        points_easy = ?, points_intermediate = ?, points_hard = ?,
-        time_limit = ?, memory_limit = ?, supported_languages = ?,
-        function_signature = ?, constraints = ?, examples = ?, hints = ?, tags = ?,
+        title = ?, description = ?, difficulty_id = ?,
+        points = ?, supported_languages = ?, tags = ?,
         is_active = ?, updated_at = NOW()
       WHERE id = ?
     `, [
       title,
       description,
-      problem_statement,
-      difficulty,
-      points_easy || 10,
-      points_intermediate || 20,
-      points_hard || 50,
-      time_limit || 300,
-      memory_limit || 256,
+      difficulty_id,
+      points || 10,
       JSON.stringify(supported_languages),
-      JSON.stringify(function_signature || {}),
-      constraints || '',
-      JSON.stringify(examples || []),
-      hints || '',
       JSON.stringify(tags || []),
       is_active !== false, // default to true
       challengeId
     ]);
 
-    // Update test cases if provided
-    if (test_cases) {
-      // Delete existing test cases
-      await query('DELETE FROM coding_test_cases WHERE challenge_id = ?', [challengeId]);
+    // Update challenge answers if provided
+    if (challenge_answers && Array.isArray(challenge_answers)) {
+      // Delete existing answers
+      await query('DELETE FROM coding_challenge_answers WHERE challenge_id = ?', [challengeId]);
       
-      // Insert new test cases
-      if (test_cases.length > 0) {
-        for (const testCase of test_cases) {
-          await query(`
-            INSERT INTO coding_test_cases (
-              challenge_id, input_data, expected_output, is_sample, is_hidden, weight
-            ) VALUES (?, ?, ?, ?, ?, ?)
-          `, [
-            challengeId,
-            JSON.stringify(testCase.input_data),
-            testCase.expected_output,
-            testCase.is_sample || false,
-            testCase.is_hidden !== false, // default to true
-            testCase.weight || 1.0
-          ]);
-        }
+      // Insert new answers
+      for (const answer of challenge_answers) {
+        await query(`
+          INSERT INTO coding_challenge_answers 
+          (challenge_id, language_id, code_snippets, correct_answer)
+          VALUES (?, ?, ?, ?)
+        `, [
+          challengeId,
+          answer.language_id,
+          JSON.stringify(answer.code_snippets),
+          JSON.stringify(answer.correct_answer)
+        ]);
       }
     }
 
@@ -167,7 +183,7 @@ export async function PUT(
 // DELETE /api/admin/coding-challenges/[id] - Delete a coding challenge
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -177,7 +193,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const challengeId = parseInt(params.id);
+    const { id } = await params;
+    const challengeId = parseInt(id);
     
     // Check if challenge exists
     const existingChallenge = await query(
