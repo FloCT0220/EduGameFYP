@@ -49,8 +49,7 @@ export function parseJsonFields<T extends Record<string, unknown>>(
   for (const field of jsonFields) {
     const defaultValue = defaultValues[field] || (field.toString().includes('languages') ? [] : 
                                                 field.toString().includes('signature') ? {} : 
-                                                field.toString().includes('examples') ? [] : 
-                                                field.toString().includes('tags') ? [] : null);
+                                                field.toString().includes('examples') ? [] : null);
     
     parsed[field] = parseJsonField(row[field] as string, defaultValue) as T[keyof T];
   }
@@ -65,13 +64,11 @@ export function parseCodingChallengeFields(challenge: Record<string, unknown>): 
   return parseJsonFields(challenge, [
     'supported_languages',
     'function_signature', 
-    'examples',
-    'tags'
+    'examples'
   ], {
     supported_languages: [],
     function_signature: {},
-    examples: [],
-    tags: []
+    examples: []
   });
 }
 
@@ -92,12 +89,10 @@ export function parseQuizQuestionFields(question: Record<string, unknown>): Reco
 export function parseCodingChallengeListFields(challenge: Record<string, unknown>): Record<string, unknown> {
   return parseJsonFields(challenge, [
     'supported_languages',
-    'tags',
     'code_snippets',
     'correct_answer'
   ], {
     supported_languages: [],
-    tags: [],
     code_snippets: [],
     correct_answer: []
   });

@@ -17,8 +17,6 @@ interface Topic {
   content: string;
   structured_content?: StructuredContent;
   lesson_order: number;
-  video_url: string;
-  duration_minutes: number;
   points_reward: number;
   is_published: boolean;
   created_at: string;
@@ -45,8 +43,6 @@ export async function GET(
         content,
         structured_content,
         lesson_order,
-        video_url,
-        duration_minutes,
         points_reward,
         is_published,
         created_at,
@@ -77,8 +73,6 @@ export async function POST(
     const { 
       title, 
       structured_content,
-      video_url, 
-      duration_minutes, 
       points_reward, 
       is_published
     } = body;
@@ -98,19 +92,15 @@ export async function POST(
         title, 
         structured_content,
         lesson_order, 
-        video_url, 
-        duration_minutes, 
         points_reward, 
         is_published
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?)
     `, [
       courseId,
       title,
       structured_content ? JSON.stringify(structured_content) : null,
       nextLessonOrder,
-      video_url || null,
-      duration_minutes,
       points_reward,
       is_published
     ]) as InsertResult;

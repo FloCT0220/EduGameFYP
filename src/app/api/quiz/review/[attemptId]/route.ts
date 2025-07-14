@@ -39,7 +39,7 @@ export async function GET(
     const attemptResult = await query(
       `SELECT 
         id, user_id, subject_id, node_id, questions_total, questions_correct,
-        score_percentage, points_earned, time_taken, completed_at
+        score_percentage, points_earned
       FROM quiz_attempts 
       WHERE id = ?`,
       [attemptId]
@@ -164,7 +164,7 @@ export async function GET(
         correctAnswers: attempt.questions_correct,
         scorePercentage: attempt.score_percentage,
         pointsEarned: attempt.points_earned,
-        timeTaken: attempt.time_taken
+        timeTaken: null // time_taken is removed from quiz_attempts select
       }
     });
 

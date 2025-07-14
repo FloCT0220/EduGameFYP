@@ -24,11 +24,7 @@ export interface QuizAttempt {
   questions_correct: number;
   score_percentage: number;
   points_earned: number;
-  time_bonus: number;
-  streak_bonus: number;
   total_points: number;
-  max_streak: number;
-  time_taken?: number;
   started_at: Date;
   completed_at?: Date;
 }
@@ -147,9 +143,9 @@ export class QuizService {
     // Create quiz attempt
     const attemptResult = await query(
       `INSERT INTO quiz_attempts 
-       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, points_earned, time_bonus, streak_bonus, total_points, max_streak, time_taken, completed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [userId, subjectId, nodeId, allQuestions.length, correctAnswers, scorePercentage, totalPoints, 0, 0, totalPoints, 0, timeTaken]
+       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, points_earned, total_points, started_at, completed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [userId, subjectId, nodeId, allQuestions.length, correctAnswers, scorePercentage, totalPoints, totalPoints]
     );
     
     const attemptId = (attemptResult as any).insertId;

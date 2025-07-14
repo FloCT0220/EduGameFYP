@@ -97,9 +97,9 @@ export async function POST(request: NextRequest) {
     // Create quiz attempt
     const attemptResult = await query(
       `INSERT INTO quiz_attempts 
-       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, points_earned, time_bonus, streak_bonus, total_points, max_streak, time_taken, completed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [finalUserId, finalSubjectId, finalNodeId, questionArray.length, correctAnswers, scorePercentage, totalPoints, 0, 0, totalPoints, 0, timeSpent || 0]
+       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, points_earned, total_points, completed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [finalUserId, finalSubjectId, finalNodeId, questionArray.length, correctAnswers, scorePercentage, totalPoints, timeSpent || 0]
     );
 
     const attemptId = (attemptResult as mysql.ResultSetHeader).insertId;

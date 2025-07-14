@@ -11,7 +11,6 @@ interface Course {
     title: string;
     description: string;
     difficulty_level: string;
-    category: string;
     creator_name: string;
     enrolled_count: number;
 }
@@ -22,7 +21,6 @@ interface Topic {
     content: string;
     lesson_order: number;
     points_reward: number;
-    duration_minutes: number;
     is_completed: boolean;
 }
 

@@ -19,8 +19,6 @@ interface Topic {
   content: string;
   structured_content?: StructuredContent;
   lesson_order: number;
-  video_url: string;
-  duration_minutes: number;
   points_reward: number;
   is_published: boolean;
   created_at: string;
@@ -64,8 +62,6 @@ export default function AdminCourseTopics() {
   const [formData, setFormData] = useState({
     title: "",
     lesson_order: 1,
-    video_url: "",
-    duration_minutes: 15,
     points_reward: 10,
     is_published: true,
   });
@@ -172,8 +168,6 @@ export default function AdminCourseTopics() {
     setFormData({
       title: topic.title,
       lesson_order: topic.lesson_order,
-      video_url: topic.video_url || "",
-      duration_minutes: topic.duration_minutes,
       points_reward: topic.points_reward,
       is_published: topic.is_published,
     });
@@ -211,8 +205,6 @@ export default function AdminCourseTopics() {
     setFormData({
       title: "",
       lesson_order: 1,
-      video_url: "",
-      duration_minutes: 15,
       points_reward: 10,
       is_published: true,
     });
@@ -383,20 +375,6 @@ export default function AdminCourseTopics() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Duration (minutes)
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.duration_minutes}
-                        onChange={e => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
-                        min="1"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Points Reward
                       </label>
                       <input
@@ -408,19 +386,6 @@ export default function AdminCourseTopics() {
                         required
                       />
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Video URL (optional)
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.video_url}
-                      onChange={e => setFormData({ ...formData, video_url: e.target.value })}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                      placeholder="https://youtube.com/watch?v=..."
-                    />
                   </div>
 
                   <div className="flex items-center">
@@ -470,9 +435,6 @@ export default function AdminCourseTopics() {
                     Topic
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Duration
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Points
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -504,9 +466,6 @@ export default function AdminCourseTopics() {
                           <span className="text-gray-400">No content</span>
                         )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {topic.duration_minutes} min
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {topic.points_reward} pts

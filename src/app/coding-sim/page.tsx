@@ -11,10 +11,11 @@ interface CodingChallenge {
   difficulty: 'easy' | 'intermediate' | 'hard';
   points: number;
   supported_languages: string[];
-  tags: string[];
+  is_active: boolean;
   created_at: string;
-  submissions_count?: number;
-  success_rate?: number;
+  created_by_username: string;
+  submissions_count: number;
+  success_rate: number;
 }
 
 const difficulties = [
@@ -70,8 +71,7 @@ export default function CodingSimPage() {
     if (searchTerm) {
       filtered = filtered.filter(challenge =>
         challenge.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        challenge.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        challenge.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        challenge.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -156,7 +156,7 @@ export default function CodingSimPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
                 <input
                   type="text"
-                  placeholder="Search challenges by title, description, or tags..."
+                  placeholder="Search challenges by title, description..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-white/60"
@@ -257,18 +257,6 @@ export default function CodingSimPage() {
                     +{challenge.supported_languages.length - 3} more
                   </span>
                 )}
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1">
-                {challenge.tags.slice(0, 3).map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded"
-                  >
-                    {tag}
-                  </span>
-                ))}
               </div>
 
               {/* Success Rate */}

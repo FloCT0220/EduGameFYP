@@ -14,10 +14,13 @@ interface CodingChallenge {
   difficulty: 'easy' | 'intermediate' | 'hard';
   points: number;
   supported_languages: string[];
-  tags: string[];
-  code_snippets: CodeSnippet[];
-  correct_answer: string[];
+  is_active: boolean;
   created_at: string;
+  created_by_username: string;
+  submissions_count: number;
+  success_rate: number;
+  code_snippets?: CodeSnippet[];
+  correct_answer?: string[];
 }
 
 interface CodeSnippet {

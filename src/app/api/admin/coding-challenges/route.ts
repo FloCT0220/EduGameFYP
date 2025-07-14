@@ -89,7 +89,6 @@ export async function POST(request: NextRequest) {
       difficulty,
       points,
       supported_languages,
-      tags,
       challenge_answers
     } = body;
 
@@ -102,15 +101,14 @@ export async function POST(request: NextRequest) {
     const challengeResult = await query(`
       INSERT INTO coding_challenges (
         title, description, difficulty,
-        points, supported_languages, tags, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        points, supported_languages, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?)
     `, [
       title,
       description,
       difficulty,
       points || 10,
       JSON.stringify(supported_languages),
-      JSON.stringify(tags || []),
       user.id
     ]) as { insertId: number };
 

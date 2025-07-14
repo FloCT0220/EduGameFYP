@@ -71,26 +71,23 @@ export const insertDefaultData = async () => {
         [
           'Introduction to Programming',
           'Learn the fundamentals of programming with hands-on examples and interactive exercises.',
-          'beginner',
-          'Programming'
+          'beginner'
         ],
         [
           'Web Development Basics',
           'Master HTML, CSS, and JavaScript to build amazing websites from scratch.',
-          'beginner',
-          'Web Development'
+          'beginner'
         ],
         [
           'Database Design',
           'Learn how to design efficient and scalable database systems.',
-          'intermediate',
-          'Database'
+          'intermediate'
         ]
       ];
 
       for (const course of sampleCourses) {
         await pool.execute(
-          'INSERT INTO courses (title, description, difficulty_level, category, is_published) VALUES (?, ?, ?, ?, ?)',
+          'INSERT INTO courses (title, description, difficulty_level, is_published) VALUES (?, ?, ?, ?)',
           [...course, true]
         );
       }
@@ -102,26 +99,45 @@ export const insertDefaultData = async () => {
       );
 
       if ((topicsExist as mysql.RowDataPacket[]).length === 0) {
+        const defaultSections = [
+          {
+            title: "Introduction",
+            content: "Welcome to this lesson! In this topic, we'll explore the fundamental concepts and practical applications."
+          },
+          {
+            title: "Key Concepts",
+            content: "Let's dive into the core principles that make this topic important in modern development."
+          },
+          {
+            title: "Practical Examples",
+            content: "Here are some real-world examples of how this topic is used in professional development environments."
+          },
+          {
+            title: "Best Practices",
+            content: "To master this topic, follow these industry-standard best practices and guidelines."
+          },
+          {
+            title: "Summary",
+            content: "You've now learned the essential concepts. Take the quiz below to test your understanding and earn points!"
+          }
+        ];
         const sampleTopics = [
           // Course 1: Introduction to Programming
-          [1, 'Understanding Variables and Data Types', 'Learn about different types of variables and how to use them effectively in programming. This lesson covers basic data types, variable declaration, and best practices for naming variables.', 1, 30, 10],
-          
+          [1, 'Understanding Variables and Data Types', 'Learn about different types of variables and how to use them effectively in programming. This lesson covers basic data types, variable declaration, and best practices for naming variables.', 1, 30, 10, JSON.stringify(defaultSections)],
           // Course 2: Web Development Basics  
-          [2, 'HTML Basics', 'Learn the fundamentals of HTML and document structure. Master essential HTML tags, semantic markup, and how to create well-structured web pages.', 1, 25, 10],
-          [2, 'CSS Styling', 'Master CSS for styling web pages and creating responsive designs. Learn selectors, properties, layout techniques, and modern CSS practices.', 2, 35, 15],
-          [2, 'JavaScript Fundamentals', 'Introduction to JavaScript programming for web interactivity. Cover variables, functions, DOM manipulation, and event handling.', 3, 40, 20],
-          [2, 'Building a Simple Website', 'Put it all together by building a complete website. Apply HTML, CSS, and JavaScript skills to create an interactive web project.', 4, 50, 25],
-          
+          [2, 'HTML Basics', 'Learn the fundamentals of HTML and document structure. Master essential HTML tags, semantic markup, and how to create well-structured web pages.', 1, 25, 10, JSON.stringify(defaultSections)],
+          [2, 'CSS Styling', 'Master CSS for styling web pages and creating responsive designs. Learn selectors, properties, layout techniques, and modern CSS practices.', 2, 35, 15, JSON.stringify(defaultSections)],
+          [2, 'JavaScript Fundamentals', 'Introduction to JavaScript programming for web interactivity. Cover variables, functions, DOM manipulation, and event handling.', 3, 40, 20, JSON.stringify(defaultSections)],
+          [2, 'Building a Simple Website', 'Put it all together by building a complete website. Apply HTML, CSS, and JavaScript skills to create an interactive web project.', 4, 50, 25, JSON.stringify(defaultSections)],
           // Course 3: Database Design
-          [3, 'Introduction to Databases', 'Understanding database concepts and types. Learn about relational databases, DBMS, and fundamental database principles.', 1, 30, 10],
-          [3, 'SQL Basics', 'Learn fundamental SQL queries and database operations. Master SELECT, INSERT, UPDATE, DELETE commands and basic joins.', 2, 40, 15],
-          [3, 'Database Normalization', 'Master the principles of database normalization and design. Learn about normal forms and how to design efficient database schemas.', 3, 45, 20],
-          [3, 'Advanced Queries and Optimization', 'Learn advanced SQL queries and performance optimization. Cover complex joins, subqueries, and indexing strategies.', 4, 50, 25]
+          [3, 'Introduction to Databases', 'Understanding database concepts and types. Learn about relational databases, DBMS, and fundamental database principles.', 1, 30, 10, JSON.stringify(defaultSections)],
+          [3, 'SQL Basics', 'Learn fundamental SQL queries and database operations. Master SELECT, INSERT, UPDATE, DELETE commands and basic joins.', 2, 40, 15, JSON.stringify(defaultSections)],
+          [3, 'Database Normalization', 'Master the principles of database normalization and design. Learn about normal forms and how to design efficient database schemas.', 3, 45, 20, JSON.stringify(defaultSections)],
+          [3, 'Advanced Queries and Optimization', 'Learn advanced SQL queries and performance optimization. Cover complex joins, subqueries, and indexing strategies.', 4, 50, 25, JSON.stringify(defaultSections)]
         ];
-
         for (const topic of sampleTopics) {
           await pool.execute(
-            'INSERT INTO topics (course_id, title, content, lesson_order, duration_minutes, points_reward, is_published) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO topics (course_id, title, content, lesson_order, points_reward, structured_content, is_published) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [...topic, true]
           );
         }
@@ -250,7 +266,6 @@ export const insertDefaultData = async () => {
             'easy',
             10,
             JSON.stringify(['python', 'javascript', 'java', 'cpp', 'c']),
-            JSON.stringify(['array', 'hash-table', 'easy']),
             adminId, true
           ],
           [
@@ -259,7 +274,6 @@ export const insertDefaultData = async () => {
             'easy',
             10,
             JSON.stringify(['python', 'javascript', 'java', 'cpp', 'c']),
-            JSON.stringify(['two-pointers', 'string', 'easy']),
             adminId, true
           ],
           [
@@ -268,7 +282,6 @@ export const insertDefaultData = async () => {
             'intermediate',
             20,
             JSON.stringify(['python', 'javascript', 'java', 'cpp']),
-            JSON.stringify(['linked-list', 'math', 'recursion', 'intermediate']),
             adminId, true
           ],
           [
@@ -277,7 +290,6 @@ export const insertDefaultData = async () => {
             'intermediate',
             20,
             JSON.stringify(['python', 'javascript', 'java', 'cpp']),
-            JSON.stringify(['array', 'divide-and-conquer', 'dynamic-programming', 'intermediate']),
             adminId, true
           ],
           [
@@ -286,7 +298,6 @@ export const insertDefaultData = async () => {
             'hard',
             50,
             JSON.stringify(['python', 'javascript', 'java', 'cpp']),
-            JSON.stringify(['stack', 'tree', 'depth-first-search', 'binary-tree', 'hard']),
             adminId, true
           ]
         ];
@@ -295,8 +306,8 @@ export const insertDefaultData = async () => {
         for (const challenge of codingChallenges) {
           await pool.execute(
             `INSERT INTO coding_challenges 
-            (title, description, difficulty, points, supported_languages, tags, created_by, is_active) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            (title, description, difficulty, points, supported_languages, created_by, is_active) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
             challenge
           );
         }
@@ -431,7 +442,6 @@ export const sampleCodingChallenges = [
     difficulty: 'easy',
     points: 10,
     supported_languages: ['python', 'javascript', 'java'],
-    tags: ['arrays', 'hash-table'],
     code_snippets: [
       { id: '1', code: 'for i in range(len(nums)):', isCorrect: true },
       { id: '2', code: 'for j in range(i + 1, len(nums)):', isCorrect: true },
@@ -450,7 +460,6 @@ export const sampleCodingChallenges = [
     difficulty: 'easy',
     points: 5,
     supported_languages: ['python', 'javascript'],
-    tags: ['strings', 'two-pointers'],
     code_snippets: [
       { id: '1', code: 'left = 0', isCorrect: true },
       { id: '2', code: 'right = len(s) - 1', isCorrect: true },

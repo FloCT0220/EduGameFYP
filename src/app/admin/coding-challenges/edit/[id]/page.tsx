@@ -57,7 +57,6 @@ export default function EditCodingChallenge({ params }: { params: Promise<{ id: 
     difficulty: 'easy' as Difficulty,
     points: 10,
     supported_languages: ['python'],
-    tags: [''],
     is_active: true
   });
 
@@ -104,7 +103,6 @@ export default function EditCodingChallenge({ params }: { params: Promise<{ id: 
           difficulty: fullChallenge.difficulty,
           points: fullChallenge.points,
           supported_languages: fullChallenge.supported_languages,
-          tags: fullChallenge.tags.length > 0 ? fullChallenge.tags : [''],
           is_active: fullChallenge.is_active
         });
         
@@ -133,7 +131,6 @@ export default function EditCodingChallenge({ params }: { params: Promise<{ id: 
       const token = getSession('authToken');
       const payload = {
         ...formData,
-        tags: formData.tags.filter(tag => tag.trim()),
         challenge_answers: challengeAnswers
       };
 
@@ -362,48 +359,6 @@ export default function EditCodingChallenge({ params }: { params: Promise<{ id: 
                           <span className="text-sm">{lang}</span>
                         </label>
                       ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tags
-                    </label>
-                    <div className="space-y-3">
-                      {formData.tags.map((tag, index) => (
-                        <div key={index} className="flex gap-3">
-                          <input
-                            type="text"
-                            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            value={tag}
-                            onChange={(e) => {
-                              const newTags = [...formData.tags];
-                              newTags[index] = e.target.value;
-                              setFormData(prev => ({ ...prev, tags: newTags }));
-                            }}
-                            placeholder="Tag name"
-                          />
-                          {formData.tags.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newTags = formData.tags.filter((_, i) => i !== index);
-                                setFormData(prev => ({ ...prev, tags: newTags }));
-                              }}
-                              className="px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg"
-                            >
-                              Remove
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, tags: [...prev.tags, ''] }))}
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        + Add Tag
-                      </button>
                     </div>
                   </div>
 

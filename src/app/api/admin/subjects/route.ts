@@ -6,7 +6,6 @@ interface Course {
   title: string;
   description: string;
   difficulty: string;
-  category: string;
   thumbnail_url: string;
   is_active: boolean;
   enrolled_count: number;
@@ -26,7 +25,6 @@ export async function GET() {
         c.title,
         c.description,
         c.difficulty_level as difficulty,
-        c.category,
         c.thumbnail_url,
         c.is_published as is_active,
         (SELECT COUNT(*) FROM user_enrollments WHERE course_id = c.id) as enrolled_count,
@@ -49,12 +47,12 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description, difficulty, category, thumbnail_url, is_published } = body;
+    const { title, description, difficulty, thumbnail_url, is_published } = body;
 
     const result = await query(`
-      INSERT INTO courses (title, description, difficulty_level, category, thumbnail_url, is_published)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [title, description, difficulty, category, thumbnail_url, is_published]) as InsertResult;
+      INSERT INTO courses (title, description, difficulty_level, thumbnail_url, is_published)
+      VALUES (?, ?, ?, ?, ?)
+    `, [title, description, difficulty, thumbnail_url, is_published]) as InsertResult;
 
     return NextResponse.json({ success: true, id: result.insertId });
   } catch (error) {

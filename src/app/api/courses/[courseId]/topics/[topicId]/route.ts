@@ -26,7 +26,6 @@ export async function GET(
                 t.structured_content,
                 t.lesson_order,
                 t.points_reward as points,
-                t.duration_minutes as estimated_time,
                 'lesson' as type
             FROM topics t
             WHERE t.course_id = ? AND t.id = ?
@@ -75,9 +74,6 @@ export async function GET(
             }
         }
 
-        // Get duration in minutes
-        const durationMinutes = topicData.estimated_time || 30;
-
         // Parse structured content
         let structuredContent: StructuredContent | undefined;
         
@@ -100,7 +96,6 @@ export async function GET(
             content: enhancedContent,
             lesson_order: topicData.lesson_order,
             points_reward: topicData.points,
-            duration_minutes: durationMinutes,
             is_completed: isCompleted,
             type: topicData.type,
             last_attempt_id: lastAttemptId,

@@ -9,7 +9,6 @@ interface ChallengeRow {
   difficulty: string;
   points: number;
   supported_languages: string;
-  tags: string;
   created_at: string;
 }
 
@@ -49,7 +48,6 @@ export async function GET(
         cc.difficulty,
         cc.points,
         cc.supported_languages,
-        cc.tags,
         cc.created_at
       FROM coding_challenges cc
       WHERE cc.id = ? AND cc.is_active = true

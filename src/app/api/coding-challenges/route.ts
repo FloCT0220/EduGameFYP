@@ -9,7 +9,6 @@ interface ChallengeRow {
   difficulty: string;
   points: number;
   supported_languages: string;
-  tags: string;
   created_at: string;
   submissions_count: number;
   success_rate: number;
@@ -26,7 +25,6 @@ export async function GET() {
         cc.difficulty,
         cc.points,
         cc.supported_languages,
-        cc.tags,
         cc.created_at,
         COUNT(cs.id) as submissions_count,
         CASE 

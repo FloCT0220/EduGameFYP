@@ -17,7 +17,6 @@ interface Topic {
     content: string;
     lesson_order: number;
     points_reward: number;
-    duration_minutes: number;
     is_completed: boolean;
     last_attempt_id?: number;
     points_earned?: number;

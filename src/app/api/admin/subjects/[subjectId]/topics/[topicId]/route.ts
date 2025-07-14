@@ -24,16 +24,12 @@ export async function PUT(
       title, 
       structured_content,
       lesson_order, 
-      video_url, 
-      duration_minutes, 
       points_reward, 
       is_published
     }: {
       title: string;
       structured_content?: StructuredContent;
       lesson_order: number;
-      video_url?: string;
-      duration_minutes: number;
       points_reward: number;
       is_published: boolean;
     } = body;
@@ -58,8 +54,6 @@ export async function PUT(
         title = ?, 
         structured_content = ?,
         lesson_order = ?, 
-        video_url = ?, 
-        duration_minutes = ?, 
         points_reward = ?, 
         is_published = ?,
         updated_at = NOW()
@@ -68,8 +62,6 @@ export async function PUT(
       title,
       structured_content ? JSON.stringify(structured_content) : null,
       lesson_order,
-      video_url || null,
-      duration_minutes,
       points_reward,
       is_published,
       topicId,

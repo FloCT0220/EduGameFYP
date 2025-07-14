@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
                 c.title,
                 c.description,
                 c.difficulty_level,
-                c.category,
                 u.username as creator_name,
                 (SELECT COUNT(*) FROM user_enrollments WHERE course_id = c.id) as enrolled_count,
                 CASE WHEN ue.user_id IS NOT NULL THEN true ELSE false END as enrolled,

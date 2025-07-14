@@ -18,7 +18,6 @@ interface Topic extends RowDataPacket {
     content: string;
     lesson_order: number;
     points_reward: number;
-    duration_minutes: number;
 }
 
 interface UserProgress extends RowDataPacket {

@@ -7,7 +7,6 @@ interface Course {
   title: string;
   description: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
-  category: string;
   thumbnail_url: string | null;
   is_active: boolean;
   enrolled_count: number;
@@ -25,7 +24,6 @@ export default function AdminSubjects() {
     title: '',
     description: '',
     difficulty: 'beginner' as Difficulty,
-    category: '',
     thumbnail_url: '',
     is_published: false
   });
@@ -75,7 +73,6 @@ export default function AdminSubjects() {
           title: '',
           description: '',
           difficulty: 'beginner',
-          category: '',
           thumbnail_url: '',
           is_published: false
         });
@@ -92,7 +89,6 @@ export default function AdminSubjects() {
       title: course.title,
       description: course.description,
       difficulty: course.difficulty as Difficulty,
-      category: course.category,
       thumbnail_url: course.thumbnail_url || '',
       is_published: course.is_active
     });
@@ -193,20 +189,6 @@ export default function AdminSubjects() {
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Category
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.category}
-                        onChange={(e) => setFormData({...formData, category: e.target.value})}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
-                        placeholder="e.g., Programming, Web Development"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Thumbnail URL
                       </label>
                       <input
@@ -248,7 +230,6 @@ export default function AdminSubjects() {
                           title: '',
                           description: '',
                           difficulty: 'beginner',
-                          category: '',
                           thumbnail_url: '',
                           is_published: false
                         });
@@ -309,11 +290,6 @@ export default function AdminSubjects() {
                     }`}>
                       {course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1)}
                     </span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Category:</span>
-                    <span className="text-gray-900">{course.category}</span>
                   </div>
                   
                   <div className="flex justify-between">

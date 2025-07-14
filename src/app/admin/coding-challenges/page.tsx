@@ -11,7 +11,6 @@ interface CodingChallenge {
   difficulty: 'easy' | 'intermediate' | 'hard';
   points: number;
   supported_languages: string[];
-  tags: string[];
   is_active: boolean;
   created_at: string;
   created_by_username: string;
@@ -184,17 +183,6 @@ export default function AdminCodingChallenges() {
                   </div>
                 </div>
                 
-                {challenge.tags.length > 0 && (
-                  <div className="mt-4">
-                    <div className="flex flex-wrap gap-1">
-                      {challenge.tags.map((tag, index) => (
-                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>

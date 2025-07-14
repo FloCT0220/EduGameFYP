@@ -11,7 +11,6 @@ interface ChallengeData extends RowDataPacket {
   difficulty: string;
   points: number;
   supported_languages: string;
-  tags: string;
   created_by: number;
   is_active: boolean;
   created_at: Date;
@@ -118,7 +117,6 @@ export async function PUT(
       difficulty,
       points,
       supported_languages,
-      tags,
       is_active,
       challenge_answers
     } = body;
@@ -132,7 +130,7 @@ export async function PUT(
     await query(`
       UPDATE coding_challenges SET
         title = ?, description = ?, difficulty = ?,
-        points = ?, supported_languages = ?, tags = ?,
+        points = ?, supported_languages = ?,
         is_active = ?, updated_at = NOW()
       WHERE id = ?
     `, [
@@ -141,7 +139,6 @@ export async function PUT(
       difficulty,
       points || 10,
       JSON.stringify(supported_languages),
-      JSON.stringify(tags || []),
       is_active !== false, // default to true
       challengeId
     ]);

@@ -10,7 +10,6 @@ interface Course {
     title: string;
     description: string;
     difficulty_level: 'beginner' | 'intermediate' | 'advanced';
-    category: string;
     enrolled: boolean;
     progress_percentage: number;
     total_points_earned: number;
@@ -269,7 +268,7 @@ export default function CoursesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredCourses.map((course) => (
                         <div key={course.id} className="card hover:scale-105 transition-all duration-300">
-                            <div className={`w-full h-32 rounded-lg mb-4 flex items-center justify-center text-6xl ${getCourseTheme(course.category)}`}>
+                            <div className={`w-full h-32 rounded-lg mb-4 flex items-center justify-center text-6xl ${getCourseTheme(course.difficulty_level)}`}>
                                 📚
                             </div>
                             
@@ -285,7 +284,6 @@ export default function CoursesPage() {
                                     }`}>
                                         {course.difficulty_level.charAt(0).toUpperCase() + course.difficulty_level.slice(1)}
                                     </span>
-                                    <span className="text-sm text-gray-500">📂 {course.category}</span>
                                 </div>
                                 
                                 {course.enrolled && (
