@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSession } from '@/lib/session';
 import Badge from '@/components/gamification/Badge';
 import PointsDisplay from '@/components/gamification/PointsDisplay';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,9 +12,6 @@ interface DashboardData {
         id: number;
         name: string;
         points: number;
-        level: number;
-        currentXP: number;
-        xpForNextLevel: number;
         streakDays: number;
         maxStreak: number;
     };
@@ -58,7 +56,16 @@ export default function Dashboard() {
             
             try {
                 setLoading(true);
-                const response = await fetch(`/api/dashboard?userId=${user.id}`);
+                const token = getSession('authToken');
+                if (!token) {
+                    throw new Error('No authentication token found');
+                }
+                
+                const response = await fetch('/api/dashboard', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch dashboard data');
@@ -138,9 +145,6 @@ export default function Dashboard() {
                 <div className="mb-8">
                     <PointsDisplay
                         points={dashboardUser.points}
-                        level={dashboardUser.level}
-                        xpForNextLevel={dashboardUser.xpForNextLevel}
-                        currentXP={dashboardUser.currentXP}
                         showAnimation={true}
                         size="lg"
                     />

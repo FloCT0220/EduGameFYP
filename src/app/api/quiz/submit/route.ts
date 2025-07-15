@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import mysql from 'mysql2/promise';
-import { getSession } from '@/lib/session';
+import { verifyToken } from '@/lib/auth';
 import { CourseService } from '@/lib/services/courseService';
 import { UserService } from '@/lib/services/userService';
+import { AchievementService } from '@/lib/services/achievementService';
 
 interface QuizAnswerInput {
   questionId: string;
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
       courseId,
       topicId,
       answers, 
-      timeSpent 
+      questionIds // <-- add this
     }: {
       userId?: number;
       subjectId?: number;
@@ -29,77 +30,78 @@ export async function POST(request: NextRequest) {
       courseId?: number;
       topicId?: string;
       answers: QuizAnswerInput[];
-      timeSpent?: number;
+      questionIds?: string[];
     } = body;
 
-    // Get user from session if not provided
-    const finalUserId = userId;
+    // Get user from Authorization header if not provided
+    let finalUserId = userId;
     if (!finalUserId) {
-      const token = getSession('authToken');
-      if (!token) {
+      const authHeader = request.headers.get('Authorization');
+      
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
       }
-      // TODO: Get user ID from token
-      // For now, return error if no userId provided
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+
+      const token = authHeader.split(' ')[1];
+      const tokenPayload = verifyToken(token);
+      if (!tokenPayload) {
+        return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+      }
+      
+      finalUserId = tokenPayload.id;
     }
 
     // Use either subject_id/node_id or courseId/topicId
     const finalSubjectId = subjectId || courseId;
     const finalNodeId = nodeId || (topicId ? parseInt(topicId) : undefined);
 
-    if (!finalUserId || !finalSubjectId || !finalNodeId || !answers || !Array.isArray(answers)) {
+    if (!finalUserId || !finalSubjectId || !finalNodeId || !answers || !Array.isArray(answers) || !Array.isArray(questionIds) || questionIds.length === 0) {
       return NextResponse.json({ 
         error: 'Missing required fields',
-        received: { userId: finalUserId, subjectId: finalSubjectId, nodeId: finalNodeId, answers }
+        received: { userId: finalUserId, subjectId: finalSubjectId, nodeId: finalNodeId, answers, questionIds }
       }, { status: 400 });
     }
 
-    // Get all questions for this quiz
+    // Fetch only those questions, in the order provided
     const questions = await query(
-      'SELECT * FROM quiz_questions WHERE subject_id = ? AND node_id = ? AND is_active = true',
-      [finalSubjectId, finalNodeId]
+      `SELECT * FROM quiz_questions WHERE id IN (${questionIds.map(() => '?').join(',')})`,
+      questionIds
     );
-
     const questionArray = questions as mysql.RowDataPacket[];
-
-    if (!questionArray.length) {
-      return NextResponse.json({ error: 'No questions found for this quiz' }, { status: 404 });
-    }
 
     // Calculate results
     let correctAnswers = 0;
     let totalPoints = 0;
     const results = [];
 
-    for (const question of questionArray) {
-      const userAnswer = answers.find(a => a.questionId === question.id);
-      const isCorrect = userAnswer?.selectedAnswer === question.correct_answer;
-      const pointsEarned = isCorrect ? question.points : 0;
+    for (const qid of questionIds) {
+      const question = questionArray.find(q => String(q.id) === String(qid));
+      const userAnswer = answers.find(a => String(a.questionId) === String(qid));
+      const isCorrect = question && userAnswer?.selectedAnswer === question.correct_answer;
+      const pointsEarned = isCorrect && question ? question.points : 0;
 
       if (isCorrect) correctAnswers++;
       totalPoints += pointsEarned;
 
       const resultItem = {
-        question_id: question.id,
-        selected_answer: userAnswer?.selectedAnswer,
+        question_id: qid,
+        selected_answer: userAnswer?.selectedAnswer ?? null,
         is_correct: isCorrect,
-        points_earned: pointsEarned,
-        time_taken: timeSpent || 0
+        points_earned: pointsEarned
       };
       
       results.push(resultItem);
     }
 
-    const scorePercentage = (correctAnswers / questionArray.length) * 100;
+    const scorePercentage = (correctAnswers / questionIds.length) * 100;
     const passed = scorePercentage >= 80; // 80% pass threshold
 
     // Create quiz attempt
     const attemptResult = await query(
       `INSERT INTO quiz_attempts 
-       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, points_earned, total_points, completed_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [finalUserId, finalSubjectId, finalNodeId, questionArray.length, correctAnswers, scorePercentage, totalPoints, timeSpent || 0]
+       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, total_points, completed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [finalUserId, finalSubjectId, finalNodeId, questionIds.length, correctAnswers, scorePercentage, totalPoints]
     );
 
     const attemptId = (attemptResult as mysql.ResultSetHeader).insertId;
@@ -108,20 +110,22 @@ export async function POST(request: NextRequest) {
     for (const result of results) {
       await query(
         `INSERT INTO quiz_answers 
-         (attempt_id, question_id, selected_answer, is_correct, points_earned, time_taken)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+         (attempt_id, question_id, selected_answer, is_correct, points_earned)
+         VALUES (?, ?, ?, ?, ?)`,
         [
-          attemptId, result.question_id, result.selected_answer,
-          result.is_correct, result.points_earned, result.time_taken
+          attemptId, result.question_id, result.selected_answer ?? null,
+          result.is_correct ?? null, result.points_earned ?? null
         ]
       );
     }
 
+    let newlyEarnedAchievements: { id: number; name: string; description: string; icon_url: string; badge_color: string; points_required: number; category: string; is_active: boolean; created_at: string }[] = [];
+
     // Update user points and experience if passed
     if (passed) {
       await query(
-        'UPDATE users SET total_points = total_points + ?, experience_points = experience_points + ? WHERE id = ?',
-        [totalPoints, totalPoints, finalUserId]
+        'UPDATE users SET total_points = total_points + ? WHERE id = ?',
+        [totalPoints, finalUserId]
       );
 
       // Update learning streak
@@ -138,14 +142,16 @@ export async function POST(request: NextRequest) {
           parseInt(topicId), 
           {
             completed: true,
-            pointsEarned: totalPoints,
-            timeSpent: Math.floor((timeSpent || 0) / 60) // Convert seconds to minutes
+            pointsEarned: totalPoints
           }
         );
 
         // Update overall course progress
         await UserService.updateCourseProgress(finalUserId, courseId);
       }
+
+      // Check and award achievements
+      newlyEarnedAchievements = await AchievementService.checkAndAwardAchievements(finalUserId);
     }
 
     return NextResponse.json({
@@ -153,9 +159,12 @@ export async function POST(request: NextRequest) {
       results: {
         attemptId,
         score: correctAnswers,
-        totalQuestions: questionArray.length,
-        pointsEarned: totalPoints,
+        totalQuestions: questionIds.length,
+        totalPoints: totalPoints,
         passed
+      },
+      achievements: {
+        newlyEarned: newlyEarnedAchievements
       }
     });
   } catch (error) {

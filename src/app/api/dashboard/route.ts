@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserService, UserEnrollment } from '@/lib/services/userService';
+import { AchievementService } from '@/lib/services/achievementService';
+import { verifyToken } from '@/lib/auth';
 
 interface DashboardEnrollmentData extends UserEnrollment {
   course_title: string;
@@ -8,27 +10,29 @@ interface DashboardEnrollmentData extends UserEnrollment {
   completed_topics: number;
 }
 
-interface AchievementData {
-  name: string;
-  description: string;
-  icon_url: string;
-  badge_color: string;
-  earned_at?: Date;
-}
+
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+    // Get user ID from Authorization header
+    const authHeader = request.headers.get('Authorization');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    const dashboardData = await UserService.getUserDashboardData(parseInt(userId));
+    const token = authHeader.split(' ')[1];
+    const tokenPayload = verifyToken(token);
+    if (!tokenPayload) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    }
+
+    const userId = tokenPayload.id;
+
+    // Check and award any new achievements for this user
+    await AchievementService.checkAndAwardAchievements(userId);
+
+    const dashboardData = await UserService.getUserDashboardData(userId);
 
     if (!dashboardData) {
       return NextResponse.json(
@@ -43,7 +47,6 @@ export async function GET(request: NextRequest) {
         id: dashboardData.user.id,
         name: dashboardData.user.username,
         points: dashboardData.user.total_points,
-        level: dashboardData.user.level,
         currentXP: dashboardData.user.total_points % 1000,
         xpForNextLevel: 1000,
         streakDays: dashboardData.user.current_streak,
@@ -56,12 +59,12 @@ export async function GET(request: NextRequest) {
         totalLessons: enrollment.total_topics || 0,
         completedLessons: enrollment.completed_topics || 0
       })),
-      achievements: dashboardData.achievements.map((achievement: AchievementData) => ({
+      achievements: (await AchievementService.getAllAchievementsWithUserStatus(parseInt(userId))).map((achievement) => ({
         title: achievement.name,
         description: achievement.description,
         icon: achievement.icon_url,
-        earned: !!achievement.earned_at,
-        earnedDate: achievement.earned_at,
+        earned: achievement.earned,
+        earnedDate: achievement.earned_at ? new Date(achievement.earned_at) : undefined,
         rarity: 'common' as const
       }))
     };

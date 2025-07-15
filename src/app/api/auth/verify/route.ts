@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     // Get fresh user data from database
     const users = await query(`
-      SELECT id, email, username, role, avatar_url, total_points, level, created_at 
+      SELECT id, email, username, role, total_points, created_at 
       FROM users 
       WHERE id = ?
     `, [payload.id]) as any[];
@@ -46,9 +46,7 @@ export async function GET(request: NextRequest) {
         email: user.email,
         username: user.username,
         role: user.role,
-        avatar_url: user.avatar_url,
         total_points: user.total_points,
-        level: user.level,
         created_at: user.created_at
       }
     });

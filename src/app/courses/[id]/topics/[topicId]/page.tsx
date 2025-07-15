@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { FaClock, FaTrophy, FaArrowLeft, FaCheck, FaSpinner } from 'react-icons/fa';
+import { FaTrophy, FaArrowLeft, FaCheck, FaSpinner } from 'react-icons/fa';
 import { getSession } from '@/lib/session';
 import toast from 'react-hot-toast';
 
@@ -44,6 +44,7 @@ export default function TopicContentPage() {
     const [user, setUser] = useState<User | null>(null);
     const [topic, setTopic] = useState<Topic | null>(null);
     const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+    const [questionIds, setQuestionIds] = useState<string[]>([]); // <-- add this
     const [loading, setLoading] = useState(true);
     const [showQuiz, setShowQuiz] = useState(false);
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -132,23 +133,12 @@ export default function TopicContentPage() {
                 const data = await response.json();
                 if (data.success) {
                     setQuestions(data.questions);
+                    setQuestionIds(data.questions.map((q: QuizQuestion) => q.id)); // <-- store the order
                 }
             }
         } catch (error) {
             console.error('Error fetching quiz questions:', error);
         }
-    };
-
-    const handleStartQuiz = () => {
-        if (questions.length === 0) {
-            toast.error('No quiz questions available');
-            return;
-        }
-        setShowQuiz(true);
-        setCurrentQuestion(0);
-        setAnswers([]);
-        setQuizCompleted(false);
-        setQuizResults(null);
     };
 
     const handleAnswerSelect = (questionId: string, selectedAnswer: number) => {
@@ -190,6 +180,7 @@ export default function TopicContentPage() {
                     userId: user?.id,  // Add user ID
                     courseId: parseInt(courseId),
                     topicId: topicId,
+                    questionIds, // <-- send the order
                     answers: answers,
                     timeSpent: timeSpent
                 }),
@@ -326,7 +317,7 @@ export default function TopicContentPage() {
         const currentAnswer = answers.find(a => a.questionId === currentQuestionData.id);
 
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+            <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4 pl-64">
                 <div className="max-w-4xl mx-auto">
                     {/* Quiz Header */}
                     <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
@@ -427,7 +418,7 @@ export default function TopicContentPage() {
 
     // Main content page
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pl-64">
             {/* Header */}
             <div className="bg-white shadow-sm border-b">
                 <div className="max-w-4xl mx-auto px-6 py-4">
@@ -438,22 +429,16 @@ export default function TopicContentPage() {
                         <FaArrowLeft />
                         Back to Course
                     </button>
-                    
                     <div className="flex justify-between items-start">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">{topic.title}</h1>
                             <div className="flex items-center gap-4 text-sm text-gray-600">
-                                <div className="flex items-center gap-1">
-                                    <FaClock />
-                                    <span>{topic.duration_minutes} min read</span>
-                                </div>
                                 <div className="flex items-center gap-1">
                                     <FaTrophy />
                                     <span>{topic.points_reward} points</span>
                                 </div>
                             </div>
                         </div>
-                        
                         {topic.is_completed && (
                             <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full">
                                 <FaCheck />
@@ -463,7 +448,6 @@ export default function TopicContentPage() {
                     </div>
                 </div>
             </div>
-
             {/* Content */}
             <div className="max-w-4xl mx-auto px-6 py-8">
                 <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
@@ -472,7 +456,6 @@ export default function TopicContentPage() {
                         dangerouslySetInnerHTML={{ __html: topic.content }}
                     />
                 </div>
-
                 {/* Quiz Section */}
                 {!topic.is_completed && (
                     <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-8 text-center">
@@ -490,7 +473,6 @@ export default function TopicContentPage() {
                         <p className="text-gray-600 mb-6">
                             Complete the quiz to earn points and unlock the next topic in your learning journey!
                         </p>
-                        
                         <div className="flex items-center justify-center gap-8 mb-6">
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-purple-600">{questions.length}</div>
@@ -505,16 +487,14 @@ export default function TopicContentPage() {
                                 <div className="text-sm text-gray-600">Pass Rate</div>
                             </div>
                         </div>
-                        
-                        <button
-                            onClick={handleStartQuiz}
+                        <a
+                            href={`/courses/${courseId}/topics/${topicId}/quiz`}
                             className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
                         >
                             Start Quiz
-                        </button>
+                        </a>
                     </div>
                 )}
-
                 {/* Completed Topic Section */}
                 {topic.is_completed && (
                     <div className="bg-gradient-to-r from-green-100 to-blue-100 rounded-xl p-8 text-center">
@@ -524,7 +504,6 @@ export default function TopicContentPage() {
                         <p className="text-gray-600 mb-6">
                             Great job! You&apos;ve successfully completed this topic and earned {topic.points_earned || topic.points_reward} points.
                         </p>
-                        
                         <div className="flex items-center justify-center gap-8 mb-6">
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-green-600">✅</div>
@@ -535,15 +514,13 @@ export default function TopicContentPage() {
                                 <div className="text-sm text-gray-600">Points Earned</div>
                             </div>
                         </div>
-                        
                         <div className="flex gap-3 justify-center">
-                            <button
-                                onClick={handleRetryQuiz}
+                            <a
+                                href={`/courses/${courseId}/topics/${topicId}/quiz`}
                                 className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
                             >
                                 🔄 Retake Quiz
-                            </button>
-                            
+                            </a>
                             {topic.last_attempt_id && (
                                 <button
                                     onClick={() => router.push(`/courses/${courseId}/topics/${topicId}/review/${topic.last_attempt_id}`)}

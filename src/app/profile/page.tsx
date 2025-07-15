@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSession } from '@/lib/session';
-import PointsDisplay from '@/components/gamification/PointsDisplay';
 
 interface UserProfile {
   id: number;
@@ -21,26 +20,10 @@ interface UserProfile {
   last_login?: string;
 }
 
-interface UserStats {
-  totalCourses: number;
-  completedCourses: number;
-  codingChallengesCompleted: number;
-  totalAchievements: number;
-}
-
-interface Course {
-  progress: number;
-}
-
-interface Achievement {
-  earned: boolean;
-}
-
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -67,10 +50,7 @@ export default function ProfilePage() {
         setError(null);
 
         // Get user profile and stats
-        const [profileRes, statsRes] = await Promise.all([
-          fetch(`/api/users?userId=${user.id}`),
-          fetch(`/api/dashboard?userId=${user.id}`)
-        ]);
+        const profileRes = await fetch(`/api/users?userId=${user.id}`);
 
         if (!profileRes.ok) {
           throw new Error('Failed to fetch profile data');
@@ -85,18 +65,7 @@ export default function ProfilePage() {
           });
         }
 
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          if (statsData.success) {
-            const dashboardData = statsData.data;
-            setStats({
-              totalCourses: dashboardData.courses?.length || 0,
-              completedCourses: dashboardData.courses?.filter((c: Course) => c.progress === 100).length || 0,
-              codingChallengesCompleted: 0, // TODO: Add coding challenges stats
-              totalAchievements: dashboardData.achievements?.filter((a: Achievement) => a.earned).length || 0
-            });
-          }
-        }
+        // No stats logic needed anymore
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -268,42 +237,6 @@ export default function ProfilePage() {
                 {profile.bio || "No bio added yet. Click 'Edit Profile' to add one!"}
               </p>
             )}
-          </div>
-        </div>
-
-        {/* Points Display */}
-        <div className="mb-8">
-          <PointsDisplay
-            points={profile.total_points}
-            level={profile.level}
-            xpForNextLevel={1000}
-            currentXP={profile.total_points % 1000}
-            showAnimation={false}
-            size="lg"
-          />
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white/80 rounded-lg p-6 text-center">
-            <div className="text-3xl mb-2">🔥</div>
-            <div className="text-2xl font-bold text-orange-600">{profile.current_streak}</div>
-            <div className="text-sm text-gray-600">Current Streak</div>
-            <div className="text-xs text-gray-500 mt-1">Max: {profile.max_streak} days</div>
-          </div>
-
-          <div className="bg-white/80 rounded-lg p-6 text-center">
-            <div className="text-3xl mb-2">📚</div>
-            <div className="text-2xl font-bold text-blue-600">
-              {stats?.completedCourses || 0}/{stats?.totalCourses || 0}
-            </div>
-            <div className="text-sm text-gray-600">Courses Completed</div>
-          </div>
-
-          <div className="bg-white/80 rounded-lg p-6 text-center">
-            <div className="text-3xl mb-2">🏆</div>
-            <div className="text-2xl font-bold text-purple-600">{stats?.totalAchievements || 0}</div>
-            <div className="text-sm text-gray-600">Achievements</div>
           </div>
         </div>
 

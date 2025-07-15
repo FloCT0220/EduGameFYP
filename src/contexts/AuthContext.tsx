@@ -3,20 +3,17 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getSession, setSession, removeSession, getSessionExpiry, refreshSession } from '@/lib/session';
 
-interface User {
-  id: number;
-  email: string;
-  username: string;
-  role: 'student' | 'admin' | 'instructor';
-  avatar_url?: string;
-  total_points: number;
-  level: number;
-  created_at: Date;
+interface AuthUser {
+    id: number;
+    username: string;
+    email: string;
+    role: string;
+    // removed: avatar_url?: string;
 }
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<{ user: User | null; success: boolean }>;
+  user: AuthUser | null;
+  login: (email: string, password: string) => Promise<{ user: AuthUser | null; success: boolean }>;
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;
@@ -25,7 +22,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -81,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string): Promise<{ user: User | null; success: boolean }> => {
+  const login = async (email: string, password: string): Promise<{ user: AuthUser | null; success: boolean }> => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',

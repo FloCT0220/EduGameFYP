@@ -3,13 +3,10 @@ import { query } from './db';
 
 export interface User {
   id: number;
-  email: string;
   username: string;
-  role: 'student' | 'admin' | 'instructor';
-  avatar_url?: string;
-  total_points: number;
-  level: number;
-  created_at: Date;
+  email: string;
+  role: string;
+  password: string;
 }
 
 export async function authenticateUser(email: string, password: string): Promise<User | null> {
@@ -17,7 +14,7 @@ export async function authenticateUser(email: string, password: string): Promise
     // Get user by email
     const users = await query(`
       SELECT * FROM users WHERE email = ?
-    `, [email]) as any[];
+    `, [email]) as User[];
     
     if (users.length === 0) {
       return null;

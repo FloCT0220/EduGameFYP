@@ -9,7 +9,6 @@ export interface User {
   total_points: number;
   current_streak: number;
   max_streak: number;
-  level: number;
   created_at: Date;
   last_login?: Date;
 }
@@ -20,7 +19,6 @@ export interface UserProgress {
   topic_id: number;
   completed_at?: Date;
   points_earned: number;
-  time_spent_minutes: number;
   progress_percentage: number;
 }
 
@@ -141,24 +139,21 @@ export class UserService {
     progressData: {
       completed: boolean;
       pointsEarned: number;
-      timeSpent: number;
     }
   ): Promise<void> {
     await query(`
       INSERT INTO user_progress 
-      (user_id, course_id, topic_id, completed_at, points_earned, time_spent_minutes)
-      VALUES (?, ?, ?, ?, ?, ?)
+      (user_id, course_id, topic_id, completed_at, points_earned)
+      VALUES (?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         completed_at = CASE WHEN ? = true THEN NOW() ELSE completed_at END,
-        points_earned = GREATEST(points_earned, VALUES(points_earned)),
-        time_spent_minutes = time_spent_minutes + VALUES(time_spent_minutes)
+        points_earned = GREATEST(points_earned, VALUES(points_earned))
     `, [
       userId, 
       courseId, 
       topicId, 
       progressData.completed ? new Date() : null,
       progressData.pointsEarned,
-      progressData.timeSpent,
       progressData.completed
     ]);
   }

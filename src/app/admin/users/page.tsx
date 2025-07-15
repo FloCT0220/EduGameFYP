@@ -9,8 +9,6 @@ interface User {
   email: string;
   role: string;
   total_points: number;
-  level: number;
-  experience_points: number;
   current_streak: number;
   last_login: string;
   created_at: string;

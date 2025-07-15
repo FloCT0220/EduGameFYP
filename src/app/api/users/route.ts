@@ -17,7 +17,6 @@ interface UserProfile {
     role: string;
     bio?: string;
     total_points: number;
-    level: number;
     current_streak: number;
     max_streak: number;
     created_at: string;
@@ -112,7 +111,7 @@ export async function GET(request: NextRequest) {
             if (payload) {
                 // Get authenticated user's profile
                 const users = await query(
-                    "SELECT id, username, email, role, bio, total_points, level, current_streak, max_streak, created_at, last_login FROM users WHERE id = ?",
+                    "SELECT id, username, email, role, bio, total_points, current_streak, max_streak, created_at, last_login FROM users WHERE id = ?",
                     [payload.id]
                 );
                 
@@ -138,7 +137,7 @@ export async function GET(request: NextRequest) {
         if (userId) {
             // Get specific user profile
             const users = await query(
-                "SELECT id, username, email, role, bio, total_points, level, current_streak, max_streak, created_at, last_login FROM users WHERE id = ?",
+                "SELECT id, username, email, role, bio, total_points, current_streak, max_streak, created_at, last_login FROM users WHERE id = ?",
                 [userId]
             );
             
@@ -157,7 +156,7 @@ export async function GET(request: NextRequest) {
         } else {
             // Get all users (for admin)
             const users = await query(
-                "SELECT id, username, email, role, total_points, level, current_streak, created_at FROM users ORDER BY created_at DESC"
+                "SELECT id, username, email, role, total_points, current_streak, created_at FROM users ORDER BY created_at DESC"
             );
             
             return NextResponse.json({
@@ -234,7 +233,7 @@ export async function PUT(request: NextRequest) {
 
         // Get updated user data
         const updatedUsers = await query(
-            "SELECT id, username, email, role, bio, total_points, level, current_streak, max_streak, created_at FROM users WHERE id = ?",
+            "SELECT id, username, email, role, bio, total_points, current_streak, max_streak, created_at FROM users WHERE id = ?",
             [userId]
         ) as UserProfile[];
 

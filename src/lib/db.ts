@@ -40,6 +40,10 @@ export const initializeDatabase = async () => {
     const { insertDefaultData } = await import('./sampleData');
     await insertDefaultData();
     
+    // Create default achievements
+    const { AchievementService } = await import('./services/achievementService');
+    await AchievementService.createDefaultAchievements();
+    
     isInitialized = true;
     console.log('✅ Database initialized successfully');
   } catch (error) {
@@ -60,10 +64,7 @@ const createTables = async () => {
       email VARCHAR(100) UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
       role ENUM('student', 'admin') DEFAULT 'student',
-      avatar_url VARCHAR(255),
       bio TEXT,
-      level INT DEFAULT 1,
-      experience_points INT DEFAULT 0,
       total_points INT DEFAULT 0,
       current_streak INT DEFAULT 0,
       max_streak INT DEFAULT 0,
@@ -118,7 +119,6 @@ const createTables = async () => {
       completed_at TIMESTAMP NULL,
       points_earned INT DEFAULT 0,
       attempts INT DEFAULT 0,
-      time_spent INT DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       PRIMARY KEY (user_id, course_id, topic_id),
@@ -133,7 +133,7 @@ const createTables = async () => {
     `CREATE TABLE IF NOT EXISTS quiz_questions (
       id INT AUTO_INCREMENT PRIMARY KEY,
       subject_id INT NOT NULL,
-      node_id VARCHAR(50) NOT NULL,
+      node_id INT,
       question TEXT NOT NULL,
       answers JSON NOT NULL,
       correct_answer INT NOT NULL CHECK (correct_answer BETWEEN 0 AND 3),
@@ -155,7 +155,6 @@ const createTables = async () => {
       completed_at TIMESTAMP NULL,
       progress_percentage DECIMAL(5,2) DEFAULT 0.00,
       total_points_earned INT DEFAULT 0,
-      certificate_url VARCHAR(255),
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
@@ -172,7 +171,6 @@ const createTables = async () => {
       topic_id INT,
       completed_at TIMESTAMP,
       progress_percentage DECIMAL(5,2) DEFAULT 0.00,
-      time_spent_minutes INT DEFAULT 0,
       points_earned INT DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -188,11 +186,10 @@ const createTables = async () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,
       subject_id INT NOT NULL,
-      node_id VARCHAR(50) NOT NULL,
+      node_id INT,
       questions_total INT NOT NULL,
       questions_correct INT NOT NULL,
       score_percentage DECIMAL(5,2) NOT NULL,
-      points_earned INT NOT NULL,
       total_points INT NOT NULL,
       started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       completed_at TIMESTAMP NULL,
@@ -210,7 +207,6 @@ const createTables = async () => {
       selected_answer INT,
       is_correct BOOLEAN NOT NULL,
       points_earned INT DEFAULT 0,
-      time_taken INT,
       FOREIGN KEY (attempt_id) REFERENCES quiz_attempts(id) ON DELETE CASCADE,
       FOREIGN KEY (question_id) REFERENCES quiz_questions(id) ON DELETE CASCADE,
       INDEX idx_attempt (attempt_id),

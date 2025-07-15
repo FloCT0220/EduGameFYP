@@ -30,7 +30,12 @@ export async function GET(request: NextRequest) {
 
     let questions;
     if (finalSubjectId && finalNodeId) {
-      // Get specific questions for a subject and node
+      // Student view: fetch questions for subject and all nodes up to and including current node
+      const subjectIdNum = parseInt(finalSubjectId);
+      const nodeIdNum = parseInt(finalNodeId);
+      if (isNaN(subjectIdNum) || isNaN(nodeIdNum)) {
+        return NextResponse.json({ success: false, error: 'Invalid subject or node id' }, { status: 400 });
+      }
       questions = await query(
         `SELECT 
           id,
@@ -44,14 +49,16 @@ export async function GET(request: NextRequest) {
           is_active,
           created_at
         FROM quiz_questions 
-        WHERE subject_id = ? AND node_id = ? AND is_active = true
-        ORDER BY RAND() 
-        LIMIT 10`,
-        [finalSubjectId, finalNodeId]
+        WHERE subject_id = ? AND node_id <= ? AND is_active = true`,
+        [subjectIdNum, nodeIdNum]
       ) as QuizQuestion[];
 
-      // Transform the questions for student view
+      // Randomly select up to 10 questions
       if (Array.isArray(questions)) {
+        // Shuffle
+        questions = questions.sort(() => Math.random() - 0.5);
+        // Take up to 10
+        questions = questions.slice(0, 10);
         questions = questions.map(q => {
           const parsedQuestion = parseQuizQuestionFields(q);
           return {

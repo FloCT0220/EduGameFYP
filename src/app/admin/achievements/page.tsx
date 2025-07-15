@@ -155,28 +155,19 @@ export default function AdminAchievements() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
-                    <input
-                      type="text"
-                      value={formData.icon_url}
-                      onChange={e => setFormData({ ...formData, icon_url: e.target.value })}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                      placeholder="🏆"
-                    />
-                  </div>
-                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                     <select
                       value={formData.category}
                       onChange={e => setFormData({ ...formData, category: e.target.value as Category })}
                       className="w-full p-2 border border-gray-300 rounded-lg"
                     >
-                      <option value="streak">Streak</option>
                       <option value="points">Points</option>
-                      <option value="completion">Completion</option>
-                      <option value="speed">Speed</option>
-                      <option value="accuracy">Accuracy</option>
                       <option value="level">Level</option>
+                      <option value="streak">Streak</option>
+                      <option value="completion">Completion (Quizzes)</option>
+                      <option value="topics">Topics</option>
+                      <option value="courses">Courses</option>
+                      <option value="challenges">Challenges</option>
                     </select>
                   </div>
                   <div>
@@ -203,6 +194,23 @@ export default function AdminAchievements() {
                       <option value="yellow">Yellow</option>
                       <option value="red">Red</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                    <div className="grid grid-cols-8 gap-2 mb-2">
+                      {['🏆','🎯','💰','🔥','📚','🎓','💻','⭐','🥇','🥈','🥉','🏅','🏵️','🎖️','🧠','📝','🚀','🎮','🧩','🔑','🔬','🧪','🕹️','🎲','🧭','🛡️','⚡','🏹','🦸','🦄','🌟','🎵','🎸','🎷','🎺','🥁','🎻','🎬','🎨','🖌️','🖼️','🎤','🎧','🎼','🎹','🧸','🪁','🪀','🛼','🛹','🏓','🏸','🏒','🏑','🏏','🥅','🏐','🏉','🏈','🏀','⚽','⚾','🥎'].map(icon => (
+                        <button
+                          type="button"
+                          key={icon}
+                          className={`text-2xl p-1 rounded-lg border-2 transition-colors ${formData.icon_url === icon ? 'border-blue-500 bg-blue-100' : 'border-gray-200 bg-white hover:bg-gray-100'}`}
+                          onClick={() => setFormData({ ...formData, icon_url: icon })}
+                          aria-label={`Select icon ${icon}`}
+                        >
+                          {icon}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-sm text-gray-500">Selected: <span className="text-2xl align-middle">{formData.icon_url}</span></div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Active</label>

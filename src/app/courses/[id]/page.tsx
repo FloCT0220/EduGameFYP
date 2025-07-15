@@ -43,7 +43,6 @@ interface SkillTreeNode {
     title: string;
     lesson_order: number;
     points_reward: number;
-    duration_minutes: number;
     is_completed: boolean;
     is_unlocked: boolean;
 }
@@ -135,7 +134,6 @@ export default function CoursePage() {
                 title: topic.title,
                 lesson_order: topic.lesson_order,
                 points_reward: topic.points_reward,
-                duration_minutes: topic.duration_minutes,
                 is_completed: isCompleted,
                 is_unlocked: isUnlocked
             };
@@ -230,16 +228,12 @@ export default function CoursePage() {
                     
                     <h4 className="font-bold text-sm mb-2 leading-tight">{node.title}</h4>
                     
-                    <div className="flex items-center justify-center gap-3 text-xs mb-2">
-                        <div className="flex items-center gap-1">
-                            <FaTrophy className="h-3 w-3" />
-                            <span>{node.points_reward} XP</span>
+                                            <div className="flex items-center justify-center gap-3 text-xs mb-2">
+                            <div className="flex items-center gap-1">
+                                <FaTrophy className="h-3 w-3" />
+                                <span>{node.points_reward} XP</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <FaClock className="h-3 w-3" />
-                            <span>{node.duration_minutes}m</span>
-                        </div>
-                    </div>
                     
                     <div className={`text-xs px-2 py-1 rounded-full ${
                         node.is_completed 

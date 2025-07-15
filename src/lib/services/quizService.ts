@@ -36,7 +36,6 @@ export interface QuizAnswer {
   selected_answer?: number;
   is_correct: boolean;
   points_earned: number;
-  time_taken?: number;
 }
 
 export interface QuizResult {
@@ -61,9 +60,7 @@ export interface SubmitQuizData {
   answers: {
     questionId: string;
     selectedAnswer: number;
-    timeTaken?: number;
   }[];
-  timeTaken?: number;
 }
 
 export interface QuizReviewData {
@@ -73,7 +70,6 @@ export interface QuizReviewData {
     userAnswer?: number;
     isCorrect: boolean;
     pointsEarned: number;
-    timeTaken?: number;
   }[];
 }
 
@@ -109,7 +105,7 @@ export class QuizService {
 
   // Submit quiz attempt
   static async submitQuizAttempt(data: SubmitQuizData): Promise<QuizResult> {
-    const { userId, subjectId, nodeId, answers, timeTaken } = data;
+    const { userId, subjectId, nodeId, answers } = data;
     
     // Get all questions for this quiz
     const allQuestions = await QuizService.getQuizQuestions(subjectId, nodeId);
@@ -133,8 +129,7 @@ export class QuizService {
         question_id: question.id,
         selected_answer: userAnswer?.selectedAnswer,
         is_correct: isCorrect,
-        points_earned: pointsEarned,
-        time_taken: userAnswer?.timeTaken
+        points_earned: pointsEarned
       });
     }
     
@@ -154,11 +149,11 @@ export class QuizService {
     for (const result of results) {
       await query(
         `INSERT INTO quiz_answers 
-      (attempt_id, question_id, selected_answer, is_correct, points_earned, time_taken)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+      (attempt_id, question_id, selected_answer, is_correct, points_earned)
+         VALUES (?, ?, ?, ?, ?)`,
         [
           attemptId, result.question_id, result.selected_answer,
-          result.is_correct, result.points_earned, result.time_taken
+          result.is_correct, result.points_earned
         ]
       );
     }
@@ -197,7 +192,6 @@ export class QuizService {
         qa.selected_answer,
         qa.is_correct,
         qa.points_earned,
-        qa.time_taken,
         qq.question,
         qq.option_a,
         qq.option_b,
@@ -235,8 +229,7 @@ export class QuizService {
         question,
         userAnswer: row.selected_answer,
         isCorrect: row.is_correct,
-        pointsEarned: row.points_earned,
-        timeTaken: row.time_taken
+        pointsEarned: row.points_earned
       });
     }
     

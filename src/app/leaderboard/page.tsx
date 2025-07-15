@@ -9,7 +9,6 @@ interface LeaderboardUser {
   id: number;
   name: string;
   total_points: number;
-  level: number;
   current_streak: number;
   max_streak: number;
 }
@@ -107,7 +106,6 @@ export default function LeaderboardPage() {
     id: userData.id.toString(),
     name: userData.name,
     points: userData.total_points,
-    level: userData.level,
     streak: userData.current_streak
   }));
 

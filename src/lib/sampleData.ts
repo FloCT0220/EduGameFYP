@@ -18,48 +18,15 @@ export const insertDefaultData = async () => {
       const hashedPasswordUser = await bcrypt.hash('123', 10);
       
       await pool.execute(
-        'INSERT INTO users (username, email, password, role, level, experience_points, total_points) VALUES (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO users (username, email, password, role, total_points) VALUES (?, ?, ?, ?, ?)',
         [
-          'admin', 'admin@email.com', hashedPassword, 'admin', 10, 1000, 1000,
-          'user', 'user@email.com', hashedPasswordUser, 'student', 0, 0, 0
+          'admin', 'admin@email.com', hashedPassword, 'admin', 1000
         ]
       );
       
       console.log('✅ Default admin user created');
     }
 
-    // Insert default achievements
-    const [achievementsExist] = await pool.execute(
-      'SELECT id FROM achievements LIMIT 1'
-    );
-
-    if ((achievementsExist as mysql.RowDataPacket[]).length === 0) {
-      const defaultAchievements = [
-        ['First Steps', 'Complete your first lesson', '🎯', 'blue', 10, 'learning'],
-        ['Quiz Master', 'Pass your first quiz', '🧠', 'green', 20, 'assessment'],
-        ['Streak Starter', 'Study for 3 days in a row', '📅', 'purple', 30, 'habits'],
-        ['Point Collector', 'Earn 100 total points', '💎', 'yellow', 100, 'points'],
-        ['Course Finisher', 'Complete your first course', '🏆', 'gold', 200, 'completion'],
-        ['Speed Learner', 'Complete 5 lessons in one day', '⚡', 'orange', 50, 'speed'],
-        ['Persistent Learner', 'Study for 7 days in a row', '🔥', 'red', 100, 'habits'],
-        ['Knowledge Seeker', 'Complete 10 quizzes', '📚', 'indigo', 150, 'assessment'],
-        // Coding achievements
-        ['First Code', 'Submit your first coding solution', '💻', 'blue', 0, 'coding'],
-        ['Bug Squasher', 'Fix a runtime error', '🐛', 'red', 10, 'coding'],
-        ['Speed Coder', 'Solve a challenge in under 5 minutes', '⚡', 'yellow', 20, 'coding'],
-        ['Algorithm Master', 'Solve 10 coding challenges', '🧮', 'purple', 50, 'coding'],
-        ['Code Warrior', 'Solve challenges in 3 different languages', '⚔️', 'orange', 30, 'coding'],
-        ['Perfect Score', 'Get 100% on a hard challenge', '🎯', 'gold', 40, 'coding']
-      ];
-
-      for (const achievement of defaultAchievements) {
-        await pool.execute(
-          'INSERT INTO achievements (name, description, icon_url, badge_color, points_required, category) VALUES (?, ?, ?, ?, ?, ?)',
-          achievement
-        );
-      }
-      console.log('✅ Default achievements created');
-    }
 
     // Insert sample courses if none exist
     const [coursesExist] = await pool.execute(
@@ -183,57 +150,57 @@ export const insertDefaultData = async () => {
     if ((quizQuestionsExist as mysql.RowDataPacket[]).length === 0) {
       const sampleQuizQuestions = [
         // Topic 1 - Understanding Variables and Data Types (Course 1, Topic ID 1)
-        [1, '1', 'What is a variable in programming?', JSON.stringify(['A constant value that never changes', 'A named storage location for data', 'A mathematical function', 'A type of programming language']), 1, 10, 'easy'],
-        [1, '1', 'Which of the following is a primitive data type?', JSON.stringify(['Array', 'Object', 'Integer', 'Function']), 2, 10, 'easy'],
-        [1, '1', 'What is the difference between a variable and a constant?', JSON.stringify(['There is no difference', 'Variables can change, constants cannot', 'Constants can change, variables cannot', 'Both can change freely']), 1, 15, 'medium'],
-        [1, '1', 'Which naming convention is considered best practice for variables?', JSON.stringify(['using spaces', 'camelCase or snake_case', 'ALL_CAPS', 'random-symbols']), 1, 15, 'medium'],
+        [1, 1, 'What is a variable in programming?', JSON.stringify(['A constant value that never changes', 'A named storage location for data', 'A mathematical function', 'A type of programming language']), 1, 10, 'easy'],
+        [1, 1, 'Which of the following is a primitive data type?', JSON.stringify(['Array', 'Object', 'Integer', 'Function']), 2, 10, 'easy'],
+        [1, 1, 'What is the difference between a variable and a constant?', JSON.stringify(['There is no difference', 'Variables can change, constants cannot', 'Constants can change, variables cannot', 'Both can change freely']), 1, 15, 'medium'],
+        [1, 1, 'Which naming convention is considered best practice for variables?', JSON.stringify(['using spaces', 'camelCase or snake_case', 'ALL_CAPS', 'random-symbols']), 1, 15, 'medium'],
 
         // Topic 2 - HTML Basics (Course 2, Topic ID 2)
-        [2, '2', 'What does HTML stand for?', JSON.stringify(['Hyper Text Markup Language', 'High Tech Modern Language', 'Home Tool Markup Language', 'Hyperlink Text Markup Language']), 0, 10, 'easy'],
-        [2, '2', 'Which HTML tag is used to define the main content of a document?', JSON.stringify(['<body>', '<main>', '<content>', '<section>']), 0, 10, 'easy'],
-        [2, '2', 'What is the correct syntax for creating a link in HTML?', JSON.stringify(['<a href="url">Link text</a>', '<link url="url">Link text</link>', '<a src="url">Link text</a>', '<href="url">Link text</href>']), 0, 15, 'medium'],
-        [2, '2', 'What is the purpose of the DOCTYPE declaration?', JSON.stringify(['To define CSS styles', 'To declare the HTML version', 'To include JavaScript', 'To create comments']), 1, 15, 'medium'],
+        [2, 2, 'What does HTML stand for?', JSON.stringify(['Hyper Text Markup Language', 'High Tech Modern Language', 'Home Tool Markup Language', 'Hyperlink Text Markup Language']), 0, 10, 'easy'],
+        [2, 2, 'Which HTML tag is used to define the main content of a document?', JSON.stringify(['<body>', '<main>', '<content>', '<section>']), 0, 10, 'easy'],
+        [2, 2, 'What is the correct syntax for creating a link in HTML?', JSON.stringify(['<a href="url">Link text</a>', '<link url="url">Link text</link>', '<a src="url">Link text</a>', '<href="url">Link text</href>']), 0, 15, 'medium'],
+        [2, 2, 'What is the purpose of the DOCTYPE declaration?', JSON.stringify(['To define CSS styles', 'To declare the HTML version', 'To include JavaScript', 'To create comments']), 1, 15, 'medium'],
 
         // Topic 3 - CSS Styling (Course 2, Topic ID 3)
-        [2, '3', 'What does CSS stand for?', JSON.stringify(['Computer Style Sheets', 'Creative Style Sheets', 'Cascading Style Sheets', 'Colorful Style Sheets']), 2, 10, 'easy'],
-        [2, '3', 'Which property is used to change the text color of an element?', JSON.stringify(['color', 'text-color', 'font-color', 'background-color']), 0, 10, 'easy'],
-        [2, '3', 'How do you select an element with id "header" in CSS?', JSON.stringify(['.header', '#header', 'header', '*header']), 1, 15, 'medium'],
-        [2, '3', 'Which CSS property controls the spacing between elements?', JSON.stringify(['margin', 'padding', 'spacing', 'gap']), 0, 10, 'easy'],
+        [2, 3, 'What does CSS stand for?', JSON.stringify(['Computer Style Sheets', 'Creative Style Sheets', 'Cascading Style Sheets', 'Colorful Style Sheets']), 2, 10, 'easy'],
+        [2, 3, 'Which property is used to change the text color of an element?', JSON.stringify(['color', 'text-color', 'font-color', 'background-color']), 0, 10, 'easy'],
+        [2, 3, 'How do you select an element with id "header" in CSS?', JSON.stringify(['.header', '#header', 'header', '*header']), 1, 15, 'medium'],
+        [2, 3, 'Which CSS property controls the spacing between elements?', JSON.stringify(['margin', 'padding', 'spacing', 'gap']), 0, 10, 'easy'],
 
         // Topic 4 - JavaScript Fundamentals (Course 2, Topic ID 4)
-        [2, '4', 'Which of the following is the correct way to declare a variable in JavaScript?', JSON.stringify(['var myVar = 5;', 'variable myVar = 5;', 'v myVar = 5;', 'declare myVar = 5;']), 0, 10, 'easy'],
-        [2, '4', 'What is the result of 5 + "5" in JavaScript?', JSON.stringify(['10', '55', 'Error', 'undefined']), 1, 15, 'medium'],
-        [2, '4', 'Which method is used to write content to the browser console?', JSON.stringify(['console.write()', 'console.log()', 'console.print()', 'console.output()']), 1, 10, 'easy'],
+        [2, 4, 'Which of the following is the correct way to declare a variable in JavaScript?', JSON.stringify(['var myVar = 5;', 'variable myVar = 5;', 'v myVar = 5;', 'declare myVar = 5;']), 0, 10, 'easy'],
+        [2, 4, 'What is the result of 5 + "5" in JavaScript?', JSON.stringify(['10', '55', 'Error', 'undefined']), 1, 15, 'medium'],
+        [2, 4, 'Which method is used to write content to the browser console?', JSON.stringify(['console.write()', 'console.log()', 'console.print()', 'console.output()']), 1, 10, 'easy'],
 
         // Topic 5 - Building a Simple Website (Course 2, Topic ID 5)
-        [2, '5', 'What does DOM stand for?', JSON.stringify(['Document Object Model', 'Dynamic Object Management', 'Data Object Model', 'Document Oriented Model']), 0, 10, 'easy'],
-        [2, '5', 'Which method is used to select an element by its ID?', JSON.stringify(['getElementById()', 'getElementByID()', 'selectById()', 'findById()']), 0, 10, 'easy'],
-        [2, '5', 'How do you change the text content of an element?', JSON.stringify(['element.text = "new text"', 'element.innerHTML = "new text"', 'element.textContent = "new text"', 'element.content = "new text"']), 2, 15, 'medium'],
+        [2, 5, 'What does DOM stand for?', JSON.stringify(['Document Object Model', 'Dynamic Object Management', 'Data Object Model', 'Document Oriented Model']), 0, 10, 'easy'],
+        [2, 5, 'Which method is used to select an element by its ID?', JSON.stringify(['getElementById()', 'getElementByID()', 'selectById()', 'findById()']), 0, 10, 'easy'],
+        [2, 5, 'How do you change the text content of an element?', JSON.stringify(['element.text = "new text"', 'element.innerHTML = "new text"', 'element.textContent = "new text"', 'element.content = "new text"']), 2, 15, 'medium'],
 
         // Database Design Course - Introduction to Databases
-        [3, '6', 'What is a database?', JSON.stringify(['A collection of files', 'An organized collection of data', 'A programming language', 'A web server']), 1, 10, 'easy'],
-        [3, '6', 'What does SQL stand for?', JSON.stringify(['Structured Query Language', 'Simple Query Language', 'Standard Query Language', 'System Query Language']), 0, 10, 'easy'],
-        [3, '6', 'Which command is used to retrieve data from a database?', JSON.stringify(['GET', 'FETCH', 'SELECT', 'RETRIEVE']), 2, 15, 'medium'],
+        [3, 6, 'What is a database?', JSON.stringify(['A collection of files', 'An organized collection of data', 'A programming language', 'A web server']), 1, 10, 'easy'],
+        [3, 6, 'What does SQL stand for?', JSON.stringify(['Structured Query Language', 'Simple Query Language', 'Standard Query Language', 'System Query Language']), 0, 10, 'easy'],
+        [3, 6, 'Which command is used to retrieve data from a database?', JSON.stringify(['GET', 'FETCH', 'SELECT', 'RETRIEVE']), 2, 15, 'medium'],
 
         // Database Design Course - SQL Basics
-        [3, '7', 'Which SQL statement is used to extract data from a database?', JSON.stringify(['EXTRACT', 'SELECT', 'GET', 'OPEN']), 1, 10, 'easy'],
-        [3, '7', 'Which SQL keyword is used to eliminate duplicate rows?', JSON.stringify(['UNIQUE', 'DISTINCT', 'DIFFERENT', 'SINGLE']), 1, 10, 'easy'],
-        [3, '7', 'What is the correct syntax for an INNER JOIN?', JSON.stringify(['SELECT * FROM table1 INNER JOIN table2 ON table1.id = table2.id', 'SELECT * FROM table1 JOIN table2 WHERE table1.id = table2.id', 'SELECT * FROM table1, table2 WHERE table1.id = table2.id', 'SELECT * FROM table1 INNER table2 ON table1.id = table2.id']), 0, 15, 'medium'],
+        [3, 7, 'Which SQL statement is used to extract data from a database?', JSON.stringify(['EXTRACT', 'SELECT', 'GET', 'OPEN']), 1, 10, 'easy'],
+        [3, 7, 'Which SQL keyword is used to eliminate duplicate rows?', JSON.stringify(['UNIQUE', 'DISTINCT', 'DIFFERENT', 'SINGLE']), 1, 10, 'easy'],
+        [3, 7, 'What is the correct syntax for an INNER JOIN?', JSON.stringify(['SELECT * FROM table1 INNER JOIN table2 ON table1.id = table2.id', 'SELECT * FROM table1 JOIN table2 WHERE table1.id = table2.id', 'SELECT * FROM table1, table2 WHERE table1.id = table2.id', 'SELECT * FROM table1 INNER table2 ON table1.id = table2.id']), 0, 15, 'medium'],
 
         // Database Design Course - Database Normalization
-        [3, '8', 'What is the main purpose of database normalization?', JSON.stringify(['To increase data redundancy', 'To reduce data redundancy and improve data integrity', 'To make queries slower', 'To increase storage space']), 1, 10, 'easy'],
-        [3, '8', 'What is First Normal Form (1NF)?', JSON.stringify(['Tables must have primary keys', 'Each column must contain atomic values', 'No partial dependencies', 'No transitive dependencies']), 1, 15, 'medium'],
-        [3, '8', 'What violates Third Normal Form (3NF)?', JSON.stringify(['Composite primary keys', 'Transitive dependencies', 'Atomic values', 'Foreign keys']), 1, 15, 'medium'],
+        [3, 8, 'What is the main purpose of database normalization?', JSON.stringify(['To increase data redundancy', 'To reduce data redundancy and improve data integrity', 'To make queries slower', 'To increase storage space']), 1, 10, 'easy'],
+        [3, 8, 'What is First Normal Form (1NF)?', JSON.stringify(['Tables must have primary keys', 'Each column must contain atomic values', 'No partial dependencies', 'No transitive dependencies']), 1, 15, 'medium'],
+        [3, 8, 'What violates Third Normal Form (3NF)?', JSON.stringify(['Composite primary keys', 'Transitive dependencies', 'Atomic values', 'Foreign keys']), 1, 15, 'medium'],
 
         // Database Design Course - Advanced Queries and Optimization
-        [3, '9', 'What is the purpose of database indexing?', JSON.stringify(['To slow down queries', 'To improve query performance', 'To increase storage space', 'To make data redundant']), 1, 10, 'easy'],
-        [3, '9', 'Which type of index is automatically created for primary keys?', JSON.stringify(['Secondary index', 'Clustered index', 'Composite index', 'Partial index']), 1, 15, 'medium'],
-        [3, '9', 'What is a subquery?', JSON.stringify(['A query that joins multiple tables', 'A query nested inside another query', 'A query that updates data', 'A query that creates indexes']), 1, 15, 'medium'],
-        [3, '9', 'Which SQL clause is used to optimize queries by limiting result sets?', JSON.stringify(['WHERE', 'HAVING', 'LIMIT', 'ORDER BY']), 0, 10, 'easy'],
-        [3, '9', 'What is query execution plan?', JSON.stringify(['A list of SQL commands', 'A roadmap showing how the database will execute a query', 'A backup of the database', 'A user interface design']), 1, 15, 'medium'],
-        [3, '9', 'Which JOIN type returns all rows from both tables?', JSON.stringify(['INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL OUTER JOIN']), 3, 15, 'medium'],
-        [3, '9', 'What is the difference between UNION and UNION ALL?', JSON.stringify(['No difference', 'UNION removes duplicates, UNION ALL keeps duplicates', 'UNION ALL removes duplicates, UNION keeps duplicates', 'UNION is faster than UNION ALL']), 1, 20, 'hard'],
-        [3, '9', 'Which statement about database views is correct?', JSON.stringify(['Views store actual data', 'Views are virtual tables based on SQL queries', 'Views cannot be queried', 'Views require more storage space']), 1, 15, 'medium']
+        [3, 9, 'What is the purpose of database indexing?', JSON.stringify(['To slow down queries', 'To improve query performance', 'To increase storage space', 'To make data redundant']), 1, 10, 'easy'],
+        [3, 9, 'Which type of index is automatically created for primary keys?', JSON.stringify(['Secondary index', 'Clustered index', 'Composite index', 'Partial index']), 1, 15, 'medium'],
+        [3, 9, 'What is a subquery?', JSON.stringify(['A query that joins multiple tables', 'A query nested inside another query', 'A query that updates data', 'A query that creates indexes']), 1, 15, 'medium'],
+        [3, 9, 'Which SQL clause is used to optimize queries by limiting result sets?', JSON.stringify(['WHERE', 'HAVING', 'LIMIT', 'ORDER BY']), 0, 10, 'easy'],
+        [3, 9, 'What is query execution plan?', JSON.stringify(['A list of SQL commands', 'A roadmap showing how the database will execute a query', 'A backup of the database', 'A user interface design']), 1, 15, 'medium'],
+        [3, 9, 'Which JOIN type returns all rows from both tables?', JSON.stringify(['INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL OUTER JOIN']), 3, 15, 'medium'],
+        [3, 9, 'What is the difference between UNION and UNION ALL?', JSON.stringify(['No difference', 'UNION removes duplicates, UNION ALL keeps duplicates', 'UNION ALL removes duplicates, UNION keeps duplicates', 'UNION is faster than UNION ALL']), 1, 20, 'hard'],
+        [3, 9, 'Which statement about database views is correct?', JSON.stringify(['Views store actual data', 'Views are virtual tables based on SQL queries', 'Views cannot be queried', 'Views require more storage space']), 1, 15, 'medium']
       ];
 
       for (const question of sampleQuizQuestions) {
