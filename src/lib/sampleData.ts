@@ -123,17 +123,17 @@ export const insertDefaultData = async () => {
         ];
         const sampleTopics = [
           // Course 1: Introduction to Programming
-          [1, 'Understanding Variables and Data Types', 'Learn about different types of variables and how to use them effectively in programming. This lesson covers basic data types, variable declaration, and best practices for naming variables.', 1, 30, 10, JSON.stringify(defaultSections)],
+          [1, 'Understanding Variables and Data Types', 'Learn about different types of variables and how to use them effectively in programming. This lesson covers basic data types, variable declaration, and best practices for naming variables.', 1, 30, JSON.stringify(defaultSections)],
           // Course 2: Web Development Basics  
-          [2, 'HTML Basics', 'Learn the fundamentals of HTML and document structure. Master essential HTML tags, semantic markup, and how to create well-structured web pages.', 1, 25, 10, JSON.stringify(defaultSections)],
-          [2, 'CSS Styling', 'Master CSS for styling web pages and creating responsive designs. Learn selectors, properties, layout techniques, and modern CSS practices.', 2, 35, 15, JSON.stringify(defaultSections)],
-          [2, 'JavaScript Fundamentals', 'Introduction to JavaScript programming for web interactivity. Cover variables, functions, DOM manipulation, and event handling.', 3, 40, 20, JSON.stringify(defaultSections)],
-          [2, 'Building a Simple Website', 'Put it all together by building a complete website. Apply HTML, CSS, and JavaScript skills to create an interactive web project.', 4, 50, 25, JSON.stringify(defaultSections)],
+          [2, 'HTML Basics', 'Learn the fundamentals of HTML and document structure. Master essential HTML tags, semantic markup, and how to create well-structured web pages.', 1, 25, JSON.stringify(defaultSections)],
+          [2, 'CSS Styling', 'Master CSS for styling web pages and creating responsive designs. Learn selectors, properties, layout techniques, and modern CSS practices.', 2, 35, JSON.stringify(defaultSections)],
+          [2, 'JavaScript Fundamentals', 'Introduction to JavaScript programming for web interactivity. Cover variables, functions, DOM manipulation, and event handling.', 3, 40, JSON.stringify(defaultSections)],
+          [2, 'Building a Simple Website', 'Put it all together by building a complete website. Apply HTML, CSS, and JavaScript skills to create an interactive web project.', 4, 50, JSON.stringify(defaultSections)],
           // Course 3: Database Design
-          [3, 'Introduction to Databases', 'Understanding database concepts and types. Learn about relational databases, DBMS, and fundamental database principles.', 1, 30, 10, JSON.stringify(defaultSections)],
-          [3, 'SQL Basics', 'Learn fundamental SQL queries and database operations. Master SELECT, INSERT, UPDATE, DELETE commands and basic joins.', 2, 40, 15, JSON.stringify(defaultSections)],
-          [3, 'Database Normalization', 'Master the principles of database normalization and design. Learn about normal forms and how to design efficient database schemas.', 3, 45, 20, JSON.stringify(defaultSections)],
-          [3, 'Advanced Queries and Optimization', 'Learn advanced SQL queries and performance optimization. Cover complex joins, subqueries, and indexing strategies.', 4, 50, 25, JSON.stringify(defaultSections)]
+          [3, 'Introduction to Databases', 'Understanding database concepts and types. Learn about relational databases, DBMS, and fundamental database principles.', 1, 30, JSON.stringify(defaultSections)],
+          [3, 'SQL Basics', 'Learn fundamental SQL queries and database operations. Master SELECT, INSERT, UPDATE, DELETE commands and basic joins.', 2, 40, JSON.stringify(defaultSections)],
+          [3, 'Database Normalization', 'Master the principles of database normalization and design. Learn about normal forms and how to design efficient database schemas.', 3, 45, JSON.stringify(defaultSections)],
+          [3, 'Advanced Queries and Optimization', 'Learn advanced SQL queries and performance optimization. Cover complex joins, subqueries, and indexing strategies.', 4, 50, JSON.stringify(defaultSections)]
         ];
         for (const topic of sampleTopics) {
           await pool.execute(
