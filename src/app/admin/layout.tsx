@@ -9,7 +9,6 @@ import {
   FaBook, 
   FaChartBar, 
   FaTrophy, 
-  FaCog, 
   FaSignOutAlt,
   FaHome,
   FaCode,
@@ -30,8 +29,7 @@ const navigationItems = [
   { href: '/admin/quizzes', icon: FaQuestionCircle, label: 'Assessments', description: 'Manage quizzes & tests' },
   { href: '/admin/coding-challenges', icon: FaCode, label: 'Coding Challenges', description: 'Programming exercises' },
   { href: '/admin/achievements', icon: FaTrophy, label: 'Achievements', description: 'Rewards & badges' },
-  { href: '/admin/analytics', icon: FaChartBar, label: 'Analytics', description: 'Platform-wide insights' },
-  { href: '/admin/setup', icon: FaCog, label: 'Settings', description: 'System configuration' }
+  { href: '/admin/analytics', icon: FaChartBar, label: 'Analytics', description: 'Platform-wide insights' }
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {

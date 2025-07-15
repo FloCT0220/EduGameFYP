@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }: {
       userId?: number;
       subjectId?: number;
-      nodeId?: string;
+      nodeId?: number;
       courseId?: number;
       topicId?: string;
       answers: QuizAnswerInput[];
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Use either subject_id/node_id or courseId/topicId
     const finalSubjectId = subjectId || courseId;
-    const finalNodeId = nodeId || topicId;
+    const finalNodeId = nodeId || (topicId ? parseInt(topicId) : undefined);
 
     if (!finalUserId || !finalSubjectId || !finalNodeId || !answers || !Array.isArray(answers)) {
       return NextResponse.json({ 

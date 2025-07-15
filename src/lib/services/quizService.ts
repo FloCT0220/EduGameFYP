@@ -3,7 +3,7 @@ import { query } from '../db';
 export interface QuizQuestion {
   id: string;
   subject_id: number;
-  node_id: string;
+  node_id: number;
   question: string;
   option_a: string;
   option_b: string;
@@ -19,7 +19,7 @@ export interface QuizAttempt {
   id: number;
   user_id: number;
   subject_id: number;
-  node_id: string;
+  node_id: number;
   questions_total: number;
   questions_correct: number;
   score_percentage: number;
@@ -57,7 +57,7 @@ export interface QuizStats {
 export interface SubmitQuizData {
   userId: number;
   subjectId: number;
-  nodeId: string;
+  nodeId: number;
   answers: {
     questionId: string;
     selectedAnswer: number;
@@ -81,7 +81,7 @@ export interface QuizReviewData {
 export class QuizService {
   
   // Get quiz questions for a specific subject and node
-  static async getQuizQuestions(subjectId: number, nodeId: string): Promise<QuizQuestion[]> {
+  static async getQuizQuestions(subjectId: number, nodeId: number): Promise<QuizQuestion[]> {
     const questions = await query(
       'SELECT * FROM quiz_questions WHERE subject_id = ? AND node_id = ? AND is_active = true ORDER BY RAND() LIMIT 10',
       [subjectId, nodeId]

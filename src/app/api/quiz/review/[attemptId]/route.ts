@@ -13,7 +13,7 @@ interface QuizReviewQuestion {
   points: number;
   difficulty: string;
   subject_id: number;
-  node_id: string;
+  node_id: number;
 }
 
 interface QuizReviewAnswer {

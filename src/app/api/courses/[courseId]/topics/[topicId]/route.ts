@@ -66,7 +66,7 @@ export async function GET(
                 LIMIT 1
             `;
             
-            const lastAttemptResult = await query(lastAttemptQuery, [parseInt(userId), parseInt(courseId), topicId]);
+            const lastAttemptResult = await query(lastAttemptQuery, [parseInt(userId), parseInt(courseId), parseInt(topicId)]);
             const lastAttemptArray = Array.isArray(lastAttemptResult) ? lastAttemptResult : [];
             if (lastAttemptArray.length > 0) {
                 lastAttemptId = (lastAttemptArray[0] as any).id;
