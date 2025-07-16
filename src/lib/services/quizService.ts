@@ -73,6 +73,37 @@ export interface QuizReviewData {
   }[];
 }
 
+interface InsertResult { insertId: number }
+interface AffectedRowsResult { affectedRows: number }
+
+interface StatsData {
+  totalAttempts: number;
+  averageScore: number;
+  bestScore: number;
+  totalPointsEarned: number;
+  maxStreak: number;
+}
+
+interface UserStatsData {
+  current_streak: number;
+}
+
+interface QuizAnswerRow {
+  question_id: string;
+  selected_answer: number | null;
+  is_correct: boolean;
+  points_earned: number;
+  question: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: number;
+  points: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  is_active: boolean;
+}
+
 // Service functions
 export class QuizService {
   
@@ -143,7 +174,7 @@ export class QuizService {
       [userId, subjectId, nodeId, allQuestions.length, correctAnswers, scorePercentage, totalPoints, totalPoints]
     );
     
-    const attemptId = (attemptResult as any).insertId;
+    const attemptId = (attemptResult as InsertResult).insertId;
     
     // Insert quiz answers
     for (const result of results) {
@@ -152,7 +183,7 @@ export class QuizService {
       (attempt_id, question_id, selected_answer, is_correct, points_earned)
          VALUES (?, ?, ?, ?, ?)`,
         [
-          attemptId, result.question_id, result.selected_answer,
+          attemptId, result.question_id, result.selected_answer ?? null,
           result.is_correct, result.points_earned
         ]
       );
@@ -209,7 +240,7 @@ export class QuizService {
     
     const results: QuizReviewData['results'] = [];
     
-    for (const row of answersData as any[]) {
+    for (const row of answersData as QuizAnswerRow[]) {
       const question: QuizQuestion = {
         id: row.question_id,
         subject_id: attempt.subject_id,
@@ -222,14 +253,13 @@ export class QuizService {
         correct_answer: row.correct_answer,
         points: row.points,
         difficulty: row.difficulty,
-        is_active: true
+        is_active: row.is_active,
       };
-      
       results.push({
         question,
-        userAnswer: row.selected_answer,
+        userAnswer: row.selected_answer ?? undefined,
         isCorrect: row.is_correct,
-        pointsEarned: row.points_earned
+        pointsEarned: row.points_earned,
       });
     }
     
@@ -259,15 +289,21 @@ export class QuizService {
       [userId]
     );
     
-    const statsData = (stats as any[])[0];
-    const userData = (userStats as any[])[0];
+    const statsData = (stats as StatsData[])[0] || {
+      totalAttempts: 0,
+      averageScore: 0,
+      bestScore: 0,
+      totalPointsEarned: 0,
+      maxStreak: 0
+    };
+    const userData = (userStats as UserStatsData[])[0] || { current_streak: 0 };
     
     return {
       totalAttempts: statsData.totalAttempts || 0,
       averageScore: statsData.averageScore || 0,
       bestScore: statsData.bestScore || 0,
       totalPointsEarned: statsData.totalPointsEarned || 0,
-      currentStreak: userData?.current_streak || 0,
+      currentStreak: userData.current_streak || 0,
       maxStreak: statsData.maxStreak || 0
     };
   }
@@ -293,7 +329,7 @@ export class QuizService {
       ]
     );
     
-    const insertId = (result as any).insertId;
+    const insertId = (result as InsertResult).insertId;
     const newQuestion = await QuizService.getQuizQuestion(insertId.toString());
     return newQuestion!;
   }
@@ -329,6 +365,6 @@ export class QuizService {
       [id]
     );
     
-    return (result as any).affectedRows > 0;
+    return (result as AffectedRowsResult).affectedRows > 0;
   }
 } 

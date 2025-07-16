@@ -15,7 +15,6 @@ export const insertDefaultData = async () => {
     if ((adminExists as mysql.RowDataPacket[]).length === 0) {
       // Create default admin user
       const hashedPassword = await bcrypt.hash('123', 10);
-      const hashedPasswordUser = await bcrypt.hash('123', 10);
       
       await pool.execute(
         'INSERT INTO users (username, email, password, role, total_points) VALUES (?, ?, ?, ?, ?)',

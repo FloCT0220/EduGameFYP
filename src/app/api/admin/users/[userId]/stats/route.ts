@@ -9,6 +9,10 @@ interface ScoreResult {
   avg_score: number;
 }
 
+interface LastActivityResult {
+  last_activity: string | null;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
@@ -51,7 +55,7 @@ export async function GET(
     const averageScore = Array.isArray(averageScoreResult) ? Math.round((averageScoreResult[0] as ScoreResult)?.avg_score || 0) : 0;
     
     const lastActivityDate = Array.isArray(lastActivityResult) && lastActivityResult[0] 
-      ? (lastActivityResult[0] as any)?.last_activity 
+      ? (lastActivityResult[0] as LastActivityResult)?.last_activity 
       : null;
 
     const lastActivity = lastActivityDate 

@@ -1,5 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import mysql from 'mysql2/promise';
+
+interface TopicData extends mysql.RowDataPacket {
+    id: number;
+    title: string;
+    content: string;
+    structured_content: string;
+    lesson_order: number;
+    points: number;
+    type: string;
+}
+
+interface ProgressData extends mysql.RowDataPacket {
+    completed: boolean;
+    completed_at: string;
+    points_earned: number;
+}
+
+interface AttemptData extends mysql.RowDataPacket {
+    id: number;
+    total_points: number;
+}
 
 export async function GET(
     request: NextRequest,
@@ -40,7 +62,7 @@ export async function GET(
             );
         }
 
-        const topicData = topicResult[0] as any;
+        const topicData = topicResult[0] as TopicData;
 
         // Check if user has completed this topic
         const progressQuery = `
@@ -51,7 +73,7 @@ export async function GET(
 
         const progressResult = await query(progressQuery, [parseInt(userId), parseInt(courseId), parseInt(topicId)]);
         const progressArray = Array.isArray(progressResult) ? progressResult : [];
-        const isCompleted = progressArray.length > 0 && (progressArray[0] as any).completed;
+        const isCompleted = progressArray.length > 0 && (progressArray[0] as ProgressData).completed;
         
         // Get last quiz attempt ID if completed
         let lastAttemptId = null;
@@ -69,8 +91,8 @@ export async function GET(
             const lastAttemptResult = await query(lastAttemptQuery, [parseInt(userId), parseInt(courseId), parseInt(topicId)]);
             const lastAttemptArray = Array.isArray(lastAttemptResult) ? lastAttemptResult : [];
             if (lastAttemptArray.length > 0) {
-                lastAttemptId = (lastAttemptArray[0] as any).id;
-                pointsEarned = (lastAttemptArray[0] as any).total_points || (progressArray[0] as any)?.points_earned || 0;
+                lastAttemptId = (lastAttemptArray[0] as AttemptData).id;
+                pointsEarned = (lastAttemptArray[0] as AttemptData).total_points || (progressArray[0] as ProgressData)?.points_earned || 0;
             }
         }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { FaTrophy, FaCheck, FaSpinner } from 'react-icons/fa';
 import { getSession } from '@/lib/session';
@@ -45,7 +45,7 @@ export default function TopicQuizPage() {
         passed: boolean;
         attemptId?: number;
     } | null>(null);
-    const [readingStartTime, setReadingStartTime] = useState<number>(Date.now());
+
 
     useEffect(() => {
         const initializeUser = async () => {
@@ -81,13 +81,7 @@ export default function TopicQuizPage() {
         initializeUser();
     }, [router]);
 
-    useEffect(() => {
-        if (courseId && topicId && user?.id) {
-            fetchQuizQuestions();
-        }
-    }, [courseId, topicId, user?.id]);
-
-    const fetchQuizQuestions = async () => {
+    const fetchQuizQuestions = useCallback(async () => {
         try {
             const response = await fetch(`/api/quiz/questions?courseId=${courseId}&topicId=${topicId}`);
             if (response.ok) {
@@ -102,7 +96,13 @@ export default function TopicQuizPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [courseId, topicId]);
+
+    useEffect(() => {
+        if (courseId && topicId && user?.id) {
+            fetchQuizQuestions();
+        }
+    }, [courseId, topicId, user?.id, fetchQuizQuestions]);
 
     const handleAnswerSelect = (questionId: string, selectedAnswer: number) => {
         setAnswers(prev => {
@@ -129,7 +129,6 @@ export default function TopicQuizPage() {
     const handleSubmitQuiz = async () => {
         setSubmittingQuiz(true);
         try {
-            const timeSpent = Math.floor((Date.now() - readingStartTime) / 1000 / 60); // in minutes
             const token = getSession('authToken');
             const response = await fetch(`/api/quiz/submit`, {
                 method: 'POST',
@@ -142,8 +141,7 @@ export default function TopicQuizPage() {
                     courseId: parseInt(courseId),
                     topicId: topicId,
                     questionIds,
-                    answers: answers,
-                    timeSpent: timeSpent
+                    answers: answers
                 }),
             });
             if (response.ok) {

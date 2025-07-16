@@ -34,7 +34,8 @@ export async function authenticateUser(email: string, password: string): Promise
     `, [user.id]);
     
     // Return user without password
-    const { password: _, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = user;
     return userWithoutPassword as User;
   } catch (error) {
     console.error('Authentication error:', error);
@@ -55,16 +56,24 @@ export function generateToken(user: User): string {
   return Buffer.from(JSON.stringify(payload)).toString('base64');
 }
 
-export function verifyToken(token: string): any {
+interface TokenPayload {
+  id: number;
+  email: string;
+  username: string;
+  role: string;
+  timestamp: number;
+}
+
+export function verifyToken(token: string): TokenPayload | null {
   try {
-    const payload = JSON.parse(Buffer.from(token, 'base64').toString());
+    const payload = JSON.parse(Buffer.from(token, 'base64').toString()) as TokenPayload;
     // Simple expiration check (7 days)
     const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
     if (Date.now() - payload.timestamp > sevenDaysInMs) {
       return null;
     }
     return payload;
-  } catch (error) {
+  } catch {
     return null;
   }
 } 

@@ -15,18 +15,8 @@ export default function Navigation() {
         { name: 'Leaderboard', path: '/leaderboard', icon: '🏅' },
     ];
 
-    const adminNavItems = [
-        { name: 'Dashboard', path: '/admin/dashboard', icon: '🏠' }
-    ];
-    const navItems = user?.role === 'student' ? studentNavItems : adminNavItems;
-
     if (pathname === '/' || pathname === '/login' || pathname === '/register' || !isAuthenticated) {
         return null; // Don't show navigation on landing and auth pages
-    }
-
-    // Don't show navigation on admin pages (admin layout has its own sidebar)
-    if (pathname.startsWith('/admin/')) {
-        return null;
     }
 
     return (
@@ -52,7 +42,7 @@ export default function Navigation() {
                 {/* Navigation Items */}
                 <div className="flex-1 py-4">
                     <div className="space-y-2 px-3">
-                        {navItems.map((item) => {
+                        {studentNavItems.map((item) => {
                             const isActive = pathname === item.path || 
                                            (item.path === '/dashboard' && pathname === '/dashboard') ||
                                            (item.path === '/courses' && pathname.startsWith('/courses')) ||
@@ -62,14 +52,7 @@ export default function Navigation() {
                             return (
                                 <button
                                     key={item.path}
-                                    onClick={() => {
-                                        if (item.path === '/quiz') {
-                                            // For general quiz access from nav, use default parameters
-                                            router.push('/quiz?courseId=1&nodeId=general&nodeName=General Knowledge Quiz');
-                                        } else {
-                                            router.push(item.path);
-                                        }
-                                    }}
+                                    onClick={() => router.push(item.path)}
                                     className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                                         isActive
                                             ? 'bg-white/20 text-white shadow-lg'

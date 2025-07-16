@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { AchievementService } from '@/lib/services/achievementService';
 import { getSession } from '@/lib/session';
 import { verifyToken } from '@/lib/auth';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Get user ID from session
     const authToken = getSession('authToken');

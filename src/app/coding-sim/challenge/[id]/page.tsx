@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
@@ -40,26 +40,7 @@ export default function ChallengeDetailPage() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showResult, setShowResult] = useState(false);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [authLoading, isAuthenticated, router]);
-
-  useEffect(() => {
-    if (params.id) {
-      fetchChallenge();
-    }
-  }, [params.id]);
-
-  useEffect(() => {
-    if (challenge) {
-      generateCodeSnippets();
-    }
-  }, [challenge, selectedLanguage]);
-
-  const fetchChallenge = async () => {
+  const fetchChallenge = useCallback(async () => {
     try {
       const response = await fetch(`/api/coding-challenges/${params.id}?language=${selectedLanguage}`);
       if (response.ok) {
@@ -71,9 +52,9 @@ export default function ChallengeDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, selectedLanguage]);
 
-  const generateCodeSnippets = () => {
+  const generateCodeSnippets = useCallback(() => {
     if (!challenge) return;
 
     // Use code snippets from the database
@@ -83,7 +64,26 @@ export default function ChallengeDetailPage() {
       setAvailableSnippets([]);
     }
     setDropZones([null, null, null, null]);
-  };
+  }, [challenge]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (params.id) {
+      fetchChallenge();
+    }
+  }, [params.id, fetchChallenge]);
+
+  useEffect(() => {
+    if (challenge) {
+      generateCodeSnippets();
+    }
+  }, [challenge, selectedLanguage, generateCodeSnippets]);
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination, draggableId } = result;

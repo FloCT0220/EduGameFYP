@@ -402,4 +402,5 @@ export const checkConnection = async () => {
   }
 };
 
-export default { query, createPool, beginTransaction, initializeDatabase, resetDatabase, checkConnection };
+const dbModule = { query, createPool, beginTransaction, initializeDatabase, resetDatabase, checkConnection };
+export default dbModule;

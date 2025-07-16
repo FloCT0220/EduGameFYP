@@ -117,7 +117,6 @@ export async function GET(
       };
 
       // Attach options array to question for easier use later
-      // (question as any).options = options; // This line is removed as per the new_code
 
       questions.push(question);
       answers.push(answer);

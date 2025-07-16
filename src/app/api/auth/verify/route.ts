@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { query } from '@/lib/db';
+import mysql from 'mysql2/promise';
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
       SELECT id, email, username, role, total_points, created_at 
       FROM users 
       WHERE id = ?
-    `, [payload.id]) as any[];
+    `, [payload.id]) as mysql.RowDataPacket[];
 
     if (users.length === 0) {
       return NextResponse.json(

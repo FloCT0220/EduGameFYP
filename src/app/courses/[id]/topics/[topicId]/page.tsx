@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { FaTrophy, FaArrowLeft, FaCheck, FaSpinner } from 'react-icons/fa';
 import { getSession } from '@/lib/session';
@@ -98,14 +98,7 @@ export default function TopicContentPage() {
         initializeUser();
     }, [router]);
 
-    useEffect(() => {
-        if (courseId && topicId && user?.id) {
-            fetchTopicContent();
-            fetchQuizQuestions();
-        }
-    }, [courseId, topicId, user?.id]);
-
-    const fetchTopicContent = async () => {
+    const fetchTopicContent = useCallback(async () => {
         try {
             const response = await fetch(`/api/courses/${courseId}/topics/${topicId}?userId=${user?.id}`);
             if (response.ok) {
@@ -124,9 +117,9 @@ export default function TopicContentPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [courseId, topicId, user?.id, router]);
 
-    const fetchQuizQuestions = async () => {
+    const fetchQuizQuestions = useCallback(async () => {
         try {
             const response = await fetch(`/api/quiz/questions?courseId=${courseId}&topicId=${topicId}`);
             if (response.ok) {
@@ -139,7 +132,14 @@ export default function TopicContentPage() {
         } catch (error) {
             console.error('Error fetching quiz questions:', error);
         }
-    };
+    }, [courseId, topicId]);
+
+    useEffect(() => {
+        if (courseId && topicId && user?.id) {
+            fetchTopicContent();
+            fetchQuizQuestions();
+        }
+    }, [courseId, topicId, user?.id, fetchTopicContent, fetchQuizQuestions]);
 
     const handleAnswerSelect = (questionId: string, selectedAnswer: number) => {
         setAnswers(prev => {
