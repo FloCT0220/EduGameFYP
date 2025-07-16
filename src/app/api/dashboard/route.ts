@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
         totalLessons: enrollment.total_topics || 0,
         completedLessons: enrollment.completed_topics || 0
       })),
-      achievements: (await AchievementService.getAllAchievementsWithUserStatus(parseInt(userId))).map((achievement) => ({
+      achievements: (await AchievementService.getAllAchievementsWithUserStatus(userId)).map((achievement) => ({
         title: achievement.name,
         description: achievement.description,
         icon: achievement.icon_url,

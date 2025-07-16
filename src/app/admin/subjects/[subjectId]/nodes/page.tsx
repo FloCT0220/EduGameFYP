@@ -379,8 +379,8 @@ export default function AdminCourseTopics() {
                       </label>
                       <input
                         type="number"
-                        value={formData.points_reward}
-                        onChange={e => setFormData({ ...formData, points_reward: parseInt(e.target.value) })}
+                        value={formData.points_reward || ''}
+                        onChange={e => setFormData({ ...formData, points_reward: parseInt(e.target.value) || 0 })}
                         className="w-full p-2 border border-gray-300 rounded-lg"
                         min="0"
                         required

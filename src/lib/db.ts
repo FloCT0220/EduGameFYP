@@ -219,7 +219,6 @@ const createTables = async () => {
       name VARCHAR(100) NOT NULL,
       description TEXT,
       icon_url VARCHAR(255),
-      badge_color VARCHAR(20) DEFAULT 'blue',
       points_required INT DEFAULT 0,
       category VARCHAR(50),
       is_active BOOLEAN DEFAULT TRUE,

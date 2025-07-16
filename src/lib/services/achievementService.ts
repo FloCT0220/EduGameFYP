@@ -5,7 +5,6 @@ interface Achievement {
   name: string;
   description: string;
   icon_url: string;
-  badge_color: string;
   points_required: number;
   category: string;
   is_active: boolean;
@@ -219,7 +218,6 @@ export class AchievementService {
           name: 'First Steps',
           description: 'Complete your first quiz',
           icon_url: '🎯',
-          badge_color: 'blue',
           points_required: 1,
           category: 'completion'
         },
@@ -227,7 +225,6 @@ export class AchievementService {
           name: 'Quiz Master',
           description: 'Complete 5 quizzes',
           icon_url: '🏆',
-          badge_color: 'green',
           points_required: 5,
           category: 'completion'
         },
@@ -235,7 +232,6 @@ export class AchievementService {
           name: 'Point Collector',
           description: 'Earn 100 points',
           icon_url: '💰',
-          badge_color: 'yellow',
           points_required: 100,
           category: 'points'
         },
@@ -243,7 +239,6 @@ export class AchievementService {
           name: 'Streak Starter',
           description: 'Maintain a 3-day learning streak',
           icon_url: '🔥',
-          badge_color: 'red',
           points_required: 3,
           category: 'streak'
         },
@@ -251,7 +246,6 @@ export class AchievementService {
           name: 'Topic Explorer',
           description: 'Complete 3 topics',
           icon_url: '📚',
-          badge_color: 'purple',
           points_required: 3,
           category: 'topics'
         },
@@ -259,7 +253,6 @@ export class AchievementService {
           name: 'Course Enthusiast',
           description: 'Enroll in 2 courses',
           icon_url: '🎓',
-          badge_color: 'blue',
           points_required: 2,
           category: 'courses'
         },
@@ -267,7 +260,6 @@ export class AchievementService {
           name: 'Code Warrior',
           description: 'Solve 3 coding challenges',
           icon_url: '💻',
-          badge_color: 'green',
           points_required: 3,
           category: 'challenges'
         },
@@ -275,7 +267,6 @@ export class AchievementService {
           name: 'Level Up',
           description: 'Reach level 5',
           icon_url: '⭐',
-          badge_color: 'yellow',
           points_required: 5,
           category: 'level'
         }
@@ -290,13 +281,12 @@ export class AchievementService {
 
         if (!existing) {
           await query(`
-            INSERT INTO achievements (name, description, icon_url, badge_color, points_required, category, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, true)
+            INSERT INTO achievements (name, description, icon_url, points_required, category, is_active)
+            VALUES (?, ?, ?, ?, ?, true)
           `, [
             achievement.name,
             achievement.description,
             achievement.icon_url,
-            achievement.badge_color,
             achievement.points_required,
             achievement.category
           ]);
