@@ -237,7 +237,6 @@ export class UserService {
         id, 
         username as name,
         total_points,
-        level,
         current_streak,
         max_streak
       FROM users 

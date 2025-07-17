@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, RotateCcw } from 'lucide-react';
+import { CheckCircle, XCircle, RotateCcw, ArrowLeft } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSession } from '@/lib/session';
@@ -121,8 +121,6 @@ export default function ChallengeDetailPage() {
     }
   };
 
-  // Removed removeSnippet function since we removed the 'x' button
-
   const checkAnswer = async () => {
     if (!user) {
       alert('Please log in to submit your answer!');
@@ -179,6 +177,10 @@ export default function ChallengeDetailPage() {
 
   const getPoints = (challenge: CodingChallenge) => challenge.points;
 
+  const handleBack = () => {
+    router.push('/coding-sim');
+  };
+
   // Show loading while checking authentication
   if (authLoading) {
     return (
@@ -203,6 +205,15 @@ export default function ChallengeDetailPage() {
     <div className="min-h-screen p-6 bg-blue-50">
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="max-w-4x2 mx-auto space-y-6">
+          {/* Back Button */}
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors font-medium mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Challenges
+          </button>
+
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">{challenge?.title}</h1>
             {/* Language Dropdown */}

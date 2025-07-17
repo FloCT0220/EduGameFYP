@@ -78,9 +78,13 @@ export default function Leaderboard({
                                     <span className="text-sm text-gray-600">
                                         ⭐ {entry.points.toLocaleString()} points
                                     </span>
-                                    {entry.streak && entry.streak > 0 && (
+                                    {entry.streak && entry.streak > 0 ? (
                                         <span className="text-sm text-orange-600">
                                             🔥 {entry.streak} day streak
+                                        </span>
+                                    ):(
+                                        <span className="text-sm text-gray-600">
+                                            🔥 0 day streak
                                         </span>
                                     )}
                                 </div>

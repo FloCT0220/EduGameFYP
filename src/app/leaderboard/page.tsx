@@ -106,8 +106,13 @@ export default function LeaderboardPage() {
     id: userData.id.toString(),
     name: userData.name,
     points: userData.total_points,
-    streak: userData.current_streak
+    streak: userData.current_streak,
+    level: Math.floor(userData.total_points / 1000) + 1
   }));
+
+  // Find user's points from leaderboard data if present, else 0
+  const currentUserEntry = user ? leaderboardData.find(u => u.id === user.id) : undefined;
+  const currentUserPoints = currentUserEntry ? currentUserEntry.total_points : 0;
 
   return (
     <div className="min-h-screen p-6 md:ml-64" style={{ background: 'var(--background-primary)' }}>
@@ -156,7 +161,7 @@ export default function LeaderboardPage() {
               </div>
               <div>
                 <div className="font-medium text-blue-900">{user.username} (You)</div>
-                <div className="text-sm text-blue-700">⭐ {user.total_points?.toLocaleString() || 0} points</div>
+                <div className="text-sm text-blue-700">⭐ {currentUserPoints.toLocaleString()} points</div>
               </div>
             </div>
             <p className="text-sm text-blue-600 mt-2">
