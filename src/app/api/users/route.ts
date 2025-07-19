@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
         } else {
             // Get all users (for admin)
             const users = await query(
-                "SELECT id, username, email, role, total_points, current_streak, created_at FROM users ORDER BY created_at DESC"
+                "SELECT id, username, email, role, bio, total_points, current_streak, max_streak, last_login, created_at, updated_at FROM users ORDER BY created_at DESC"
             );
             
             return NextResponse.json({

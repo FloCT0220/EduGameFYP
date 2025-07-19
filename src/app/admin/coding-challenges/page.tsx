@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSession } from '@/lib/session';
 
@@ -27,15 +27,21 @@ const DIFFICULTY_OPTIONS = [
 export default function AdminCodingChallenges() {
   const { user } = useAuth();
   const [challenges, setChallenges] = useState<CodingChallenge[]>([]);
+  const [filteredChallenges, setFilteredChallenges] = useState<CodingChallenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [languageFilter, setLanguageFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  useEffect(() => {
-    if (user?.role === 'admin') {
-      fetchChallenges();
-    }
-  }, [user]);
+  // Get unique languages from challenges for dynamic filter options
+  const availableLanguages = Array.from(new Set(challenges.map(c => c.supported_language))).sort();
 
-  const fetchChallenges = async () => {
+  const fetchChallenges = useCallback(async () => {
     try {
       const token = getSession('authToken');
       const response = await fetch('/api/admin/coding-challenges', {
@@ -55,7 +61,75 @@ export default function AdminCodingChallenges() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  const applyFilters = useCallback(() => {
+    let filtered = [...challenges];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(challenge =>
+        challenge.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        challenge.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        challenge.supported_language.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Difficulty filter
+    if (difficultyFilter !== 'all') {
+      filtered = filtered.filter(challenge => challenge.difficulty === difficultyFilter);
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      const isActive = statusFilter === 'active';
+      filtered = filtered.filter(challenge => challenge.is_active === isActive);
+    }
+
+    // Language filter
+    if (languageFilter !== 'all') {
+      filtered = filtered.filter(challenge => challenge.supported_language === languageFilter);
+    }
+
+    // Sorting
+    filtered.sort((a, b) => {
+      let aValue: string | number | boolean = a[sortBy as keyof CodingChallenge];
+      let bValue: string | number | boolean = b[sortBy as keyof CodingChallenge];
+
+      // Handle date sorting
+      if (sortBy === 'created_at') {
+        aValue = new Date(aValue as string).getTime();
+        bValue = new Date(bValue as string).getTime();
+      }
+
+      // Handle numeric sorting
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
+      // Handle string sorting
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortOrder === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      return 0;
+    });
+
+    setFilteredChallenges(filtered);
+  }, [challenges, searchTerm, difficultyFilter, statusFilter, languageFilter, sortBy, sortOrder]);
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      fetchChallenges();
+    }
+  }, [user, fetchChallenges]);
+
+  // Apply filters whenever challenges or filter states change
+  useEffect(() => {
+    applyFilters();
+    }, [applyFilters]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this challenge?')) return;
@@ -119,9 +193,109 @@ export default function AdminCodingChallenges() {
             </a>
           </div>
 
+          {/* Filters Section */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Filters & Search</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                <input
+                  type="text"
+                  placeholder="Search challenges..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Difficulty Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
+                <select
+                  value={difficultyFilter}
+                  onChange={(e) => setDifficultyFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Difficulties</option>
+                  <option value="easy">Easy</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+
+              {/* Language Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                <select
+                  value={languageFilter}
+                  onChange={(e) => setLanguageFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Languages</option>
+                  {availableLanguages.map(lang => (
+                    <option key={lang} value={lang}>{lang}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Sort Controls */}
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Sort by:</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="created_at">Date Created</option>
+                  <option value="title">Title</option>
+                  <option value="difficulty">Difficulty</option>
+                  <option value="points">Points</option>
+                  <option value="submissions_count">Submissions</option>
+                  <option value="success_rate">Success Rate</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Order:</label>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
+                </select>
+              </div>
+
+              {/* Clear Filters Button */}
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setDifficultyFilter('all');
+                  setStatusFilter('all');
+                  setLanguageFilter('all');
+                  setSortBy('created_at');
+                  setSortOrder('desc');
+                }}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Clear Filters
+              </button>
+
+              {/* Results Count */}
+              <div className="text-sm text-gray-600">
+                Showing {filteredChallenges.length} of {challenges.length} challenges
+              </div>
+            </div>
+          </div>
+
           {/* Challenges Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {challenges.map((challenge) => (
+            {filteredChallenges.map((challenge) => (
               <div key={challenge.id} className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-xl font-semibold text-gray-900">{challenge.title}</h3>
@@ -187,7 +361,7 @@ export default function AdminCodingChallenges() {
             ))}
           </div>
 
-          {challenges.length === 0 && !isLoading && (
+          {filteredChallenges.length === 0 && !isLoading && (
             <div className="text-center py-12">
               <div className="text-gray-500 text-lg">No coding challenges found</div>
               <a

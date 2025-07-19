@@ -31,7 +31,7 @@ export default function Home() {
         <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--background-primary)' }}>
             <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/30 mx-auto mb-4"></div>
-                <p className="text-white/70">Loading EduQuest...</p>
+                <p className="text-white/70">Loading Gamified Learning Platform...</p>
             </div>
         </div>
     );

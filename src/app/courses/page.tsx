@@ -180,7 +180,7 @@ export default function CoursesPage() {
                 {/* Header */}
                 <div className="mb-8 bg-white/80 rounded-lg p-4">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">📚 Course Library</h1>
-                    <p className="text-gray-700">Welcome back, {user?.username}! Explore courses and master skill trees with different levels and prerequisites!</p>
+                    <p className="text-gray-700">Welcome back, {user?.username}! Explore courses and master topics with different levels and prerequisites!</p>
                 </div>
 
                 {/* Stats Cards */}
@@ -286,7 +286,7 @@ export default function CoursesPage() {
                                     </span>
                                 </div>
                                 
-                                {course.enrolled && (
+                                {course.enrolled ? (
                                     <div className="mb-3">
                                         <div className="flex justify-between text-sm text-gray-600 mb-1">
                                             <span>Progress</span>
@@ -298,6 +298,8 @@ export default function CoursesPage() {
                                             color={getProgressColor(course.progress_percentage)}
                                         />
                                     </div>
+                                ):(
+                                    <div className="display-none"></div>
                                 )}
                                 
                                 <div className="flex items-center justify-between text-sm text-gray-600 mb-4">

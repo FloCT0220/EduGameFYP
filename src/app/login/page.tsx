@@ -15,6 +15,12 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [fieldErrors, setFieldErrors] = useState({
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    });
 
     const router = useRouter();
     const { login, user, isAuthenticated, loading } = useAuth();
@@ -42,11 +48,45 @@ export default function LoginPage() {
         );
     }
 
+    const validateField = (name: string, value: string): string => {
+        switch (name) {
+            case 'username':
+                if (!value.trim()) return '';
+                if (value.length < 3) return 'Username must be at least 3 characters';
+                if (value.length > 20) return 'Username must be less than 20 characters';
+                if (!/^[a-zA-Z0-9_-]+$/.test(value)) return 'Username can only contain letters, numbers, hyphens, and underscores';
+                return '';
+            case 'email':
+                if (!value.trim()) return '';
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Please enter a valid email address';
+                return '';
+            case 'password':
+                if (!value) return '';
+                if (value.length < 8) return 'Password must be at least 8 characters';
+                if (!/(?=.*[a-z])/.test(value)) return 'Password must contain at least one lowercase letter';
+                if (!/(?=.*[A-Z])/.test(value)) return 'Password must contain at least one uppercase letter';
+                if (!/(?=.*\d)/.test(value)) return 'Password must contain at least one number';
+                return '';
+            case 'confirmPassword':
+                if (!value) return '';
+                if (formData.password !== value) return 'Passwords do not match';
+                return '';
+            default:
+                return '';
+        }
+    };
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        
+        // Clear general error/success messages
         if (error) setError('');
         if (success) setSuccess('');
+        
+        // Validate field and update field errors
+        const fieldError = validateField(name, value);
+        setFieldErrors(prev => ({ ...prev, [name]: fieldError }));
     };
 
     const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -80,15 +120,49 @@ export default function LoginPage() {
         setError('');
         setSuccess('');
 
-        // Validation
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            setIsLoading(false);
-            return;
+        // Comprehensive validation
+        const errors: string[] = [];
+
+        // Username validation
+        if (!formData.username.trim()) {
+            errors.push('Username is required');
+        } else if (formData.username.length < 3) {
+            errors.push('Username must be at least 3 characters long');
+        } else if (formData.username.length > 20) {
+            errors.push('Username must be less than 20 characters');
+        } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
+            errors.push('Username can only contain letters, numbers, hyphens, and underscores');
         }
 
-        if (formData.password.length < 6) {
-            setError('Password must be at least 6 characters long');
+        // Email validation
+        if (!formData.email.trim()) {
+            errors.push('Email is required');
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            errors.push('Please enter a valid email address');
+        }
+
+        // Password validation
+        if (!formData.password) {
+            errors.push('Password is required');
+        } else if (formData.password.length < 8) {
+            errors.push('Password must be at least 8 characters long');
+        } else if (!/(?=.*[a-z])/.test(formData.password)) {
+            errors.push('Password must contain at least one lowercase letter');
+        } else if (!/(?=.*[A-Z])/.test(formData.password)) {
+            errors.push('Password must contain at least one uppercase letter');
+        } else if (!/(?=.*\d)/.test(formData.password)) {
+            errors.push('Password must contain at least one number');
+        }
+
+        // Confirm password validation
+        if (!formData.confirmPassword) {
+            errors.push('Please confirm your password');
+        } else if (formData.password !== formData.confirmPassword) {
+            errors.push('Passwords do not match');
+        }
+
+        if (errors.length > 0) {
+            setError(errors.join('. '));
             setIsLoading(false);
             return;
         }
@@ -133,7 +207,7 @@ export default function LoginPage() {
             <div className="max-w-md w-full">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold mb-2 text-gradient">
-                        {isLogin ? 'Welcome Back! 🎓' : 'Join EduQuest! ✨'}
+                        {isLogin ? 'Welcome Back! 🎓' : 'Join Gamified Learning Platform! ✨'}
                     </h1>
                     <p className="text-white/90">
                         {isLogin ? 'Continue your learning journey' : 'Start your learning adventure today'}
@@ -149,6 +223,7 @@ export default function LoginPage() {
                                 setIsLogin(true);
                                 setError('');
                                 setSuccess('');
+                                setFieldErrors({ username: '', email: '', password: '', confirmPassword: '' });
                             }}
                             className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
                                 isLogin 
@@ -164,6 +239,7 @@ export default function LoginPage() {
                                 setIsLogin(false);
                                 setError('');
                                 setSuccess('');
+                                setFieldErrors({ username: '', email: '', password: '', confirmPassword: '' });
                             }}
                             className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
                                 !isLogin 
@@ -256,9 +332,16 @@ export default function LoginPage() {
                                     value={formData.username}
                                     onChange={handleInputChange}
                                     required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                                        fieldErrors.username 
+                                            ? 'border-red-300 focus:ring-red-500' 
+                                            : 'border-gray-300 focus:ring-green-500'
+                                    }`}
                                     placeholder="Choose a unique username"
                                 />
+                                {fieldErrors.username && (
+                                    <p className="text-red-600 text-sm mt-1">{fieldErrors.username}</p>
+                                )}
                             </div>
 
                             <div>
@@ -272,9 +355,16 @@ export default function LoginPage() {
                                     value={formData.email}
                                     onChange={handleInputChange}
                                     required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                                        fieldErrors.email 
+                                            ? 'border-red-300 focus:ring-red-500' 
+                                            : 'border-gray-300 focus:ring-green-500'
+                                    }`}
                                     placeholder="Enter your email address"
                                 />
+                                {fieldErrors.email && (
+                                    <p className="text-red-600 text-sm mt-1">{fieldErrors.email}</p>
+                                )}
                             </div>
 
                             <div>
@@ -288,9 +378,16 @@ export default function LoginPage() {
                                     value={formData.password}
                                     onChange={handleInputChange}
                                     required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                                    placeholder="Create a secure password (min. 6 characters)"
+                                    className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                                        fieldErrors.password 
+                                            ? 'border-red-300 focus:ring-red-500' 
+                                            : 'border-gray-300 focus:ring-green-500'
+                                    }`}
+                                    placeholder="Create a secure password (min. 8 characters)"
                                 />
+                                {fieldErrors.password && (
+                                    <p className="text-red-600 text-sm mt-1">{fieldErrors.password}</p>
+                                )}
                             </div>
 
                             <div>
@@ -304,9 +401,16 @@ export default function LoginPage() {
                                     value={formData.confirmPassword}
                                     onChange={handleInputChange}
                                     required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                                    className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                                        fieldErrors.confirmPassword 
+                                            ? 'border-red-300 focus:ring-red-500' 
+                                            : 'border-gray-300 focus:ring-green-500'
+                                    }`}
                                     placeholder="Re-enter your password"
                                 />
+                                {fieldErrors.confirmPassword && (
+                                    <p className="text-red-600 text-sm mt-1">{fieldErrors.confirmPassword}</p>
+                                )}
                             </div>
 
                             <div className="bg-green-50 p-4 rounded-lg">

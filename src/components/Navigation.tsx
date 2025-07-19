@@ -15,8 +15,8 @@ export default function Navigation() {
         { name: 'Leaderboard', path: '/leaderboard', icon: '🏅' },
     ];
 
-    if (pathname === '/' || pathname === '/login' || pathname === '/register' || !isAuthenticated) {
-        return null; // Don't show navigation on landing and auth pages
+    if (pathname === '/' || pathname === '/login' || pathname === '/register' || !isAuthenticated || pathname.startsWith('/admin')) {
+        return null; // Don't show navigation on landing, auth, and admin pages
     }
 
     return (
@@ -35,7 +35,7 @@ export default function Navigation() {
                         className="flex items-center space-x-2 text-xl font-bold text-white hover:text-blue-200 transition-colors"
                     >
                         <span className="text-2xl">🎓</span>
-                        <span className="text-gradient">EduQuest</span>
+                        <span className="text-gradient">Gamified Learning Platform</span>
                     </button>
                 </div>
 

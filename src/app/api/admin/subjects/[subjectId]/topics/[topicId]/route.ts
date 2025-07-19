@@ -1,109 +1,121 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from "@/lib/db";
+import { query } from '@/lib/db';
 
-interface ContentSection {
-  title: string;
-  content: string;
-}
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ subjectId: string; topicId: string }> }
+) {
+  try {
+    const { subjectId, topicId } = await params;
+    const courseId = parseInt(subjectId);
+    const topicIdNum = parseInt(topicId);
 
-interface StructuredContent {
-  sections: ContentSection[];
+    if (isNaN(courseId) || isNaN(topicIdNum)) {
+      return NextResponse.json({ error: 'Invalid course or topic ID' }, { status: 400 });
+    }
+
+    const result = await query(
+      'SELECT id, course_id, title, content, structured_content, lesson_order, points_reward, is_published, created_at, updated_at FROM topics WHERE id = ? AND course_id = ?',
+      [topicIdNum, courseId]
+    );
+
+    if (!result || !Array.isArray(result) || result.length === 0) {
+      return NextResponse.json({ error: 'Topic not found' }, { status: 404 });
+    }
+
+    const topic = result[0] as any;
+    
+    // Parse structured_content if it exists
+    if (topic.structured_content) {
+      try {
+        topic.structured_content = JSON.parse(topic.structured_content);
+      } catch {
+        topic.structured_content = null;
+      }
+    }
+
+    return NextResponse.json(topic);
+  } catch (error) {
+    console.error('Error fetching topic:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { subjectId: string; topicId: string } }
+  { params }: { params: Promise<{ subjectId: string; topicId: string }> }
 ) {
   try {
-    const awaitedParams = await params;
-    const courseId = parseInt(awaitedParams.subjectId);
-    const topicId = parseInt(awaitedParams.topicId);
+    const { subjectId, topicId } = await params;
+    const courseId = parseInt(subjectId);
+    const topicIdNum = parseInt(topicId);
     const body = await request.json();
-    
-    const { 
-      title, 
-      structured_content,
-      lesson_order, 
-      points_reward, 
-      is_published
-    }: {
-      title: string;
-      structured_content?: StructuredContent;
-      lesson_order: number;
-      points_reward: number;
-      is_published: boolean;
-    } = body;
 
-    // Validate lesson order uniqueness within the course (excluding current topic)
-    const existingTopics = await query(`
-      SELECT COUNT(*) as count 
-      FROM topics 
-      WHERE course_id = ? AND lesson_order = ? AND id != ?
-    `, [courseId, lesson_order, topicId]) as { count: number }[];
-
-    if (existingTopics[0].count > 0) {
-      return NextResponse.json(
-        { error: `Lesson order ${lesson_order} is already taken by another topic in this course.` },
-        { status: 400 }
-      );
+    if (isNaN(courseId) || isNaN(topicIdNum)) {
+      return NextResponse.json({ error: 'Invalid course or topic ID' }, { status: 400 });
     }
 
-    await query(`
-      UPDATE topics 
-      SET 
-        title = ?, 
-        structured_content = ?,
-        lesson_order = ?, 
-        points_reward = ?, 
-        is_published = ?,
-        updated_at = NOW()
-      WHERE id = ? AND course_id = ?
-    `, [
-      title,
-      structured_content ? JSON.stringify(structured_content) : null,
-      lesson_order,
-      points_reward,
-      is_published,
-      topicId,
-      courseId
-    ]);
+    const { title, is_published, lesson_order, points_reward, structured_content } = body;
 
-    return NextResponse.json({ 
-      success: true,
-      message: 'Topic updated successfully'
-    });
+    // Validate required fields
+    if (!title || !lesson_order || points_reward === undefined) {
+      return NextResponse.json({ error: 'Title, lesson order, and points reward are required' }, { status: 400 });
+    }
+
+    // Check if topic exists
+    const existingTopic = await query('SELECT id FROM topics WHERE id = ? AND course_id = ?', [topicIdNum, courseId]);
+    if (!existingTopic || !Array.isArray(existingTopic) || existingTopic.length === 0) {
+      return NextResponse.json({ error: 'Topic not found' }, { status: 404 });
+    }
+
+    // Check if lesson order is unique within the course (excluding current topic)
+    const orderCheck = await query(
+      'SELECT id FROM topics WHERE course_id = ? AND lesson_order = ? AND id != ?',
+      [courseId, lesson_order, topicIdNum]
+    );
+    if (orderCheck && Array.isArray(orderCheck) && orderCheck.length > 0) {
+      return NextResponse.json({ error: `Lesson order ${lesson_order} is already taken by another topic in this course` }, { status: 400 });
+    }
+
+    // Update topic
+    const structuredContentJson = structured_content ? JSON.stringify(structured_content) : null;
+    await query(
+      'UPDATE topics SET title = ?, lesson_order = ?, points_reward = ?, is_published = ?, structured_content = ?, updated_at = NOW() WHERE id = ? AND course_id = ?',
+      [title, lesson_order, points_reward, is_published, structuredContentJson, topicIdNum, courseId]
+    );
+
+    return NextResponse.json({ message: 'Topic updated successfully' });
   } catch (error) {
     console.error('Error updating topic:', error);
-    return NextResponse.json(
-      { error: 'Failed to update topic' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { subjectId: string; topicId: string } }
+  { params }: { params: Promise<{ subjectId: string; topicId: string }> }
 ) {
   try {
-    const awaitedParams = await params;
-    const courseId = parseInt(awaitedParams.subjectId);
-    const topicId = parseInt(awaitedParams.topicId);
+    const { subjectId, topicId } = await params;
+    const courseId = parseInt(subjectId);
+    const topicIdNum = parseInt(topicId);
 
-    await query(
-      'DELETE FROM topics WHERE id = ? AND course_id = ?',
-      [topicId, courseId]
-    );
+    if (isNaN(courseId) || isNaN(topicIdNum)) {
+      return NextResponse.json({ error: 'Invalid course or topic ID' }, { status: 400 });
+    }
 
-    return NextResponse.json({ 
-      success: true,
-      message: 'Topic deleted successfully'
-    });
+    // Check if topic exists
+    const existingTopic = await query('SELECT id FROM topics WHERE id = ? AND course_id = ?', [topicIdNum, courseId]);
+    if (!existingTopic || !Array.isArray(existingTopic) || existingTopic.length === 0) {
+      return NextResponse.json({ error: 'Topic not found' }, { status: 404 });
+    }
+
+    // Delete topic
+    await query('DELETE FROM topics WHERE id = ? AND course_id = ?', [topicIdNum, courseId]);
+
+    return NextResponse.json({ message: 'Topic deleted successfully' });
   } catch (error) {
     console.error('Error deleting topic:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete topic' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 } 

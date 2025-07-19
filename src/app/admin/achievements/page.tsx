@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface Achievement {
   id: number;
@@ -35,11 +35,7 @@ export default function AdminAchievements() {
     is_active: true,
   });
 
-  useEffect(() => {
-    fetchAchievements();
-  }, []);
-
-  const fetchAchievements = async () => {
+  const fetchAchievements = useCallback(async () => {
     try {
       const response = await fetch("/api/admin/achievements");
       const data = await response.json();
@@ -50,7 +46,11 @@ export default function AdminAchievements() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchAchievements();
+    }, [fetchAchievements]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

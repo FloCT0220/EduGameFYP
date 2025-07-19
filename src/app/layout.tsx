@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EduQuest - Gamified Learning Platform",
+  title: "Gamified Learning Platform",
   description: "An interactive online education system with gamification elements including points, achievements, streaks, and leaderboards.",
 };
 

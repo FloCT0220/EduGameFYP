@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             <div>
               <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
-              <p className="text-xs text-gray-500">EduGame Platform</p>
+              <p className="text-xs text-gray-500">Gamified Learning Platform</p>
             </div>
           </div>
           <button

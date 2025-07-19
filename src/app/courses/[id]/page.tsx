@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { FaClock, FaUsers, FaPlay, FaLock, FaCheck, FaTrophy } from 'react-icons/fa';
 import toast from 'react-hot-toast';
@@ -71,24 +71,7 @@ export default function CoursePage() {
         }
     }, [authLoading, isAuthenticated, router]);
 
-    useEffect(() => {
-        if (courseId && user?.id) {
-            fetchCourseData();
-        }
-    }, [courseId, user?.id]);
-
-    // Check for refresh parameter and refetch data
-    useEffect(() => {
-        const shouldRefresh = searchParams.get('refresh');
-        if (shouldRefresh && courseId && user?.id) {
-            // Remove the refresh parameter from URL
-            router.replace(`/courses/${courseId}`, { scroll: false });
-            // Refetch course data to get updated topic completion status
-            fetchCourseData();
-        }
-    }, [searchParams, courseId, user?.id, router]);
-
-    const fetchCourseData = async () => {
+    const fetchCourseData = useCallback(async () => {
         try {
             const response = await fetch(`/api/courses/${courseId}?userId=${user?.id}`);
             if (response.ok) {
@@ -110,7 +93,26 @@ export default function CoursePage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [courseId, user?.id, router]);
+
+    useEffect(() => {
+        if (courseId && user?.id) {
+            fetchCourseData();
+        }
+    }, [courseId, user?.id, fetchCourseData]);
+
+    // Check for refresh parameter and refetch data
+    useEffect(() => {
+        const shouldRefresh = searchParams.get('refresh');
+        if (shouldRefresh && courseId && user?.id) {
+            // Remove the refresh parameter from URL
+            router.replace(`/courses/${courseId}`, { scroll: false });
+            // Refetch course data to get updated topic completion status
+            fetchCourseData();
+        }
+    }, [searchParams, courseId, user?.id, router, fetchCourseData]);
+
+
 
     const buildVerticalSkillTree = (topics: Topic[], topicProgress: { [topicId: number]: boolean }): SkillTreeLevel[] => {
         if (!topics || topics.length === 0) return [];
@@ -378,8 +380,8 @@ export default function CoursePage() {
                     <div className="text-center py-16">
                         <div className="bg-white rounded-xl shadow-lg p-8 max-w-md mx-auto">
                             <FaLock className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Enroll to Access Skill Tree</h3>
-                            <p className="text-gray-600 mb-6">Join this course to unlock the interactive skill tree and start your learning journey!</p>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Enroll to Access Topics</h3>
+                            <p className="text-gray-600 mb-6">Join this course to unlock the interactive topics and start your learning journey!</p>
                             <button
                                 onClick={handleEnroll}
                                 disabled={enrolling || !user}
@@ -392,7 +394,7 @@ export default function CoursePage() {
                 ) : (
                     <div className="bg-white rounded-xl shadow-lg p-8">
                         <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">🌳 Skill Tree</h2>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Topics</h2>
                             <p className="text-gray-600">Complete topics to unlock new challenges. Click on available topics to start learning!</p>
                         </div>
                         

@@ -249,7 +249,8 @@ export default function ChallengeDetailPage() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-move hover:bg-blue-100 transition-colors ${snapshot.isDragging ? 'scale-95 opacity-60 z-50' : ''}`}
+                              className={`bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-move hover:bg-blue-100 
+                                transition-colors ${snapshot.isDragging ? 'scale-95 opacity-60 z-50' : ''}`}
                             >
                               <code className="text-sm text-blue-800 font-mono">{snippet.code}</code>
                     </div>
@@ -260,7 +261,7 @@ export default function ChallengeDetailPage() {
                     </div>
                   )}
                 </Droppable>
-                </div>
+              </div>
 
               {/* Drop Zones Column */}
               <div>
@@ -272,7 +273,8 @@ export default function ChallengeDetailPage() {
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className={`border-2 border-dashed rounded p-2 bg-white min-h-[40px] transition-colors duration-200 ${snapshot.isDraggingOver ? 'bg-blue-100' : ''}`}
+                          className={`border-2 border-dashed rounded p-2 bg-white min-h-[40px] 
+                            transition-colors duration-200 ${snapshot.isDraggingOver ? 'bg-blue-100' : ''}`}
                         >
                           {dropZones[zoneIdx] ? (
                             <Draggable draggableId={dropZones[zoneIdx]!.id} index={0} key={dropZones[zoneIdx]!.id}>
@@ -281,10 +283,11 @@ export default function ChallengeDetailPage() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-move hover:bg-blue-100 transition-colors ${snapshot.isDragging ? 'scale-95 opacity-60 z-50' : ''}`}
+                                  className={`bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-move hover:bg-blue-100 
+                                    transition-colors ${snapshot.isDragging ? 'scale-95 opacity-60 z-50' : ''}`}
                                 >
                                   <span className="text-blue-800 font-mono">{dropZones[zoneIdx]!.code}</span>
-                    </div>
+                                </div>
                               )}
                             </Draggable>
                           ) : (

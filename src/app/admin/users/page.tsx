@@ -7,11 +7,15 @@ interface User {
   id: number;
   username: string;
   email: string;
+  password?: string;
   role: string;
+  bio?: string;
   total_points: number;
   current_streak: number;
-  last_login: string;
+  max_streak: number;
+  last_login: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 interface UserStats {
@@ -22,7 +26,7 @@ interface UserStats {
   lastActivity: string;
 }
 
-type UserRole = "student" | "admin";
+
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -32,14 +36,6 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    role: "student" as UserRole,
-  });
 
   useEffect(() => {
     fetchUsers();
@@ -77,50 +73,12 @@ export default function UsersPage() {
     await fetchUserStats(user.id);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const url = editingUser ? `/api/users/${editingUser.id}` : "/api/users";
-      const method = editingUser ? "PUT" : "POST";
-      const body = editingUser
-        ? { ...formData, id: editingUser.id }
-        : formData;
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (response.ok) {
-        setShowForm(false);
-        setEditingUser(null);
-        setFormData({
-          username: "",
-          email: "",
-          password: "",
-          role: "student",
-        });
-        fetchUsers();
-      }
-    } catch (error) {
-      console.error("Error saving user:", error);
-    }
-  };
 
-  const handleEdit = (user: User) => {
-    setEditingUser(user);
-    setFormData({
-      username: user.username,
-      email: user.email,
-      password: "",
-      role: user.role as UserRole,
-    });
-    setShowForm(true);
-  };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
     try {
-      const response = await fetch(`/api/users/${id}`, {
+      const response = await fetch(`/api/admin/users/${id}`, {
         method: "DELETE",
       });
       if (response.ok) {
@@ -154,13 +112,13 @@ export default function UsersPage() {
           <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-1">Manage learner accounts and track engagement</p>
         </div>
-        <button 
-          onClick={() => setShowForm(true)}
+        <a
+          href="/admin/users/add"
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center text-sm"
         >
           <FaPlus className="mr-2 h-4 w-4" />
           Add User
-        </button>
+        </a>
       </div>
 
       {/* Filters */}
@@ -241,10 +199,10 @@ export default function UsersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      Level {user.level || 1}
+                      {user.total_points || 0} points
                     </div>
                     <div className="text-sm text-gray-500">
-                      {user.total_points || 0} points
+                      Max streak: {user.max_streak || 0}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -268,13 +226,13 @@ export default function UsersPage() {
                       >
                         <FaEye className="h-4 w-4" />
                       </button>
-                      <button 
-                        onClick={() => handleEdit(user)}
+                      <a
+                        href={`/admin/users/add?id=${user.id}`}
                         className="text-yellow-600 hover:text-yellow-900" 
                         title="Edit User"
                       >
                         <FaEdit className="h-4 w-4" />
-                      </button>
+                      </a>
                       <button 
                         onClick={() => handleDelete(user.id)}
                         className="text-red-600 hover:text-red-900" 
@@ -301,86 +259,7 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Add/Edit User Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingUser ? "Edit User" : "Add User"}
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                  <input
-                    type="text"
-                    value={formData.username}
-                    onChange={e => setFormData({ ...formData, username: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={e => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    required={!editingUser}
-                    placeholder={editingUser ? "Leave blank to keep current password" : ""}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                  <select
-                    value={formData.role}
-                    onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="student">Student</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingUser(null);
-                    setFormData({
-                      username: "",
-                      email: "",
-                      password: "",
-                      role: "student",
-                    });
-                  }}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  {editingUser ? "Update" : "Create"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
 
       {/* User Details Modal */}
       {showDetailsModal && selectedUser && (
@@ -420,20 +299,20 @@ export default function UsersPage() {
               {/* Stats Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{selectedUser.level || 1}</div>
-                  <div className="text-sm text-blue-800">Level</div>
+                  <div className="text-2xl font-bold text-blue-600">{selectedUser.total_points || 0}</div>
+                  <div className="text-sm text-blue-800">Total Points</div>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{selectedUser.total_points || 0}</div>
-                  <div className="text-sm text-green-800">Total Points</div>
+                  <div className="text-2xl font-bold text-green-600">{selectedUser.current_streak || 0}</div>
+                  <div className="text-sm text-green-800">Current Streak</div>
                 </div>
                 <div className="bg-yellow-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-yellow-600">{selectedUser.current_streak || 0}</div>
-                  <div className="text-sm text-yellow-800">Day Streak</div>
+                  <div className="text-2xl font-bold text-yellow-600">{selectedUser.max_streak || 0}</div>
+                  <div className="text-sm text-yellow-800">Max Streak</div>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{selectedUser.experience_points || 0}</div>
-                  <div className="text-sm text-purple-800">XP</div>
+                  <div className="text-2xl font-bold text-purple-600">{selectedUser.role}</div>
+                  <div className="text-sm text-purple-800">Role</div>
                 </div>
               </div>
 

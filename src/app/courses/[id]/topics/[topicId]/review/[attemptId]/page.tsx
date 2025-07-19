@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -60,13 +60,7 @@ export default function QuizReview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchReviewData();
-    }
-  }, [user]);
-
-  const fetchReviewData = async () => {
+  const fetchReviewData = useCallback(async () => {
     try {
       const response = await fetch(`/api/quiz/review/${params.attemptId}`);
       
@@ -82,7 +76,13 @@ export default function QuizReview() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.attemptId]);
+
+  useEffect(() => {
+    if (user) {
+      fetchReviewData();
+    }
+    }, [user, fetchReviewData]);
 
   const handleBackToTopic = () => {
     router.push(`/courses/${params.id}/topics/${params.topicId}`);
