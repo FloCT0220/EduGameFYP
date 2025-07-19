@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 
 interface QuizQuestion {
@@ -23,7 +23,7 @@ export default function AdminQuizzes() {
   const [filteredQuestions, setFilteredQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    subject: '',
+    course: '',
     difficulty: '',
     search: ''
   });
@@ -36,7 +36,7 @@ export default function AdminQuizzes() {
     applyFilters();
   }, [questions, filters]);
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...questions];
 
     // Filter by search term
@@ -48,10 +48,10 @@ export default function AdminQuizzes() {
       );
     }
 
-    // Filter by subject
-    if (filters.subject) {
+    // Filter by course
+    if (filters.course) {
       filtered = filtered.filter(question =>
-        question.subject_name === filters.subject
+        question.subject_name === filters.course
       );
     }
 
@@ -63,9 +63,9 @@ export default function AdminQuizzes() {
     }
 
     setFilteredQuestions(filtered);
-  };
+  }, [questions, filters]);
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/quiz');
       if (!response.ok) {
@@ -84,7 +84,7 @@ export default function AdminQuizzes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this question?')) return;
@@ -148,8 +148,8 @@ export default function AdminQuizzes() {
               Subject
             </label>
             <select
-              value={filters.subject}
-              onChange={(e) => setFilters({...filters, subject: e.target.value})}
+              value={filters.course}
+              onChange={(e) => setFilters({...filters, course: e.target.value})}
               className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Subjects</option>
@@ -179,7 +179,7 @@ export default function AdminQuizzes() {
           {/* Clear Filters */}
           <div className="flex items-end">
             <button
-              onClick={() => setFilters({subject: '', difficulty: '', search: ''})}
+              onClick={() => setFilters({course: '', difficulty: '', search: ''})}
               className="w-full p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
             >
               Clear Filters

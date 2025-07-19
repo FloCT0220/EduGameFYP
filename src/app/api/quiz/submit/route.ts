@@ -12,6 +12,17 @@ interface QuizAnswerInput {
   timeTaken?: number;
 }
 
+interface Achievement {
+  id: number;
+  name: string;
+  description: string;
+  icon_url: string;
+  points_required: number;
+  category: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -96,7 +107,7 @@ export async function POST(request: NextRequest) {
       [finalUserId, courseId, parseInt(topicId), questionIds.length, correctAnswers, scorePercentage, totalPoints, JSON.stringify(results)]
       );
 
-    let newlyEarnedAchievements: any[] = [];
+    let newlyEarnedAchievements: Achievement[] = [];
 
     // Update user points and experience if passed
     if (passed) {

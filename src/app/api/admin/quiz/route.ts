@@ -18,7 +18,7 @@ interface QuizQuestion extends mysql.RowDataPacket {
   topic_name: string;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get all questions for admin view with subject and topic names
     const questions = await query(
