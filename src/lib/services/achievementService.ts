@@ -126,7 +126,7 @@ export class AchievementService {
 
       // Get topic completion count
       const [topicStats] = await query(
-        'SELECT COUNT(*) as topic_count FROM user_topic_progress WHERE user_id = ? AND completed = true',
+        'SELECT COUNT(*) as topic_count FROM user_progress WHERE user_id = ? AND progress_type = "topic" AND completed = true',
         [userId]
       ) as { topic_count: number }[];
 

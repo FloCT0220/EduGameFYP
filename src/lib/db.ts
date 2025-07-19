@@ -110,25 +110,6 @@ const createTables = async () => {
       UNIQUE KEY unique_course_lesson_order (course_id, lesson_order)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // User topic progress table
-    `CREATE TABLE IF NOT EXISTS user_topic_progress (
-      user_id INT NOT NULL,
-      course_id INT NOT NULL,
-      topic_id INT NOT NULL,
-      completed BOOLEAN NOT NULL DEFAULT FALSE,
-      completed_at TIMESTAMP NULL,
-      points_earned INT DEFAULT 0,
-      attempts INT DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (user_id, course_id, topic_id),
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
-      INDEX idx_user_course (user_id, course_id),
-      INDEX idx_completion (completed)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
     // Quiz questions table
     `CREATE TABLE IF NOT EXISTS quiz_questions (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -163,24 +144,6 @@ const createTables = async () => {
       INDEX idx_course (course_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // User progress table
-    `CREATE TABLE IF NOT EXISTS user_progress (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT NOT NULL,
-      course_id INT NOT NULL,
-      topic_id INT,
-      completed_at TIMESTAMP,
-      progress_percentage DECIMAL(5,2) DEFAULT 0.00,
-      points_earned INT DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
-      UNIQUE KEY unique_user_topic (user_id, topic_id),
-      INDEX idx_user_course (user_id, course_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
     // Quiz attempts table
     `CREATE TABLE IF NOT EXISTS quiz_attempts (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -191,26 +154,13 @@ const createTables = async () => {
       questions_correct INT NOT NULL,
       score_percentage DECIMAL(5,2) NOT NULL,
       total_points INT NOT NULL,
+      answers JSON,
       started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       completed_at TIMESTAMP NULL,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       INDEX idx_user_quiz (user_id, subject_id, node_id),
       INDEX idx_user_attempts (user_id),
       INDEX idx_completed (completed_at)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-    // Quiz answers table
-    `CREATE TABLE IF NOT EXISTS quiz_answers (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      attempt_id INT NOT NULL,
-      question_id INT NOT NULL,
-      selected_answer INT,
-      is_correct BOOLEAN NOT NULL,
-      points_earned INT DEFAULT 0,
-      FOREIGN KEY (attempt_id) REFERENCES quiz_attempts(id) ON DELETE CASCADE,
-      FOREIGN KEY (question_id) REFERENCES quiz_questions(id) ON DELETE CASCADE,
-      INDEX idx_attempt (attempt_id),
-      INDEX idx_question (question_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
     // Achievements table
@@ -240,20 +190,6 @@ const createTables = async () => {
       INDEX idx_achievement (achievement_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-
-    // Learning streaks table
-    `CREATE TABLE IF NOT EXISTS learning_streaks (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT NOT NULL,
-      streak_date DATE NOT NULL,
-      activities_completed INT DEFAULT 0,
-      points_earned INT DEFAULT 0,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      UNIQUE KEY unique_user_date (user_id, streak_date),
-      INDEX idx_user (user_id),
-      INDEX idx_date (streak_date)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
     // Coding challenges table
     `CREATE TABLE IF NOT EXISTS coding_challenges (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -262,6 +198,8 @@ const createTables = async () => {
       difficulty ENUM('easy', 'intermediate', 'hard') DEFAULT 'easy',
       points INT DEFAULT 10,
       supported_languages JSON,
+      code_snippets JSON,
+      correct_answer JSON,
       created_by INT,
       is_active BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -270,21 +208,6 @@ const createTables = async () => {
       INDEX idx_difficulty (difficulty),
       INDEX idx_active (is_active),
       INDEX idx_created_by (created_by)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-    // Coding challenge answers table
-    `CREATE TABLE IF NOT EXISTS coding_challenge_answers (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      challenge_id INT NOT NULL,
-      programming_language VARCHAR(50) NOT NULL,
-      code_snippets JSON NOT NULL,
-      correct_answer JSON NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      FOREIGN KEY (challenge_id) REFERENCES coding_challenges(id) ON DELETE CASCADE,
-      INDEX idx_challenge (challenge_id),
-      INDEX idx_language (programming_language),
-      UNIQUE KEY unique_challenge_language (challenge_id, programming_language)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
     // Challenge submissions table
@@ -305,25 +228,25 @@ const createTables = async () => {
       INDEX idx_submitted_at (submitted_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // User coding stats table
-    `CREATE TABLE IF NOT EXISTS user_coding_stats (
+    // User progress table (merged with user_topic_progress)
+    `CREATE TABLE IF NOT EXISTS user_progress (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,
-      challenges_attempted INT DEFAULT 0,
-      challenges_solved INT DEFAULT 0,
-      total_submissions INT DEFAULT 0,
-      easy_solved INT DEFAULT 0,
-      intermediate_solved INT DEFAULT 0,
-      hard_solved INT DEFAULT 0,
-      total_coding_points INT DEFAULT 0,
-      average_attempts DECIMAL(3,1) DEFAULT 0.0,
-      best_streak INT DEFAULT 0,
-      current_streak INT DEFAULT 0,
+      course_id INT NOT NULL,
+      topic_id INT,
+      progress_type ENUM('course', 'topic') NOT NULL,
+      completed BOOLEAN DEFAULT FALSE,
+      completed_at TIMESTAMP NULL,
+      points_earned INT DEFAULT 0,
+      attempts INT DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      UNIQUE KEY unique_user_stats (user_id),
-      INDEX idx_user (user_id)
+      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
+      UNIQUE KEY unique_user_topic (user_id, topic_id),
+      INDEX idx_user_course (user_id, course_id),
+      INDEX idx_completion (completed)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
   ];

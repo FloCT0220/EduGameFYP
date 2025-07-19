@@ -99,27 +99,12 @@ export async function POST(request: NextRequest) {
     // Create quiz attempt
     const attemptResult = await query(
       `INSERT INTO quiz_attempts 
-       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, total_points, completed_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [finalUserId, finalSubjectId, finalNodeId, questionIds.length, correctAnswers, scorePercentage, totalPoints]
+       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, total_points, answers, completed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [finalUserId, finalSubjectId, finalNodeId, questionIds.length, correctAnswers, scorePercentage, totalPoints, JSON.stringify(results)]
     );
 
-    const attemptId = (attemptResult as mysql.ResultSetHeader).insertId;
-
-    // Insert quiz answers
-    for (const result of results) {
-      await query(
-        `INSERT INTO quiz_answers 
-         (attempt_id, question_id, selected_answer, is_correct, points_earned)
-         VALUES (?, ?, ?, ?, ?)`,
-        [
-          attemptId, result.question_id, result.selected_answer ?? null,
-          result.is_correct ?? null, result.points_earned ?? null
-        ]
-      );
-    }
-
-    let newlyEarnedAchievements: { id: number; name: string; description: string; icon_url: string; badge_color: string; points_required: number; category: string; is_active: boolean; created_at: string }[] = [];
+    let newlyEarnedAchievements: any[] = [];
 
     // Update user points and experience if passed
     if (passed) {
@@ -157,7 +142,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       results: {
-        attemptId,
+        attemptId: (attemptResult as mysql.ResultSetHeader).insertId,
         score: correctAnswers,
         totalQuestions: questionIds.length,
         totalPoints: totalPoints,
@@ -177,28 +162,22 @@ async function updateLearningStreak(userId: number) {
   const today = new Date().toISOString().split('T')[0];
   
   try {
-    // Check if user already has a streak record for today
+    // Check if user already has completed progress for today
     const existingStreak = await query(
-      'SELECT id FROM learning_streaks WHERE user_id = ? AND streak_date = ?',
+      'SELECT id FROM user_progress WHERE user_id = ? AND DATE(completed_at) = ? AND completed = true',
       [userId, today]
     );
 
-    // Only update streak if no record exists for today
+    // Only update streak if no completed progress exists for today
     if ((existingStreak as mysql.RowDataPacket[]).length === 0) {
-      // Insert today's streak record
-      await query(
-        'INSERT INTO learning_streaks (user_id, streak_date, activities_completed, points_earned) VALUES (?, ?, 1, 0)',
-        [userId, today]
-      );
-
       // Get yesterday's date
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-      // Check if user had activity yesterday
+      // Check if user had completed progress yesterday
       const yesterdayStreak = await query(
-        'SELECT id FROM learning_streaks WHERE user_id = ? AND streak_date = ?',
+        'SELECT id FROM user_progress WHERE user_id = ? AND DATE(completed_at) = ? AND completed = true',
         [userId, yesterdayStr]
       );
 

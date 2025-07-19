@@ -181,7 +181,7 @@ export default function QuizReview() {
                       className={`p-3 rounded-lg border ${
                         isCorrect
                           ? 'bg-green-50 border-green-300'
-                          : isSelected
+                          : isSelected && !isCorrect
                           ? 'bg-red-50 border-red-300'
                           : 'bg-gray-50 border-gray-200'
                       }`}
@@ -191,24 +191,27 @@ export default function QuizReview() {
                           <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium mr-3 ${
                             isCorrect
                               ? 'bg-green-600 text-white'
-                              : isSelected
+                              : isSelected && !isCorrect
                               ? 'bg-red-600 text-white'
                               : 'bg-gray-300 text-gray-600'
                           }`}>
                             {String.fromCharCode(65 + optIdx)}
                           </span>
                           <span className={`${
-                            isCorrect ? 'text-green-800' : isSelected ? 'text-red-800' : 'text-gray-700'
+                            isCorrect ? 'text-green-800 font-semibold' : isSelected && !isCorrect ? 'text-red-800 font-semibold' : 'text-gray-700'
                           }`}>
                             {option}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
                           {isCorrect && (
-                            <span className="text-green-600 text-sm">✓ Correct</span>
+                            <span className="text-green-600 text-sm font-medium">✓ Correct Answer</span>
                           )}
                           {isSelected && !isCorrect && (
-                            <span className="text-red-600 text-sm">✗ Your answer</span>
+                            <span className="text-red-600 text-sm font-medium">✗ Your Answer</span>
+                          )}
+                          {!isSelected && !isCorrect && (
+                            <span className="text-gray-500 text-sm">Not selected</span>
                           )}
                         </div>
                       </div>

@@ -224,14 +224,25 @@ export const insertDefaultData = async () => {
       if (adminUser.length > 0) {
         const adminId = adminUser[0].id;
 
-        // Sample coding challenges
+        // Sample coding challenges with embedded code snippets and answers
         const codingChallenges = [
           [
             'Two Sum',
             'Find two numbers in an array that add up to a target sum.',
             'easy',
             10,
-            JSON.stringify(['python', 'javascript', 'java', 'cpp', 'c']),
+            JSON.stringify(['python', 'javascript']),
+            JSON.stringify([
+              { id: '1', code: 'for i in range(len(nums)):', language: 'python' },
+              { id: '2', code: 'for j in range(i + 1, len(nums)):', language: 'python' },
+              { id: '3', code: 'if nums[i] + nums[j] == target:', language: 'python' },
+              { id: '4', code: 'return [i, j]', language: 'python' },
+              { id: '5', code: 'for (let i = 0; i < nums.length; i++) {', language: 'javascript' },
+              { id: '6', code: 'for (let j = i + 1; j < nums.length; j++) {', language: 'javascript' },
+              { id: '7', code: 'if (nums[i] + nums[j] === target) {', language: 'javascript' },
+              { id: '8', code: 'return [i, j];', language: 'javascript' }
+            ]),
+            JSON.stringify(['1', '2', '3', '4']),
             adminId, true
           ],
           [
@@ -239,7 +250,24 @@ export const insertDefaultData = async () => {
             'Write a function that reverses a string.',
             'easy',
             10,
-            JSON.stringify(['python', 'javascript', 'java', 'cpp', 'c']),
+            JSON.stringify(['python', 'javascript']),
+            JSON.stringify([
+              { id: '1', code: 'left = 0', language: 'python' },
+              { id: '2', code: 'right = len(s) - 1', language: 'python' },
+              { id: '3', code: 'while left < right:', language: 'python' },
+              { id: '4', code: 's[left], s[right] = s[right], s[left]', language: 'python' },
+              { id: '5', code: 'left += 1', language: 'python' },
+              { id: '6', code: 'right -= 1', language: 'python' },
+              { id: '7', code: 'return s', language: 'python' },
+              { id: '8', code: 'let left = 0;', language: 'javascript' },
+              { id: '9', code: 'let right = s.length - 1;', language: 'javascript' },
+              { id: '10', code: 'while (left < right) {', language: 'javascript' },
+              { id: '11', code: '[s[left], s[right]] = [s[right], s[left]];', language: 'javascript' },
+              { id: '12', code: 'left++;', language: 'javascript' },
+              { id: '13', code: 'right--;', language: 'javascript' },
+              { id: '14', code: 'return s;', language: 'javascript' }
+            ]),
+            JSON.stringify(['1', '2', '3', '4', '5', '6', '7']),
             adminId, true
           ],
           [
@@ -247,7 +275,23 @@ export const insertDefaultData = async () => {
             'Add two numbers represented as linked lists.',
             'intermediate',
             20,
-            JSON.stringify(['python', 'javascript', 'java', 'cpp']),
+            JSON.stringify(['python', 'javascript', 'java']),
+            JSON.stringify([
+              { id: '1', code: 'dummy = ListNode(0)', language: 'python' },
+              { id: '2', code: 'current = dummy', language: 'python' },
+              { id: '3', code: 'carry = 0', language: 'python' },
+              { id: '4', code: 'while l1 or l2 or carry:', language: 'python' },
+              { id: '5', code: 'x = l1.val if l1 else 0', language: 'python' },
+              { id: '6', code: 'y = l2.val if l2 else 0', language: 'python' },
+              { id: '7', code: 'sum_val = x + y + carry', language: 'python' },
+              { id: '8', code: 'carry = sum_val // 10', language: 'python' },
+              { id: '9', code: 'current.next = ListNode(sum_val % 10)', language: 'python' },
+              { id: '10', code: 'current = current.next', language: 'python' },
+              { id: '11', code: 'if l1: l1 = l1.next', language: 'python' },
+              { id: '12', code: 'if l2: l2 = l2.next', language: 'python' },
+              { id: '13', code: 'return dummy.next', language: 'python' }
+            ]),
+            JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']),
             adminId, true
           ],
           [
@@ -256,6 +300,15 @@ export const insertDefaultData = async () => {
             'intermediate',
             20,
             JSON.stringify(['python', 'javascript', 'java', 'cpp']),
+            JSON.stringify([
+              { id: '1', code: 'max_current = nums[0]', language: 'python' },
+              { id: '2', code: 'max_global = nums[0]', language: 'python' },
+              { id: '3', code: 'for i in range(1, len(nums)):', language: 'python' },
+              { id: '4', code: 'max_current = max(nums[i], max_current + nums[i])', language: 'python' },
+              { id: '5', code: 'max_global = max(max_global, max_current)', language: 'python' },
+              { id: '6', code: 'return max_global', language: 'python' }
+            ]),
+            JSON.stringify(['1', '2', '3', '4', '5', '6']),
             adminId, true
           ],
           [
@@ -264,6 +317,20 @@ export const insertDefaultData = async () => {
             'hard',
             50,
             JSON.stringify(['python', 'javascript', 'java', 'cpp']),
+            JSON.stringify([
+              { id: '1', code: 'result = []', language: 'python' },
+              { id: '2', code: 'stack = []', language: 'python' },
+              { id: '3', code: 'current = root', language: 'python' },
+              { id: '4', code: 'while current or stack:', language: 'python' },
+              { id: '5', code: 'while current:', language: 'python' },
+              { id: '6', code: 'stack.append(current)', language: 'python' },
+              { id: '7', code: 'current = current.left', language: 'python' },
+              { id: '8', code: 'current = stack.pop()', language: 'python' },
+              { id: '9', code: 'result.append(current.val)', language: 'python' },
+              { id: '10', code: 'current = current.right', language: 'python' },
+              { id: '11', code: 'return result', language: 'python' }
+            ]),
+            JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']),
             adminId, true
           ]
         ];
@@ -272,125 +339,12 @@ export const insertDefaultData = async () => {
         for (const challenge of codingChallenges) {
           await pool.execute(
             `INSERT INTO coding_challenges 
-            (title, description, difficulty, points, supported_languages, created_by, is_active) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            (title, description, difficulty, points, supported_languages, code_snippets, correct_answer, created_by, is_active) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             challenge
           );
         }
         console.log('✅ Coding challenges created');
-
-        // Insert challenge answers for different languages
-        const challengeAnswers = [
-          // Two Sum (Challenge 1) - Python
-          [1, 'python', JSON.stringify([
-            { id: '1', code: 'for i in range(len(nums)):' },
-            { id: '2', code: 'for j in range(i + 1, len(nums)):' },
-            { id: '3', code: 'if nums[i] + nums[j] == target:' },
-            { id: '4', code: 'return [i, j]' },
-            { id: '5', code: 'return []' },
-            { id: '6', code: 'for i in range(len(nums) - 1):' },
-            { id: '7', code: 'if nums[i] == target:' },
-            { id: '8', code: 'return i' }
-          ]), JSON.stringify(['1', '2', '3', '4'])],
-          
-          // Two Sum (Challenge 1) - JavaScript
-          [1, 'javascript', JSON.stringify([
-            { id: '1', code: 'for (let i = 0; i < nums.length; i++) {' },
-            { id: '2', code: 'for (let j = i + 1; j < nums.length; j++) {' },
-            { id: '3', code: 'if (nums[i] + nums[j] === target) {' },
-            { id: '4', code: 'return [i, j];' },
-            { id: '5', code: 'return [];' },
-            { id: '6', code: 'for (let i = 0; i < nums.length - 1; i++) {' },
-            { id: '7', code: 'if (nums[i] === target) {' },
-            { id: '8', code: 'return i;' }
-          ]), JSON.stringify(['1', '2', '3', '4'])],
-          
-          // Reverse String (Challenge 2) - Python
-          [2, 'python', JSON.stringify([
-            { id: '1', code: 'left = 0' },
-            { id: '2', code: 'right = len(s) - 1' },
-            { id: '3', code: 'while left < right:' },
-            { id: '4', code: 's[left], s[right] = s[right], s[left]' },
-            { id: '5', code: 'left += 1' },
-            { id: '6', code: 'right -= 1' },
-            { id: '7', code: 'return s' },
-            { id: '8', code: 'for i in range(len(s)):' },
-            { id: '9', code: 's[i] = s[-i-1]' }
-          ]), JSON.stringify(['1', '2', '3', '4', '5', '6', '7'])],
-          
-          // Reverse String (Challenge 2) - JavaScript
-          [2, 'javascript', JSON.stringify([
-            { id: '1', code: 'let left = 0;' },
-            { id: '2', code: 'let right = s.length - 1;' },
-            { id: '3', code: 'while (left < right) {' },
-            { id: '4', code: '[s[left], s[right]] = [s[right], s[left]];' },
-            { id: '5', code: 'left++;' },
-            { id: '6', code: 'right--;' },
-            { id: '7', code: 'return s;' },
-            { id: '8', code: 'for (let i = 0; i < s.length; i++) {' },
-            { id: '9', code: 's[i] = s[s.length - 1 - i];' }
-          ]), JSON.stringify(['1', '2', '3', '4', '5', '6', '7'])],
-          
-          // Add Two Numbers (Challenge 3) - Python
-          [3, 'python', JSON.stringify([
-            { id: '1', code: 'dummy = ListNode(0)' },
-            { id: '2', code: 'current = dummy' },
-            { id: '3', code: 'carry = 0' },
-            { id: '4', code: 'while l1 or l2 or carry:' },
-            { id: '5', code: 'x = l1.val if l1 else 0' },
-            { id: '6', code: 'y = l2.val if l2 else 0' },
-            { id: '7', code: 'sum_val = x + y + carry' },
-            { id: '8', code: 'carry = sum_val // 10' },
-            { id: '9', code: 'current.next = ListNode(sum_val % 10)' },
-            { id: '10', code: 'current = current.next' },
-            { id: '11', code: 'if l1: l1 = l1.next' },
-            { id: '12', code: 'if l2: l2 = l2.next' },
-            { id: '13', code: 'return dummy.next' },
-            { id: '14', code: 'result = []' },
-            { id: '15', code: 'return result' }
-          ]), JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'])],
-          
-          // Maximum Subarray (Challenge 4) - Python
-          [4, 'python', JSON.stringify([
-            { id: '1', code: 'max_current = nums[0]' },
-            { id: '2', code: 'max_global = nums[0]' },
-            { id: '3', code: 'for i in range(1, len(nums)):' },
-            { id: '4', code: 'max_current = max(nums[i], max_current + nums[i])' },
-            { id: '5', code: 'max_global = max(max_global, max_current)' },
-            { id: '6', code: 'return max_global' },
-            { id: '7', code: 'sum = 0' },
-            { id: '8', code: 'for num in nums:' },
-            { id: '9', code: 'sum += num' }
-          ]), JSON.stringify(['1', '2', '3', '4', '5', '6'])],
-          
-          // Binary Tree Inorder Traversal (Challenge 5) - Python
-          [5, 'python', JSON.stringify([
-            { id: '1', code: 'result = []' },
-            { id: '2', code: 'stack = []' },
-            { id: '3', code: 'current = root' },
-            { id: '4', code: 'while current or stack:' },
-            { id: '5', code: 'while current:' },
-            { id: '6', code: 'stack.append(current)' },
-            { id: '7', code: 'current = current.left' },
-            { id: '8', code: 'current = stack.pop()' },
-            { id: '9', code: 'result.append(current.val)' },
-            { id: '10', code: 'current = current.right' },
-            { id: '11', code: 'return result' },
-            { id: '12', code: 'if not root:' },
-            { id: '13', code: 'return []' }
-          ]), JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'])]
-        ];
-
-        // Insert challenge answers
-        for (const answer of challengeAnswers) {
-          await pool.execute(
-            `INSERT INTO coding_challenge_answers 
-            (challenge_id, programming_language, code_snippets, correct_answer) 
-            VALUES (?, ?, ?, ?)`,
-            answer
-          );
-        }
-        console.log('✅ Challenge answers created');
       }
     }
 

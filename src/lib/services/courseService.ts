@@ -51,12 +51,13 @@ export class CourseService {
         const progress = await query(
             `SELECT 
                 COUNT(t.id) as total_lessons,
-                COUNT(utp.completed) as completed_lessons
+                COUNT(up.completed) as completed_lessons
             FROM topics t
-            LEFT JOIN user_topic_progress utp 
-                ON t.id = utp.topic_id 
-                AND utp.user_id = ?
-                AND utp.completed = true
+            LEFT JOIN user_progress up 
+                ON t.id = up.topic_id 
+                AND up.user_id = ?
+                AND up.progress_type = "topic"
+                AND up.completed = true
             WHERE t.course_id = ?
             GROUP BY t.course_id`,
             [userId, courseId]
@@ -81,11 +82,12 @@ export class CourseService {
 
     static async getTopicProgress(userId: number, courseId: number): Promise<{ [topicId: number]: boolean }> {
         const progress = await query(
-            `SELECT t.id, COALESCE(utp.completed, false) as completed
+            `SELECT t.id, COALESCE(up.completed, false) as completed
             FROM topics t
-            LEFT JOIN user_topic_progress utp 
-                ON t.id = utp.topic_id 
-                AND utp.user_id = ?
+            LEFT JOIN user_progress up 
+                ON t.id = up.topic_id 
+                AND up.user_id = ?
+                AND up.progress_type = "topic"
             WHERE t.course_id = ?`,
             [userId, courseId]
         ) as TopicProgress[];
@@ -111,8 +113,8 @@ export class CourseService {
 
         // Now insert with the course_id
         await query(
-            `INSERT INTO user_topic_progress (user_id, topic_id, course_id, completed, completed_at)
-            VALUES (?, ?, ?, true, NOW())
+            `INSERT INTO user_progress (user_id, topic_id, course_id, progress_type, completed, completed_at)
+            VALUES (?, ?, ?, "topic", true, NOW())
             ON DUPLICATE KEY UPDATE completed = true, completed_at = NOW()`,
             [userId, topicId, courseId]
         );

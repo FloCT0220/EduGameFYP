@@ -67,8 +67,8 @@ export async function GET(
         // Check if user has completed this topic
         const progressQuery = `
             SELECT completed, completed_at, points_earned
-            FROM user_topic_progress
-            WHERE user_id = ? AND course_id = ? AND topic_id = ?
+            FROM user_progress
+            WHERE user_id = ? AND course_id = ? AND topic_id = ? AND progress_type = "topic"
         `;
 
         const progressResult = await query(progressQuery, [parseInt(userId), parseInt(courseId), parseInt(topicId)]);

@@ -33,8 +33,6 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const {username, email, password, role = 'student' } = body;
 
-        console.log('User registration data received:', { username, email, role });
-
         // Basic validation
         if (!username || !email || !password) {
             return NextResponse.json(

@@ -29,23 +29,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the correct answer for this challenge and language
-    const answers = await query(`
+    // Get the correct answer for this challenge
+    const challenges = await query(`
       SELECT correct_answer, points
-      FROM coding_challenge_answers cca
-      JOIN coding_challenges cc ON cca.challenge_id = cc.id
-      WHERE cca.challenge_id = ? AND cca.programming_language = ?
-    `, [challengeId, programmingLanguage]) as AnswerRow[];
+      FROM coding_challenges
+      WHERE id = ? AND is_active = true
+    `, [challengeId]) as AnswerRow[];
 
-    if (!answers || answers.length === 0) {
+    if (!challenges || challenges.length === 0) {
       return NextResponse.json(
-        { error: 'Challenge or language not found' },
+        { error: 'Challenge not found' },
         { status: 404 }
       );
     }
 
-    const correctAnswer = answers[0].correct_answer;
-    const challengePoints = answers[0].points;
+    const challenge = challenges[0];
+    let correctAnswer: string[] = [];
+    
+    if (challenge.correct_answer) {
+      if (typeof challenge.correct_answer === 'string') {
+        correctAnswer = JSON.parse(challenge.correct_answer);
+      } else {
+        correctAnswer = challenge.correct_answer;
+      }
+    }
+    
+    const challengePoints = challenge.points;
 
     // Check if answer is correct
     const isCorrect = JSON.stringify(submittedAnswer) === JSON.stringify(correctAnswer);

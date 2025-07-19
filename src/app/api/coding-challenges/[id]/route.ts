@@ -9,17 +9,15 @@ interface ChallengeRow {
   difficulty: string;
   points: number;
   supported_languages: string;
+  code_snippets: string;
+  correct_answer: string;
   created_at: string;
 }
 
 interface CodeSnippet {
   id: string;
   code: string;
-}
-
-interface AnswerRow {
-  code_snippets: CodeSnippet[];
-  correct_answer: string[];
+  language?: string;
 }
 
 export async function GET(
@@ -39,7 +37,7 @@ export async function GET(
       );
     }
 
-    // Get challenge details
+    // Get challenge details with code snippets and answers
     const challenges = await query(`
       SELECT 
         cc.id,
@@ -48,6 +46,8 @@ export async function GET(
         cc.difficulty,
         cc.points,
         cc.supported_languages,
+        cc.code_snippets,
+        cc.correct_answer,
         cc.created_at
       FROM coding_challenges cc
       WHERE cc.id = ? AND cc.is_active = true
@@ -62,20 +62,13 @@ export async function GET(
 
     const challenge = (challenges as ChallengeRow[])[0];
 
-    // Get code snippets and correct answer for the selected language
-    const answers = await query(`
-      SELECT code_snippets, correct_answer
-      FROM coding_challenge_answers
-      WHERE challenge_id = ? AND programming_language = ?
-    `, [challengeId, language]) as AnswerRow[];
-
+    // Parse code snippets and correct answer from the challenge
     let codeSnippets: CodeSnippet[] = [];
     let correctAnswer: string[] = [];
 
-    if (answers && answers.length > 0) {
-      // Handle both string and object formats from database
-      const codeSnippetsData = answers[0].code_snippets;
-      const correctAnswerData = answers[0].correct_answer;
+    if (challenge.code_snippets) {
+      const codeSnippetsData = challenge.code_snippets;
+      const correctAnswerData = challenge.correct_answer;
       
       if (typeof codeSnippetsData === 'string') {
         codeSnippets = JSON.parse(codeSnippetsData || '[]');
@@ -88,6 +81,11 @@ export async function GET(
       } else {
         correctAnswer = correctAnswerData || [];
       }
+    }
+
+    // Filter code snippets by language if specified
+    if (language && language !== 'all') {
+      codeSnippets = codeSnippets.filter((snippet: CodeSnippet) => snippet.language === language);
     }
 
     // Parse JSON fields using utility function
