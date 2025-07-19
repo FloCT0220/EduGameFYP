@@ -1,0 +1,616 @@
+@startuml Admin Use Cases Activity Diagrams
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+    BackgroundColor #FDF6E8
+    BorderColor #E67E22
+    FontColor #2C3E50
+}
+skinparam activityDiamond {
+    BackgroundColor #F9E79F
+    BorderColor #B9770E
+    FontColor #2C3E50
+}
+
+' ========================================
+' 1. ADMIN LOGIN ACTIVITY DIAGRAM
+' ========================================
+title Admin Login Activity Diagram
+
+|Admin|
+start
+:Navigate to login page;
+:Enter admin credentials;
+:Submit login form;
+
+|System|
+:Validate admin credentials;
+if (Credentials valid?) then (yes)
+    :Generate authentication token;
+    :Store admin session;
+    :Redirect to admin dashboard;
+    |Admin|
+    :Access admin dashboard;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error message;
+    :Retry login;
+    stop
+endif
+
+' ========================================
+' 2. VIEW ANALYTICS ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Analytics Activity Diagram
+
+|Admin|
+start
+:Navigate to analytics page;
+
+|System|
+:Fetch analytics data (user stats, course stats, etc.);
+:Process and aggregate data;
+:Display analytics dashboard;
+
+|Admin|
+:View analytics charts and reports;
+:Filter or export data;
+stop
+
+' ========================================
+' 3. VIEW USERS ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Users Activity Diagram
+
+|Admin|
+start
+:Navigate to users management page;
+
+|System|
+:Fetch user list from database;
+:Display user list;
+
+|Admin|
+:View user list;
+stop
+
+' ========================================
+' 4. ADD USER ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Add User Activity Diagram
+
+|Admin|
+start
+:Navigate to add user form;
+:Enter user details;
+:Submit form;
+
+|System|
+:Validate user data;
+if (Valid?) then (yes)
+    :Create user account in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 5. UPDATE USER ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Update User Activity Diagram
+
+|Admin|
+start
+:Navigate to users management page;
+:Select user to update;
+:Edit user details;
+:Submit changes;
+
+|System|
+:Validate updated data;
+if (Valid?) then (yes)
+    :Update user in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 6. DELETE USER ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Delete User Activity Diagram
+
+|Admin|
+start
+:Navigate to users management page;
+:Select user to delete;
+:Confirm deletion;
+
+|System|
+:Delete user from database;
+:Display success message;
+|Admin|
+:View confirmation;
+stop
+
+' ========================================
+' 7. VIEW COURSES ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Courses Activity Diagram
+
+|Admin|
+start
+:Navigate to courses management page;
+
+|System|
+:Fetch course list from database;
+:Display course list;
+
+|Admin|
+:View course list;
+stop
+
+' ========================================
+' 8. ADD COURSE ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Add Course Activity Diagram
+
+|Admin|
+start
+:Navigate to add course form;
+:Enter course details;
+:Submit form;
+
+|System|
+:Validate course data;
+if (Valid?) then (yes)
+    :Create course in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 9. UPDATE COURSE ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Update Course Activity Diagram
+
+|Admin|
+start
+:Navigate to courses management page;
+:Select course to update;
+:Edit course details;
+:Submit changes;
+
+|System|
+:Validate updated data;
+if (Valid?) then (yes)
+    :Update course in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 10. DELETE COURSE ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Delete Course Activity Diagram
+
+|Admin|
+start
+:Navigate to courses management page;
+:Select course to delete;
+:Confirm deletion;
+
+|System|
+:Delete course from database;
+:Display success message;
+|Admin|
+:View confirmation;
+stop
+
+' ========================================
+' 11. VIEW TOPICS ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Topics Activity Diagram
+
+|Admin|
+start
+:Navigate to topics management page;
+
+|System|
+:Fetch topic list from database;
+:Display topic list;
+
+|Admin|
+:View topic list;
+stop
+
+' ========================================
+' 12. ADD TOPIC ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Add Topic Activity Diagram
+
+|Admin|
+start
+:Navigate to add topic form;
+:Enter topic details;
+:Submit form;
+
+|System|
+:Validate topic data;
+if (Valid?) then (yes)
+    :Create topic in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 13. UPDATE TOPIC ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Update Topic Activity Diagram
+
+|Admin|
+start
+:Navigate to topics management page;
+:Select topic to update;
+:Edit topic details;
+:Submit changes;
+
+|System|
+:Validate updated data;
+if (Valid?) then (yes)
+    :Update topic in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 14. DELETE TOPIC ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Delete Topic Activity Diagram
+
+|Admin|
+start
+:Navigate to topics management page;
+:Select topic to delete;
+:Confirm deletion;
+
+|System|
+:Delete topic from database;
+:Display success message;
+|Admin|
+:View confirmation;
+stop
+
+' ========================================
+' 15. VIEW QUIZZES ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Quizzes Activity Diagram
+
+|Admin|
+start
+:Navigate to quizzes management page;
+
+|System|
+:Fetch quiz list from database;
+:Display quiz list;
+
+|Admin|
+:View quiz list;
+stop
+
+' ========================================
+' 16. ADD QUIZ ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Add Quiz Activity Diagram
+
+|Admin|
+start
+:Navigate to add quiz form;
+:Enter quiz details and questions;
+:Submit form;
+
+|System|
+:Validate quiz data;
+if (Valid?) then (yes)
+    :Create quiz in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 17. UPDATE QUIZ ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Update Quiz Activity Diagram
+
+|Admin|
+start
+:Navigate to quizzes management page;
+:Select quiz to update;
+:Edit quiz details/questions;
+:Submit changes;
+
+|System|
+:Validate updated data;
+if (Valid?) then (yes)
+    :Update quiz in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 18. DELETE QUIZ ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Delete Quiz Activity Diagram
+
+|Admin|
+start
+:Navigate to quizzes management page;
+:Select quiz to delete;
+:Confirm deletion;
+
+|System|
+:Delete quiz from database;
+:Display success message;
+|Admin|
+:View confirmation;
+stop
+
+' ========================================
+' 19. VIEW ACHIEVEMENTS ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Achievements Activity Diagram
+
+|Admin|
+start
+:Navigate to achievements management page;
+
+|System|
+:Fetch achievement list from database;
+:Display achievement list;
+
+|Admin|
+:View achievement list;
+stop
+
+' ========================================
+' 20. ADD ACHIEVEMENT ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Add Achievement Activity Diagram
+
+|Admin|
+start
+:Navigate to add achievement form;
+:Enter achievement details;
+:Submit form;
+
+|System|
+:Validate achievement data;
+if (Valid?) then (yes)
+    :Create achievement in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 21. UPDATE ACHIEVEMENT ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Update Achievement Activity Diagram
+
+|Admin|
+start
+:Navigate to achievements management page;
+:Select achievement to update;
+:Edit achievement details;
+:Submit changes;
+
+|System|
+:Validate updated data;
+if (Valid?) then (yes)
+    :Update achievement in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 22. DELETE ACHIEVEMENT ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Delete Achievement Activity Diagram
+
+|Admin|
+start
+:Navigate to achievements management page;
+:Select achievement to delete;
+:Confirm deletion;
+
+|System|
+:Delete achievement from database;
+:Display success message;
+|Admin|
+:View confirmation;
+stop
+
+' ========================================
+' 23. VIEW CODING CHALLENGES ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Coding Challenges Activity Diagram
+
+|Admin|
+start
+:Navigate to coding challenges management page;
+
+|System|
+:Fetch coding challenge list from database;
+:Display challenge list;
+
+|Admin|
+:View challenge list;
+stop
+
+' ========================================
+' 24. ADD CODING CHALLENGE ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Add Coding Challenge Activity Diagram
+
+|Admin|
+start
+:Navigate to add coding challenge form;
+:Enter challenge details;
+:Submit form;
+
+|System|
+:Validate challenge data;
+if (Valid?) then (yes)
+    :Create challenge in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 25. UPDATE CODING CHALLENGE ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Update Coding Challenge Activity Diagram
+
+|Admin|
+start
+:Navigate to coding challenges management page;
+:Select challenge to update;
+:Edit challenge details;
+:Submit changes;
+
+|System|
+:Validate updated data;
+if (Valid?) then (yes)
+    :Update challenge in database;
+    :Display success message;
+    |Admin|
+    :View confirmation;
+    stop
+else (no)
+    :Display error message;
+    |Admin|
+    :View error;
+    stop
+endif
+
+' ========================================
+' 26. DELETE CODING CHALLENGE ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Delete Coding Challenge Activity Diagram
+
+|Admin|
+start
+:Navigate to coding challenges management page;
+:Select challenge to delete;
+:Confirm deletion;
+
+|System|
+:Delete challenge from database;
+:Display success message;
+|Admin|
+:View confirmation;
+stop
+
+@enduml 

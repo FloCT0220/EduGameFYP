@@ -1,0 +1,146 @@
+@startuml
+' --- Settings for a cleaner look ---
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor #FEF3E2
+    BorderColor #E39B34
+}
+skinparam actor {
+    BorderColor #34495E
+}
+
+' --- Define Actors ---
+actor Student
+actor Admin
+
+' --- Group Use Cases by Actor/Functionality ---
+rectangle "Student Functions" {
+    ' Core Actions
+    (Register)
+    (Login)
+
+    ' Learning & Engagement
+    (Take Course)
+    (Take Quiz)
+    (Take Block-Based Coding Challenge)
+
+    ' Profile & Social
+    (View Profile)
+    (Update Profile)
+    (View Achievement)
+    (View Leaderboard)
+
+    ' Supporting Use Cases
+    (Review Quiz Results)
+    (Earn Points)
+    (View Points)
+}
+
+rectangle "Admin Functions" {
+    (View Analytics)
+
+    package "User Management" {
+        (View Users)
+        (Add Users)
+        (Update Users)
+        (Delete Users)
+    }
+
+    package "Course Management" {
+        (View Courses)
+        (Add Courses)
+        (Delete Courses)
+    }
+
+    package "Topic Management" {
+        (View Topics)
+        (Add Topics)
+        (Update Topics)
+        (Delete Topics)
+    }
+
+    package "Quiz Management" {
+        (View Quiz)
+        (Add Quiz)
+        (Update Quiz)
+        (Delete Quiz)
+    }
+
+    package "Achievement Management" {
+        (View Achievements)
+        (Add Achievements)
+        (Update Achievements)
+        (Delete Achievements)
+    }
+
+    package "Coding Challenge Management" {
+        (View Coding Challenge)
+        (Add Coding Challenge)
+        (Update Coding Challenge)
+        (Delete Coding Challenge)
+    }
+}
+
+
+' ===== Define Relationships =====
+
+' --- Student to Use Case Connections ---
+Student --> (Register)
+Student --> (Login)
+Student --> (Take Course)
+Student --> (Take Block-Based Coding Challenge)
+Student --> (View Profile)
+Student --> (View Achievement)
+Student --> (View Leaderboard)
+
+
+' --- Relationships Between Student Use Cases ---
+(Take Course) ..> (Take Quiz) : <<extend>>
+
+(Take Quiz) ..> (Review Quiz Results) : <<include>>
+(Take Course) ..> (Earn Points) : <<include>>
+(Take Quiz) ..> (Earn Points) : <<include>>
+(Take Block-Based Coding Challenge) ..> (Earn Points) : <<include>>
+
+(View Profile) ..> (Update Profile) : <<extend>>
+
+(View Achievement) ..> (View Points) : <<include>>
+(View Leaderboard) ..> (View Points) : <<include>>
+
+
+' --- Admin to Use Case Connections ---
+Admin --> (View Analytics)
+Admin --> (View Users)
+Admin --> (View Courses)
+Admin --> (View Topics)
+Admin --> (View Quiz)
+Admin --> (View Achievements)
+Admin --> (View Coding Challenge)
+
+
+' --- Relationships Within Admin Functions (CRUD) ---
+(View Users) --> (Add Users)
+(View Users) --> (Update Users)
+(View Users) --> (Delete Users)
+
+(View Courses) --> (Add Courses)
+(View Courses) --> (Delete Courses)
+
+(View Topics) --> (Add Topics)
+(View Topics) --> (Update Topics)
+(View Topics) --> (Delete Topics)
+
+(View Quiz) --> (Add Quiz)
+(View Quiz) --> (Update Quiz)
+(View Quiz) --> (Delete Quiz)
+
+(View Achievements) --> (Add Achievements)
+(View Achievements) --> (Update Achievements)
+(View Achievements) --> (Delete Achievements)
+
+(View Coding Challenge) --> (Add Coding Challenge)
+(View Coding Challenge) --> (Update Coding Challenge)
+(View Coding Challenge) --> (Delete Coding Challenge)
+
+@enduml

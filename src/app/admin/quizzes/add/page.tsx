@@ -22,8 +22,8 @@ interface Topic {
 }
 
 interface FormData {
-  subject_id: number;
-  node_id: number;
+  course_id: number;
+  topic_id: number;
   question: string;
   answers: string[];
   correct_answer: number;
@@ -32,8 +32,8 @@ interface FormData {
 }
 
 const initialFormData: FormData = {
-  subject_id: 0,
-  node_id: 0,
+  course_id: 0,
+  topic_id: 0,
   question: '',
   answers: ['', '', '', ''],
   correct_answer: 0,
@@ -110,8 +110,8 @@ export default function AddEditQuizQuestion() {
       const question = await response.json();
       
       setFormData({
-        subject_id: question.subject_id,
-        node_id: question.node_id,
+        course_id: question.course_id,
+        topic_id: question.topic_id,
         question: question.question,
         answers: question.answers || ['', '', '', ''],
         correct_answer: question.correct_answer,
@@ -120,8 +120,8 @@ export default function AddEditQuizQuestion() {
       });
 
       // Fetch topics for the selected course
-      if (question.subject_id) {
-        await fetchTopics(question.subject_id);
+      if (question.course_id) {
+        await fetchTopics(question.course_id);
       }
     } catch (error) {
       console.error('Error fetching question:', error);
@@ -151,8 +151,8 @@ export default function AddEditQuizQuestion() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          subject_id: formData.subject_id,
-          node_id: formData.node_id,
+          course_id: formData.course_id,
+          topic_id: formData.topic_id,
           question: formData.question,
           answers: formData.answers,
           correct_answer: formData.correct_answer,
@@ -185,7 +185,7 @@ export default function AddEditQuizQuestion() {
   };
 
   const handleCourseChange = (courseId: number) => {
-    setFormData({ ...formData, subject_id: courseId, node_id: 0 });
+    setFormData({ ...formData, course_id: courseId, topic_id: 0 });
     fetchTopics(courseId);
   };
 
@@ -225,7 +225,7 @@ export default function AddEditQuizQuestion() {
                   Subject
                 </label>
                 <select
-                  value={formData.subject_id}
+                  value={formData.course_id}
                   onChange={(e) => handleCourseChange(parseInt(e.target.value))}
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
@@ -245,11 +245,11 @@ export default function AddEditQuizQuestion() {
                   Topic
                 </label>
                 <select
-                  value={formData.node_id}
-                  onChange={(e) => setFormData({...formData, node_id: parseInt(e.target.value)})}
+                  value={formData.topic_id}
+                  onChange={(e) => setFormData({...formData, topic_id: parseInt(e.target.value)})}
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
-                  disabled={loadingTopics || formData.subject_id === 0}
+                  disabled={loadingTopics || formData.course_id === 0}
                 >
                   <option value={0}>Select a topic...</option>
                   {topics.map((topic) => (

@@ -1,0 +1,168 @@
+@startuml
+
+hide circle
+skinparam linetype ortho
+skinparam entity {
+  BackgroundColor #F0F8FF
+  BorderColor #4A90E2
+  FontColor #2C3E50
+  FontSize 14
+}
+skinparam entityHeaderBackgroundColor #B3D8F7
+skinparam entityHeaderFontColor #1A3A5B
+
+entity users {
+  *id : INT <<PK>>
+  username : VARCHAR(50)
+  email : VARCHAR(100)
+  password : VARCHAR(255)
+  role : ENUM('student','admin')
+  bio : TEXT
+  total_points : INT
+  current_streak : INT
+  max_streak : INT
+  last_login : DATETIME
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity courses {
+  *id : INT <<PK>>
+  title : VARCHAR(200)
+  description : TEXT
+  difficulty_level : ENUM('beginner','intermediate','advanced')
+  is_published : BOOLEAN
+  created_by : INT <<FK users.id>>
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity topics {
+  *id : INT <<PK>>
+  course_id : INT <<FK courses.id>>
+  title : VARCHAR(200)
+  content : TEXT
+  structured_content : JSON
+  lesson_order : INT
+  points_reward : INT
+  is_published : BOOLEAN
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity user_enrollments {
+  *id : INT <<PK>>
+  user_id : INT <<FK users.id>>
+  course_id : INT <<FK courses.id>>
+  enrolled_at : TIMESTAMP
+  completed_at : TIMESTAMP
+  progress_percentage : DECIMAL(5,2)
+  total_points_earned : INT
+  updated_at : TIMESTAMP
+}
+
+entity user_progress {
+  *id : INT <<PK>>
+  user_id : INT <<FK users.id>>
+  course_id : INT <<FK courses.id>>
+  topic_id : INT <<FK topics.id>>
+  progress_type : ENUM('course','topic')
+  completed : BOOLEAN
+  completed_at : TIMESTAMP
+  points_earned : INT
+  attempts : INT
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity quiz_questions {
+  *id : INT <<PK>>
+  course_id : INT <<FK courses.id>>
+  topic_id : INT <<FK topics.id>>
+  question : TEXT
+  answers : JSON
+  correct_answer : INT
+  points : INT
+  difficulty : ENUM('easy','medium','hard')
+  is_active : BOOLEAN
+  created_at : TIMESTAMP
+}
+
+entity quiz_attempts {
+  *id : INT <<PK>>
+  user_id : INT <<FK users.id>>
+  course_id : INT <<FK courses.id>>
+  topic_id : INT <<FK topics.id>>
+  questions_total : INT
+  questions_correct : INT
+  score_percentage : DECIMAL(5,2)
+  total_points : INT
+  answers : JSON
+  started_at : TIMESTAMP
+  completed_at : TIMESTAMP
+}
+
+entity achievements {
+  *id : INT <<PK>>
+  name : VARCHAR(100)
+  description : TEXT
+  icon_url : VARCHAR(255)
+  points_required : INT
+  category : VARCHAR(50)
+  is_active : BOOLEAN
+  created_at : TIMESTAMP
+}
+
+entity user_achievements {
+  *id : INT <<PK>>
+  user_id : INT <<FK users.id>>
+  achievement_id : INT <<FK achievements.id>>
+  earned_at : TIMESTAMP
+}
+
+entity coding_challenges {
+  *id : INT <<PK>>
+  title : VARCHAR(200)
+  description : TEXT
+  difficulty : ENUM('easy','intermediate','hard')
+  points : INT
+  supported_language : VARCHAR(50)
+  code_snippets : JSON
+  correct_answer : JSON
+  created_by : INT <<FK users.id>>
+  is_active : BOOLEAN
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity coding_submissions {
+  *id : INT <<PK>>
+  user_id : INT <<FK users.id>>
+  challenge_id : INT <<FK coding_challenges.id>>
+  programming_language : VARCHAR(50)
+  submitted_answer : JSON
+  is_correct : BOOLEAN
+  points_earned : INT
+  submitted_at : TIMESTAMP
+}
+
+' Relationships
+users ||--o{ user_enrollments : "enrolls in"
+users ||--o{ user_progress : "tracks progress for"
+users ||--o{ quiz_attempts : "attempts"
+users ||--o{ user_achievements : "earns"
+users ||--o{ coding_submissions : "submits"
+users ||--o{ coding_challenges : "creates"
+courses ||--o{ topics : "contains"
+courses ||--o{ user_enrollments : "enrolled by"
+courses ||--o{ user_progress : "progress tracked for"
+courses ||--o{ quiz_questions : "has questions"
+courses ||--o{ quiz_attempts : "attempted for"
+topics ||--o{ user_progress : "progress tracked for"
+topics ||--o{ quiz_questions : "has questions"
+topics ||--o{ quiz_attempts : "attempted for"
+
+coding_challenges ||--o{ coding_submissions : "submitted to"
+achievements ||--o{ user_achievements : "earned by"
+
+@enduml 

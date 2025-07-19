@@ -5,8 +5,8 @@ import mysql from 'mysql2/promise';
 
 interface QuizQuestion extends mysql.RowDataPacket {
   id: number;
-  subject_id: number;
-  node_id: number;
+  course_id: number;
+  topic_id: number;
   question: string;
   answers: string;
   correct_answer: number;
@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
     const questions = await query(
       `SELECT 
         qq.id,
-        qq.subject_id,
-        qq.node_id,
+        qq.course_id,
+        qq.topic_id,
         qq.question,
         qq.answers,
         qq.correct_answer,
@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
         c.title as subject_name,
         t.title as topic_name
       FROM quiz_questions qq
-      LEFT JOIN courses c ON qq.subject_id = c.id
-      LEFT JOIN topics t ON qq.node_id = t.id
+      LEFT JOIN courses c ON qq.course_id = c.id
+      LEFT JOIN topics t ON qq.topic_id = t.id
       ORDER BY qq.created_at DESC`
     );
 
@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
-      subject_id,
-      node_id,
+      course_id,
+      topic_id,
       question,
       answers,
       correct_answer,
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!subject_id || !node_id || !question || 
+    if (!course_id || !topic_id || !question || 
         !answers || !Array.isArray(answers) || answers.length !== 4 ||
         correct_answer === undefined || !points || !difficulty) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -96,11 +96,11 @@ export async function POST(request: NextRequest) {
 
     const result = await query(
       `INSERT INTO quiz_questions 
-       (subject_id, node_id, question, answers, correct_answer, points, difficulty, is_active)
+       (course_id, topic_id, question, answers, correct_answer, points, difficulty, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        subject_id,
-        node_id,
+        course_id,
+        topic_id,
         question,
         JSON.stringify(answers),
         correct_answer,

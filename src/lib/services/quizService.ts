@@ -2,8 +2,8 @@ import { query } from '../db';
 
 export interface QuizQuestion {
   id: string;
-  subject_id: number;
-  node_id: number;
+  course_id: number;
+  topic_id: number;
   question: string;
   option_a: string;
   option_b: string;
@@ -18,8 +18,8 @@ export interface QuizQuestion {
 export interface QuizAttempt {
   id: number;
   user_id: number;
-  subject_id: number;
-  node_id: number;
+  course_id: number;
+  topic_id: number;
   questions_total: number;
   questions_correct: number;
   score_percentage: number;
@@ -55,8 +55,8 @@ export interface QuizStats {
 
 export interface SubmitQuizData {
   userId: number;
-  subjectId: number;
-  nodeId: number;
+  courseId: number;
+  topicId: number;
   answers: {
     questionId: string;
     selectedAnswer: number;
@@ -107,11 +107,11 @@ interface QuizAnswerRow {
 // Service functions
 export class QuizService {
   
-  // Get quiz questions for a specific subject and node
-  static async getQuizQuestions(subjectId: number, nodeId: number): Promise<QuizQuestion[]> {
+  // Get quiz questions for a specific course and topic
+  static async getQuizQuestions(courseId: number, topicId: number): Promise<QuizQuestion[]> {
     const questions = await query(
-      'SELECT * FROM quiz_questions WHERE subject_id = ? AND node_id = ? AND is_active = true ORDER BY RAND() LIMIT 10',
-      [subjectId, nodeId]
+      'SELECT * FROM quiz_questions WHERE course_id = ? AND topic_id = ? AND is_active = true ORDER BY RAND() LIMIT 10',
+      [courseId, topicId]
     );
     return questions as QuizQuestion[];
   }
@@ -119,7 +119,7 @@ export class QuizService {
   // Get all quiz questions for admin
   static async getAllQuizQuestions(): Promise<QuizQuestion[]> {
     const questions = await query(
-      'SELECT * FROM quiz_questions ORDER BY subject_id, node_id, id'
+      'SELECT * FROM quiz_questions ORDER BY course_id, topic_id, id'
     );
     return questions as QuizQuestion[];
   }
@@ -136,10 +136,10 @@ export class QuizService {
 
   // Submit quiz attempt
   static async submitQuizAttempt(data: SubmitQuizData): Promise<QuizResult> {
-    const { userId, subjectId, nodeId, answers } = data;
+    const { userId, courseId, topicId, answers } = data;
     
     // Get all questions for this quiz
-    const allQuestions = await QuizService.getQuizQuestions(subjectId, nodeId);
+    const allQuestions = await QuizService.getQuizQuestions(courseId, topicId);
     
     // Calculate results
     let correctAnswers = 0;
@@ -169,9 +169,9 @@ export class QuizService {
     // Create quiz attempt
     const attemptResult = await query(
       `INSERT INTO quiz_attempts 
-       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, points_earned, total_points, started_at, completed_at)
+       (user_id, course_id, topic_id, questions_total, questions_correct, score_percentage, points_earned, total_points, started_at, completed_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [userId, subjectId, nodeId, allQuestions.length, correctAnswers, scorePercentage, totalPoints, totalPoints]
+      [userId, courseId, topicId, allQuestions.length, correctAnswers, scorePercentage, totalPoints, totalPoints]
     );
     
     const attemptId = (attemptResult as InsertResult).insertId;
@@ -243,8 +243,8 @@ export class QuizService {
     for (const row of answersData as QuizAnswerRow[]) {
       const question: QuizQuestion = {
         id: row.question_id,
-        subject_id: attempt.subject_id,
-        node_id: attempt.node_id,
+        course_id: attempt.course_id,
+        topic_id: attempt.topic_id,
         question: row.question,
         option_a: row.option_a,
         option_b: row.option_b,
@@ -312,11 +312,11 @@ export class QuizService {
   static async createQuizQuestion(questionData: Omit<QuizQuestion, 'id'>): Promise<QuizQuestion> {
     const result = await query(
       `INSERT INTO quiz_questions 
-       (subject_id, node_id, question, option_a, option_b, option_c, option_d, correct_answer, points, difficulty, is_active)
+       (course_id, topic_id, question, option_a, option_b, option_c, option_d, correct_answer, points, difficulty, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        questionData.subject_id,
-      questionData.node_id,
+        questionData.course_id,
+      questionData.topic_id,
       questionData.question,
       questionData.option_a,
       questionData.option_b,

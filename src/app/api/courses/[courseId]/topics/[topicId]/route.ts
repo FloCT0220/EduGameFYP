@@ -83,7 +83,7 @@ export async function GET(
             const lastAttemptQuery = `
                 SELECT id, total_points
                 FROM quiz_attempts
-                WHERE user_id = ? AND subject_id = ? AND node_id = ?
+                WHERE user_id = ? AND course_id = ? AND topic_id = ?
                 ORDER BY completed_at DESC
                 LIMIT 1
             `;

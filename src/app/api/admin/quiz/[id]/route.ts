@@ -5,8 +5,8 @@ import mysql from 'mysql2/promise';
 
 interface QuizQuestion extends mysql.RowDataPacket {
   id: number;
-  subject_id: number;
-  node_id: number;
+  course_id: number;
+  topic_id: number;
   question: string;
   answers: string;
   correct_answer: number;
@@ -32,8 +32,8 @@ export async function GET(
     const questions = await query(
       `SELECT 
         qq.id,
-        qq.subject_id,
-        qq.node_id,
+        qq.course_id,
+        qq.topic_id,
         qq.question,
         qq.answers,
         qq.correct_answer,
@@ -44,8 +44,8 @@ export async function GET(
         c.title as subject_name,
         t.title as topic_name
       FROM quiz_questions qq
-      LEFT JOIN courses c ON qq.subject_id = c.id
-      LEFT JOIN topics t ON qq.node_id = t.id
+      LEFT JOIN courses c ON qq.course_id = c.id
+      LEFT JOIN topics t ON qq.topic_id = t.id
       WHERE qq.id = ?`,
       [id]
     ) as QuizQuestion[];
@@ -81,8 +81,8 @@ export async function PUT(
 
     const body = await request.json();
     const {
-      subject_id,
-      node_id,
+      course_id,
+      topic_id,
       question,
       answers,
       correct_answer,
@@ -91,7 +91,7 @@ export async function PUT(
     } = body;
 
     // Validate required fields
-    if (!subject_id || !node_id || !question || 
+    if (!course_id || !topic_id || !question || 
         !answers || !Array.isArray(answers) || answers.length !== 4 ||
         correct_answer === undefined || !points || !difficulty) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -109,12 +109,12 @@ export async function PUT(
 
     const result = await query(
       `UPDATE quiz_questions 
-       SET subject_id = ?, node_id = ?, question = ?, answers = ?, 
+       SET course_id = ?, topic_id = ?, question = ?, answers = ?, 
            correct_answer = ?, points = ?, difficulty = ?
        WHERE id = ?`,
       [
-        subject_id,
-        node_id,
+        course_id,
+        topic_id,
         question,
         JSON.stringify(answers),
         correct_answer,

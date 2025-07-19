@@ -14,8 +14,8 @@ interface QuizQuestion {
   correct_answer: number;
   points: number;
   difficulty: string;
-  subject_id: number;
-  node_id: string;
+  course_id: number;
+  topic_id: string;
 }
 
 interface QuizReviewResult {
@@ -30,12 +30,14 @@ interface QuizReviewResult {
 interface QuizAttempt {
   id: number;
   user_id: number;
-  subject_id: number;
-  node_id: string;
+  course_id: number;
+  topic_id: string;
   questions_total: number;
   questions_correct: number;
   score_percentage: number;
   points_earned: number;
+  total_points: number;
+  started_at: string;
   completed_at: string;
 }
 

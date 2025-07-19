@@ -17,16 +17,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { 
       userId, 
-      subjectId, 
-      nodeId, 
-      courseId,
-      topicId,
+      courseId, 
+      topicId, 
       answers, 
       questionIds // <-- add this
     }: {
       userId?: number;
-      subjectId?: number;
-      nodeId?: number;
       courseId?: number;
       topicId?: string;
       answers: QuizAnswerInput[];
@@ -51,14 +47,10 @@ export async function POST(request: NextRequest) {
       finalUserId = tokenPayload.id;
     }
 
-    // Use either subject_id/node_id or courseId/topicId
-    const finalSubjectId = subjectId || courseId;
-    const finalNodeId = nodeId || (topicId ? parseInt(topicId) : undefined);
-
-    if (!finalUserId || !finalSubjectId || !finalNodeId || !answers || !Array.isArray(answers) || !Array.isArray(questionIds) || questionIds.length === 0) {
+    if (!finalUserId || !courseId || !topicId || !answers || !Array.isArray(answers) || !Array.isArray(questionIds) || questionIds.length === 0) {
       return NextResponse.json({ 
         error: 'Missing required fields',
-        received: { userId: finalUserId, subjectId: finalSubjectId, nodeId: finalNodeId, answers, questionIds }
+        received: { userId: finalUserId, courseId, topicId, answers, questionIds }
       }, { status: 400 });
     }
 
@@ -99,9 +91,9 @@ export async function POST(request: NextRequest) {
     // Create quiz attempt
     const attemptResult = await query(
       `INSERT INTO quiz_attempts 
-       (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, total_points, answers, completed_at)
+       (user_id, course_id, topic_id, questions_total, questions_correct, score_percentage, total_points, answers, completed_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [finalUserId, finalSubjectId, finalNodeId, questionIds.length, correctAnswers, scorePercentage, totalPoints, JSON.stringify(results)]
+      [finalUserId, courseId, parseInt(topicId), questionIds.length, correctAnswers, scorePercentage, totalPoints, JSON.stringify(results)]
       );
 
     let newlyEarnedAchievements: any[] = [];

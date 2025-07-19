@@ -9,10 +9,10 @@ export async function GET() {
 				c.title as subject_name,
 				t.title as topic_name
 			FROM quiz_questions q
-			LEFT JOIN courses c ON q.subject_id = c.id
-			LEFT JOIN topics t ON q.node_id = t.id
+			LEFT JOIN courses c ON q.course_id = c.id
+			LEFT JOIN topics t ON q.topic_id = t.id
 			WHERE q.is_active = true
-			ORDER BY q.subject_id, q.node_id, q.id
+			ORDER BY q.course_id, q.topic_id, q.id
 		`);
 		
 		return NextResponse.json({

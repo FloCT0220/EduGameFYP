@@ -1,0 +1,494 @@
+@startuml Unit Test Cases Documentation - Complete System Use Cases
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+
+title Unit Test Cases - Complete System Use Cases Coverage
+
+' ===== STUDENT USE CASES TEST CASES =====
+package "Student Use Cases - Core Actions" {
+  table "Registration Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Valid Registration | email, username, password | 201 Created, user account | Pending
+    Duplicate Email | existing email, new username, password | 400 Bad Request, error message | Pending
+    Duplicate Username | new email, existing username, password | 400 Bad Request, error message | Pending
+    Invalid Email Format | invalid email, username, password | 400 Bad Request, validation error | Pending
+    Weak Password | email, username, weak password | 400 Bad Request, password requirements | Pending
+    Missing Required Fields | partial data | 400 Bad Request, missing field errors | Pending
+  }
+  
+  table "Login Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Valid Login | correct email, correct password | 200 OK, user data + token | Pending
+    Invalid Email | wrong email, correct password | 401 Unauthorized | Pending
+    Invalid Password | correct email, wrong password | 401 Unauthorized | Pending
+    Account Not Found | non-existent email, password | 401 Unauthorized | Pending
+    Account Locked | locked account credentials | 423 Locked | Pending
+    Too Many Attempts | multiple failed attempts | 429 Too Many Requests | Pending
+  }
+}
+
+package "Student Use Cases - Learning & Engagement" {
+  table "Take Course Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Enroll in Course | userId, courseId | 200 OK, enrollment created | Pending
+    Already Enrolled | userId, already enrolled courseId | 409 Conflict or ignore | Pending
+    Course Not Found | userId, invalid courseId | 404 Not Found | Pending
+    Course Not Published | userId, unpublished courseId | 403 Forbidden | Pending
+    View Course Content | userId, courseId | 200 OK, course with topics | Pending
+    Track Course Progress | userId, courseId | 200 OK, progress percentage | Pending
+    Complete Course | userId, courseId | 200 OK, completion status | Pending
+  }
+  
+  table "Take Quiz Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Start Quiz | userId, topicId | 200 OK, quiz questions | Pending
+    Submit Quiz Answers | userId, answers array | 200 OK, score and results | Pending
+    Quiz Timeout | userId, expired quiz | 408 Request Timeout | Pending
+    Invalid Quiz Data | malformed quiz data | 400 Bad Request | Pending
+    Quiz Not Available | userId, unavailable quiz | 404 Not Found | Pending
+    Duplicate Submission | userId, already submitted | 409 Conflict | Pending
+  }
+  
+  table "Take Block-Based Coding Challenge Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Start Challenge | userId, challengeId | 200 OK, challenge data | Pending
+    Submit Code Solution | userId, challengeId, code | 200 OK, execution results | Pending
+    Correct Solution | valid solution code | 200 OK, success + points | Pending
+    Incorrect Solution | wrong solution code | 200 OK, failure + feedback | Pending
+    Code Compilation Error | invalid syntax code | 400 Bad Request, error details | Pending
+    Time Limit Exceeded | code taking too long | 408 Request Timeout | Pending
+    Security Violation | malicious code | 403 Forbidden, security error | Pending
+  }
+}
+
+package "Student Use Cases - Profile & Social" {
+  table "View Profile Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View Own Profile | userId (authenticated) | 200 OK, complete profile | Pending
+    View Other Profile | userId, otherUserId | 200 OK, public profile data | Pending
+    Profile Not Found | userId, invalid userId | 404 Not Found | Pending
+    Unauthorized Access | no authentication | 401 Unauthorized | Pending
+  }
+  
+  table "Update Profile Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Update Valid Profile | userId, valid profile data | 200 OK, updated profile | Pending
+    Update with Invalid Data | userId, invalid data | 400 Bad Request, validation errors | Pending
+    Update Other User Profile | userId, otherUserId, data | 403 Forbidden | Pending
+    Update Non-existent Profile | invalid userId, data | 404 Not Found | Pending
+    Update with Duplicate Email | userId, existing email | 409 Conflict | Pending
+  }
+  
+  table "View Achievement Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View Own Achievements | userId | 200 OK, achievements list | Pending
+    View Empty Achievements | userId with no achievements | 200 OK, empty array | Pending
+    View Achievement Details | userId, achievementId | 200 OK, achievement details | Pending
+    Achievement Not Found | userId, invalid achievementId | 404 Not Found | Pending
+  }
+  
+  table "View Leaderboard Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View Global Leaderboard | limit parameter | 200 OK, top users | Pending
+    View Course Leaderboard | courseId, limit | 200 OK, course top users | Pending
+    View Empty Leaderboard | no users | 200 OK, empty array | Pending
+    View Limited Results | limit: 10 | 200 OK, max 10 users | Pending
+    View Own Position | userId | 200 OK, user rank | Pending
+  }
+}
+
+package "Student Use Cases - Supporting Functions" {
+  table "Review Quiz Results Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View Quiz Review | userId, attemptId | 200 OK, detailed results | Pending
+    View Correct Answers | userId, attemptId | 200 OK, answers with explanations | Pending
+    View Score Breakdown | userId, attemptId | 200 OK, score analysis | Pending
+    Attempt Not Found | userId, invalid attemptId | 404 Not Found | Pending
+    Unauthorized Review | wrong userId, attemptId | 403 Forbidden | Pending
+  }
+  
+  table "Earn Points Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Earn Course Points | userId, courseId, points | 200 OK, points added | Pending
+    Earn Quiz Points | userId, quizId, points | 200 OK, points added | Pending
+    Earn Challenge Points | userId, challengeId, points | 200 OK, points added | Pending
+    Points Calculation | various activities | 200 OK, correct point totals | Pending
+    Level Up | userId reaching level threshold | 200 OK, level increased | Pending
+    Negative Points | invalid point deduction | 400 Bad Request | Pending
+  }
+  
+  table "View Points Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View Total Points | userId | 200 OK, total points | Pending
+    View Points History | userId | 200 OK, points transaction history | Pending
+    View Level Progress | userId | 200 OK, level and progress | Pending
+    View Points Breakdown | userId | 200 OK, points by category | Pending
+  }
+}
+
+' ===== ADMIN USE CASES TEST CASES =====
+package "Admin Use Cases - Analytics" {
+  table "View Analytics Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View System Overview | admin token | 200 OK, system statistics | Pending
+    View User Analytics | admin token, date range | 200 OK, user statistics | Pending
+    View Course Analytics | admin token, courseId | 200 OK, course statistics | Pending
+    View Quiz Analytics | admin token, quizId | 200 OK, quiz statistics | Pending
+    View Achievement Analytics | admin token | 200 OK, achievement statistics | Pending
+    Export Analytics Data | admin token, format | 200 OK, downloadable file | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+}
+
+package "Admin Use Cases - User Management" {
+  table "View Users Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View All Users | admin token | 200 OK, users list | Pending
+    View Users with Filter | admin token, filter params | 200 OK, filtered users | Pending
+    View User Details | admin token, userId | 200 OK, user details | Pending
+    Paginate Users | admin token, page, limit | 200 OK, paginated results | Pending
+    Search Users | admin token, search term | 200 OK, search results | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Add Users Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Add Valid User | admin token, user data | 201 Created, new user | Pending
+    Add User with Invalid Data | admin token, invalid data | 400 Bad Request, errors | Pending
+    Add Duplicate User | admin token, existing email | 409 Conflict | Pending
+    Add User with Role | admin token, user data with role | 201 Created, user with role | Pending
+    Bulk Add Users | admin token, users array | 201 Created, bulk results | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Update Users Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Update Valid User | admin token, userId, new data | 200 OK, updated user | Pending
+    Update User Role | admin token, userId, new role | 200 OK, role updated | Pending
+    Update Non-existent User | admin token, invalid userId | 404 Not Found | Pending
+    Update with Invalid Data | admin token, userId, invalid data | 400 Bad Request | Pending
+    Update User Status | admin token, userId, status | 200 OK, status updated | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Delete Users Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Delete Valid User | admin token, userId | 200 OK, deletion confirmed | Pending
+    Delete Non-existent User | admin token, invalid userId | 404 Not Found | Pending
+    Delete Admin User | admin token, admin userId | 403 Forbidden | Pending
+    Delete User with Data | admin token, userId with courses | 200 OK, cascade delete | Pending
+    Bulk Delete Users | admin token, userIds array | 200 OK, bulk deletion | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+}
+
+package "Admin Use Cases - Course Management" {
+  table "View Courses Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View All Courses | admin token | 200 OK, courses list | Pending
+    View Course Details | admin token, courseId | 200 OK, course details | Pending
+    View Course with Topics | admin token, courseId | 200 OK, course + topics | Pending
+    View Course Statistics | admin token, courseId | 200 OK, course stats | Pending
+    Filter Courses | admin token, filter params | 200 OK, filtered courses | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Add Courses Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Add Valid Course | admin token, course data | 201 Created, new course | Pending
+    Add Course with Topics | admin token, course + topics data | 201 Created, course with topics | Pending
+    Add Course with Invalid Data | admin token, invalid data | 400 Bad Request | Pending
+    Add Duplicate Course | admin token, existing title | 409 Conflict | Pending
+    Add Course with Media | admin token, course + media files | 201 Created, course with media | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Delete Courses Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Delete Valid Course | admin token, courseId | 200 OK, deletion confirmed | Pending
+    Delete Course with Enrollments | admin token, courseId | 200 OK, cascade delete | Pending
+    Delete Non-existent Course | admin token, invalid courseId | 404 Not Found | Pending
+    Delete Published Course | admin token, published courseId | 403 Forbidden | Pending
+    Bulk Delete Courses | admin token, courseIds array | 200 OK, bulk deletion | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+}
+
+package "Admin Use Cases - Topic Management" {
+  table "View Topics Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View All Topics | admin token | 200 OK, topics list | Pending
+    View Topics by Course | admin token, courseId | 200 OK, course topics | Pending
+    View Topic Details | admin token, topicId | 200 OK, topic details | Pending
+    View Topic Content | admin token, topicId | 200 OK, topic content | Pending
+    Filter Topics | admin token, filter params | 200 OK, filtered topics | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Add Topics Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Add Valid Topic | admin token, topic data | 201 Created, new topic | Pending
+    Add Topic with Content | admin token, topic + content data | 201 Created, topic with content | Pending
+    Add Topic with Invalid Data | admin token, invalid data | 400 Bad Request | Pending
+    Add Topic to Non-existent Course | admin token, invalid courseId | 404 Not Found | Pending
+    Add Topic with Media | admin token, topic + media files | 201 Created, topic with media | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Update Topics Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Update Valid Topic | admin token, topicId, new data | 200 OK, updated topic | Pending
+    Update Topic Content | admin token, topicId, new content | 200 OK, content updated | Pending
+    Update Topic Order | admin token, topicId, new order | 200 OK, order updated | Pending
+    Update Non-existent Topic | admin token, invalid topicId | 404 Not Found | Pending
+    Update with Invalid Data | admin token, topicId, invalid data | 400 Bad Request | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Delete Topics Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Delete Valid Topic | admin token, topicId | 200 OK, deletion confirmed | Pending
+    Delete Topic with Progress | admin token, topicId | 200 OK, cascade delete | Pending
+    Delete Non-existent Topic | admin token, invalid topicId | 404 Not Found | Pending
+    Delete Published Topic | admin token, published topicId | 403 Forbidden | Pending
+    Bulk Delete Topics | admin token, topicIds array | 200 OK, bulk deletion | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+}
+
+package "Admin Use Cases - Quiz Management" {
+  table "View Quiz Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View All Quizzes | admin token | 200 OK, quizzes list | Pending
+    View Quiz Details | admin token, quizId | 200 OK, quiz details | Pending
+    View Quiz Questions | admin token, quizId | 200 OK, quiz questions | Pending
+    View Quiz Statistics | admin token, quizId | 200 OK, quiz stats | Pending
+    Filter Quizzes | admin token, filter params | 200 OK, filtered quizzes | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Add Quiz Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Add Valid Quiz | admin token, quiz data | 201 Created, new quiz | Pending
+    Add Quiz with Questions | admin token, quiz + questions data | 201 Created, quiz with questions | Pending
+    Add Quiz with Invalid Data | admin token, invalid data | 400 Bad Request | Pending
+    Add Quiz to Non-existent Topic | admin token, invalid topicId | 404 Not Found | Pending
+    Add Quiz with Media | admin token, quiz + media files | 201 Created, quiz with media | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Update Quiz Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Update Valid Quiz | admin token, quizId, new data | 200 OK, updated quiz | Pending
+    Update Quiz Questions | admin token, quizId, new questions | 200 OK, questions updated | Pending
+    Update Quiz Settings | admin token, quizId, new settings | 200 OK, settings updated | Pending
+    Update Non-existent Quiz | admin token, invalid quizId | 404 Not Found | Pending
+    Update with Invalid Data | admin token, quizId, invalid data | 400 Bad Request | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Delete Quiz Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Delete Valid Quiz | admin token, quizId | 200 OK, deletion confirmed | Pending
+    Delete Quiz with Attempts | admin token, quizId | 200 OK, cascade delete | Pending
+    Delete Non-existent Quiz | admin token, invalid quizId | 404 Not Found | Pending
+    Delete Active Quiz | admin token, active quizId | 403 Forbidden | Pending
+    Bulk Delete Quizzes | admin token, quizIds array | 200 OK, bulk deletion | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+}
+
+package "Admin Use Cases - Achievement Management" {
+  table "View Achievements Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View All Achievements | admin token | 200 OK, achievements list | Pending
+    View Achievement Details | admin token, achievementId | 200 OK, achievement details | Pending
+    View Achievement Statistics | admin token, achievementId | 200 OK, achievement stats | Pending
+    View User Achievements | admin token, userId | 200 OK, user achievements | Pending
+    Filter Achievements | admin token, filter params | 200 OK, filtered achievements | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Add Achievements Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Add Valid Achievement | admin token, achievement data | 201 Created, new achievement | Pending
+    Add Achievement with Icon | admin token, achievement + icon | 201 Created, achievement with icon | Pending
+    Add Achievement with Invalid Data | admin token, invalid data | 400 Bad Request | Pending
+    Add Duplicate Achievement | admin token, existing name | 409 Conflict | Pending
+    Add Achievement with Conditions | admin token, achievement + conditions | 201 Created, achievement with conditions | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Update Achievements Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Update Valid Achievement | admin token, achievementId, new data | 200 OK, updated achievement | Pending
+    Update Achievement Icon | admin token, achievementId, new icon | 200 OK, icon updated | Pending
+    Update Achievement Conditions | admin token, achievementId, new conditions | 200 OK, conditions updated | Pending
+    Update Non-existent Achievement | admin token, invalid achievementId | 404 Not Found | Pending
+    Update with Invalid Data | admin token, achievementId, invalid data | 400 Bad Request | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Delete Achievements Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Delete Valid Achievement | admin token, achievementId | 200 OK, deletion confirmed | Pending
+    Delete Achievement with Earners | admin token, achievementId | 200 OK, cascade delete | Pending
+    Delete Non-existent Achievement | admin token, invalid achievementId | 404 Not Found | Pending
+    Delete Active Achievement | admin token, active achievementId | 403 Forbidden | Pending
+    Bulk Delete Achievements | admin token, achievementIds array | 200 OK, bulk deletion | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+}
+
+package "Admin Use Cases - Coding Challenge Management" {
+  table "View Coding Challenge Test Cases" {
+    Test Case | Input | Expected Output | Status
+    View All Challenges | admin token | 200 OK, challenges list | Pending
+    View Challenge Details | admin token, challengeId | 200 OK, challenge details | Pending
+    View Challenge Submissions | admin token, challengeId | 200 OK, challenge submissions | Pending
+    View Challenge Statistics | admin token, challengeId | 200 OK, challenge stats | Pending
+    Filter Challenges | admin token, filter params | 200 OK, filtered challenges | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Add Coding Challenge Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Add Valid Challenge | admin token, challenge data | 201 Created, new challenge | Pending
+    Add Challenge with Test Cases | admin token, challenge + test cases | 201 Created, challenge with tests | Pending
+    Add Challenge with Invalid Data | admin token, invalid data | 400 Bad Request | Pending
+    Add Challenge with Code Templates | admin token, challenge + templates | 201 Created, challenge with templates | Pending
+    Add Challenge with Multiple Languages | admin token, challenge + languages | 201 Created, multi-language challenge | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Update Coding Challenge Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Update Valid Challenge | admin token, challengeId, new data | 200 OK, updated challenge | Pending
+    Update Challenge Test Cases | admin token, challengeId, new tests | 200 OK, tests updated | Pending
+    Update Challenge Difficulty | admin token, challengeId, new difficulty | 200 OK, difficulty updated | Pending
+    Update Non-existent Challenge | admin token, invalid challengeId | 404 Not Found | Pending
+    Update with Invalid Data | admin token, challengeId, invalid data | 400 Bad Request | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+  
+  table "Delete Coding Challenge Test Cases" {
+    Test Case | Input | Expected Output | Status
+    Delete Valid Challenge | admin token, challengeId | 200 OK, deletion confirmed | Pending
+    Delete Challenge with Submissions | admin token, challengeId | 200 OK, cascade delete | Pending
+    Delete Non-existent Challenge | admin token, invalid challengeId | 404 Not Found | Pending
+    Delete Active Challenge | admin token, active challengeId | 403 Forbidden | Pending
+    Bulk Delete Challenges | admin token, challengeIds array | 200 OK, bulk deletion | Pending
+    Unauthorized Access | student token | 403 Forbidden | Pending
+  }
+}
+
+' ===== USE CASE RELATIONSHIP TESTS =====
+package "Use Case Relationship Tests" {
+  table "Student Use Case Relationships" {
+    Test Case | Relationship | Input | Expected Output | Status
+    Take Course Extends Take Quiz | (Take Course) ..> (Take Quiz) | course enrollment | quiz becomes available | Pending
+    Take Quiz Includes Review Results | (Take Quiz) ..> (Review Quiz Results) | quiz completion | review available | Pending
+    Take Course Includes Earn Points | (Take Course) ..> (Earn Points) | course completion | points awarded | Pending
+    Take Quiz Includes Earn Points | (Take Quiz) ..> (Earn Points) | quiz completion | points awarded | Pending
+    Take Challenge Includes Earn Points | (Take Challenge) ..> (Earn Points) | challenge completion | points awarded | Pending
+    View Profile Extends Update Profile | (View Profile) ..> (Update Profile) | profile view | update option available | Pending
+    View Achievement Includes View Points | (View Achievement) ..> (View Points) | achievement view | points displayed | Pending
+    View Leaderboard Includes View Points | (View Leaderboard) ..> (View Points) | leaderboard view | points displayed | Pending
+  }
+  
+  table "Admin Use Case Relationships" {
+    Test Case | Relationship | Input | Expected Output | Status
+    View Users Enables Add Users | (View Users) --> (Add Users) | user list view | add user option | Pending
+    View Users Enables Update Users | (View Users) --> (Update Users) | user list view | update user option | Pending
+    View Users Enables Delete Users | (View Users) --> (Delete Users) | user list view | delete user option | Pending
+    View Courses Enables Add Courses | (View Courses) --> (Add Courses) | course list view | add course option | Pending
+    View Courses Enables Delete Courses | (View Courses) --> (Delete Courses) | course list view | delete course option | Pending
+    View Topics Enables Add Topics | (View Topics) --> (Add Topics) | topic list view | add topic option | Pending
+    View Topics Enables Update Topics | (View Topics) --> (Update Topics) | topic list view | update topic option | Pending
+    View Topics Enables Delete Topics | (View Topics) --> (Delete Topics) | topic list view | delete topic option | Pending
+    View Quiz Enables Add Quiz | (View Quiz) --> (Add Quiz) | quiz list view | add quiz option | Pending
+    View Quiz Enables Update Quiz | (View Quiz) --> (Update Quiz) | quiz list view | update quiz option | Pending
+    View Quiz Enables Delete Quiz | (View Quiz) --> (Delete Quiz) | quiz list view | delete quiz option | Pending
+    View Achievements Enables Add Achievements | (View Achievements) --> (Add Achievements) | achievement list view | add achievement option | Pending
+    View Achievements Enables Update Achievements | (View Achievements) --> (Update Achievements) | achievement list view | update achievement option | Pending
+    View Achievements Enables Delete Achievements | (View Achievements) --> (Delete Achievements) | achievement list view | delete achievement option | Pending
+    View Coding Challenge Enables Add Challenge | (View Coding Challenge) --> (Add Coding Challenge) | challenge list view | add challenge option | Pending
+    View Coding Challenge Enables Update Challenge | (View Coding Challenge) --> (Update Coding Challenge) | challenge list view | update challenge option | Pending
+    View Coding Challenge Enables Delete Challenge | (View Coding Challenge) --> (Delete Coding Challenge) | challenge list view | delete challenge option | Pending
+  }
+}
+
+' ===== INTEGRATION TESTS FOR USE CASES =====
+package "Use Case Integration Tests" {
+  table "Student Journey Integration Tests" {
+    Test Case | Journey Steps | Expected Output | Status
+    Complete Student Registration | Register → Login → View Profile | Full registration flow | Pending
+    Course Learning Journey | Take Course → Take Quiz → Review Results → Earn Points | Complete learning flow | Pending
+    Challenge Completion Journey | Take Challenge → Submit Code → Earn Points | Complete challenge flow | Pending
+    Achievement Unlocking Journey | Complete Requirements → Check Achievement → View Points | Achievement flow | Pending
+    Social Interaction Journey | View Leaderboard → View Points → Update Profile | Social features flow | Pending
+  }
+  
+  table "Admin Management Integration Tests" {
+    Test Case | Journey Steps | Expected Output | Status
+    User Management Journey | View Users → Add User → Update User → Delete User | Complete user management | Pending
+    Course Management Journey | View Courses → Add Course → Add Topics → Delete Course | Complete course management | Pending
+    Quiz Management Journey | View Quiz → Add Quiz → Update Quiz → Delete Quiz | Complete quiz management | Pending
+    Achievement Management Journey | View Achievements → Add Achievement → Update Achievement → Delete Achievement | Complete achievement management | Pending
+    Challenge Management Journey | View Challenges → Add Challenge → Update Challenge → Delete Challenge | Complete challenge management | Pending
+    Analytics Journey | View Analytics → Export Data → Generate Reports | Complete analytics flow | Pending
+  }
+}
+
+' ===== TEST EXECUTION SUMMARY =====
+package "Complete Test Execution Summary" {
+  note as N1
+    **Test Execution Commands:**
+    
+    **Run All Use Case Tests:**
+    npm test
+    
+    **Run Student Use Case Tests:**
+    npm test -- --testNamePattern="Student"
+    
+    **Run Admin Use Case Tests:**
+    npm test -- --testNamePattern="Admin"
+    
+    **Run Integration Tests:**
+    npm test -- --testNamePattern="Integration"
+    
+    **Run with Coverage:**
+    npm test -- --coverage
+    
+    **Run Tests in Watch Mode:**
+    npm test -- --watch
+  end note
+  
+  note as N2
+    **Use Case Coverage Targets:**
+    - Student Use Cases: 100%
+    - Admin Use Cases: 100%
+    - Use Case Relationships: 100%
+    - Integration Flows: 100%
+    
+    **Test Categories:**
+    - Unit Tests: 70%
+    - Integration Tests: 20%
+    - End-to-End Tests: 10%
+  end note
+  
+  note as N3
+    **Total Use Cases Covered:**
+    - Student Use Cases: 15 functions
+    - Admin Use Cases: 25 functions
+    - Use Case Relationships: 23 relationships
+    - Integration Flows: 11 complete journeys
+    
+    **Total Test Cases: 200+ specific scenarios**
+  end note
+}
+
+@enduml 

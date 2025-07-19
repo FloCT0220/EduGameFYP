@@ -5,8 +5,8 @@ import mysql from 'mysql2/promise';
 
 interface QuizQuestion extends mysql.RowDataPacket {
   id: number;
-  subject_id: number;
-  node_id: number;
+  course_id: number;
+  topic_id: number;
   question: string;
   answers: string;
   correct_answer: number;
@@ -19,28 +19,26 @@ interface QuizQuestion extends mysql.RowDataPacket {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const subjectId = searchParams.get('subject_id');
-    const nodeId = searchParams.get('node_id');
     const courseId = searchParams.get('courseId');
     const topicId = searchParams.get('topicId');
 
-    // Use either subject_id/node_id or courseId/topicId
-    const finalSubjectId = subjectId || courseId;
-    const finalNodeId = nodeId || topicId;
+    // Use courseId/topicId parameters
+    const finalCourseId = courseId;
+    const finalTopicId = topicId;
 
     let questions;
-    if (finalSubjectId && finalNodeId) {
-      // Student view: fetch questions for subject and all nodes up to and including current node
-      const subjectIdNum = parseInt(finalSubjectId);
-      const nodeIdNum = parseInt(finalNodeId);
-      if (isNaN(subjectIdNum) || isNaN(nodeIdNum)) {
-        return NextResponse.json({ success: false, error: 'Invalid subject or node id' }, { status: 400 });
+    if (finalCourseId && finalTopicId) {
+      // Student view: fetch questions for course and all topics up to and including current topic
+      const courseIdNum = parseInt(finalCourseId);
+      const topicIdNum = parseInt(finalTopicId);
+      if (isNaN(courseIdNum) || isNaN(topicIdNum)) {
+        return NextResponse.json({ success: false, error: 'Invalid course or topic id' }, { status: 400 });
       }
       questions = await query(
         `SELECT 
           id,
-          subject_id,
-          node_id,
+          course_id,
+          topic_id,
           question,
           answers,
           correct_answer,
@@ -49,8 +47,8 @@ export async function GET(request: NextRequest) {
           is_active,
           created_at
         FROM quiz_questions 
-        WHERE subject_id = ? AND node_id <= ? AND is_active = true`,
-        [subjectIdNum, nodeIdNum]
+        WHERE course_id = ? AND topic_id <= ? AND is_active = true`,
+        [courseIdNum, topicIdNum]
       ) as QuizQuestion[];
 
       // Randomly select up to 10 questions
@@ -80,8 +78,8 @@ export async function GET(request: NextRequest) {
       questions = await query(
         `SELECT 
           id,
-          subject_id,
-          node_id,
+          course_id,
+          topic_id,
           question,
           answers,
           correct_answer,
@@ -113,8 +111,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
-      subject_id,
-      node_id,
+      course_id,
+      topic_id,
       question,
       answers,
       correct_answer,
@@ -123,7 +121,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!subject_id || !node_id || !question || !answers || 
+    if (!course_id || !topic_id || !question || !answers || 
         correct_answer === undefined || !points || !difficulty) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -140,11 +138,11 @@ export async function POST(request: NextRequest) {
 
     const result = await query(
       `INSERT INTO quiz_questions 
-       (subject_id, node_id, question, answers, correct_answer, points, difficulty, is_active)
+       (course_id, topic_id, question, answers, correct_answer, points, difficulty, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        subject_id,
-        node_id,
+        course_id,
+        topic_id,
         question,
         JSON.stringify(answers),
         correct_answer,

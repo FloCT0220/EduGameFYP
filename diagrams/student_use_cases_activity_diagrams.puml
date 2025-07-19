@@ -1,0 +1,336 @@
+@startuml Student Use Cases Activity Diagrams
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+    BackgroundColor #E8F4FD
+    BorderColor #4A90E2
+    FontColor #2C3E50
+}
+skinparam activityDiamond {
+    BackgroundColor #FFF2CC
+    BorderColor #F39C12
+    FontColor #2C3E50
+}
+
+' ========================================
+' 1. LOGIN ACTIVITY DIAGRAM
+' ========================================
+title Login Activity Diagram
+
+|Student|
+start
+:Navigate to login page;
+:Enter email and password;
+:Submit login form;
+
+|System|
+:Validate user credentials;
+if (Credentials valid?) then (yes)
+    :Generate authentication token;
+    :Store user session;
+    :Redirect to dashboard;
+    |Student|
+    :Access dashboard;
+    stop
+else (no)
+    :Display error message;
+    |Student|
+    :View error message;
+    :Retry login or register;
+    stop
+endif
+
+' ========================================
+' 2. REGISTER ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Register Activity Diagram
+
+|Student|
+start
+:Navigate to registration page;
+:Enter username, email, and password;
+:Confirm password;
+:Submit registration form;
+
+|System|
+:Validate registration data;
+if (Data valid?) then (yes)
+    :Check if email already exists;
+    if (Email exists?) then (no)
+        :Create new user account;
+        :Hash password securely;
+        :Store user data in database;
+        :Send confirmation message;
+        |Student|
+        :View success message;
+        :Switch to login form;
+        stop
+    else (yes)
+        :Display email already exists error;
+        |Student|
+        :View error message;
+        :Enter different email;
+        stop
+    endif
+else (no)
+    :Display validation errors;
+    |Student|
+    :View error messages;
+    :Correct form data;
+    stop
+endif
+
+' ========================================
+' 3. VIEW COURSE ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Course Activity Diagram
+
+|Student|
+start
+:Navigate to courses page;
+:Browse available courses;
+:Select a course to view;
+
+|System|
+:Load course details;
+:Check user enrollment status;
+:Display course information;
+:Show course progress (if enrolled);
+
+|Student|
+:View course details;
+:View course content;
+:View course progress;
+if (Want to enroll?) then (yes)
+    :Click enroll button;
+    |System|
+    :Process enrollment;
+    :Update user course list;
+    :Send enrollment confirmation;
+    |Student|
+    :View enrollment confirmation;
+    stop
+else (no)
+    :Continue browsing;
+    stop
+endif
+
+' ========================================
+' 4. TAKE QUIZ ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Take Quiz Activity Diagram
+
+|Student|
+start
+:Navigate to course topic;
+:Select quiz to take;
+:Start quiz;
+
+|System|
+:Load quiz questions;
+:Initialize quiz session;
+:Display first question;
+
+|Student|
+:Read question;
+:Select answer;
+:Submit answer;
+
+|System|
+:Validate answer;
+:Record response;
+:Calculate score;
+if (More questions?) then (yes)
+    :Display next question;
+    |Student|
+    :Continue answering;
+else (no)
+    :Calculate final score;
+    :Update user progress;
+    :Award points;
+    :Display results;
+    |Student|
+    :View quiz results;
+    :View score and feedback;
+    stop
+endif
+
+' ========================================
+' 5. REVIEW QUIZ RESULTS ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Review Quiz Results Activity Diagram
+
+|Student|
+start
+:Navigate to quiz results;
+:Select quiz attempt to review;
+
+|System|
+:Load quiz attempt data;
+:Retrieve answers and correct responses;
+:Calculate performance metrics;
+:Display detailed results;
+
+|Student|
+:View overall score;
+:Review each question;
+:View correct answers;
+:View explanations;
+:View performance analytics;
+stop
+
+' ========================================
+' 6. VIEW BLOCK-BASED CODING CHALLENGE ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Block-Based Coding Challenge Activity Diagram
+
+|Student|
+start
+:Navigate to coding challenges;
+:Browse available challenges;
+:Select a coding challenge;
+
+|System|
+:Load challenge details;
+:Initialize coding environment;
+:Display challenge description;
+:Show block-based interface;
+
+|Student|
+:Read challenge requirements;
+:Drag and drop code blocks;
+:Assemble program logic;
+:Test code execution;
+
+|System|
+:Execute code in sandbox;
+:Validate output;
+:Provide real-time feedback;
+if (Code correct?) then (yes)
+    :Mark challenge as completed;
+    :Award points;
+    :Update progress;
+    :Display success message;
+    |Student|
+    :View success notification;
+    :View earned points;
+    stop
+else (no)
+    :Display error messages;
+    :Provide hints;
+    |Student|
+    :View error feedback;
+    :Modify code;
+    :Retry execution;
+endif
+
+' ========================================
+' 7. VIEW PROFILE ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Profile Activity Diagram
+
+|Student|
+start
+:Navigate to profile page;
+
+|System|
+:Load user profile data;
+:Retrieve user statistics;
+:Fetch achievement data;
+:Display profile information;
+
+|Student|
+:View personal information;
+:View learning statistics;
+:View achievement badges;
+:View progress metrics;
+stop
+
+' ========================================
+' 8. UPDATE PROFILE ACTIVITY DIAGRAM
+' ========================================
+newpage
+title Update Profile Activity Diagram
+
+|Student|
+start
+:Navigate to profile page;
+:Click edit profile button;
+:Modify profile information;
+:Enter new username/bio;
+:Save changes;
+
+|System|
+:Validate updated information;
+if (Data valid?) then (yes)
+    :Update user profile in database;
+    :Confirm changes saved;
+    :Display updated profile;
+    |Student|
+    :View updated profile;
+    :Confirm changes applied;
+    stop
+else (no)
+    :Display validation errors;
+    |Student|
+    :View error messages;
+    :Correct invalid data;
+    :Retry save;
+endif
+
+' ========================================
+' 9. VIEW ACHIEVEMENT ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Achievement Activity Diagram
+
+|Student|
+start
+:Navigate to achievements page;
+:Select achievement category;
+
+|System|
+:Load user achievements;
+:Retrieve achievement criteria;
+:Calculate progress towards achievements;
+:Display achievement status;
+
+|Student|
+:View earned achievements;
+:View achievement details;
+:View progress towards unearned achievements;
+:View achievement rewards;
+stop
+
+' ========================================
+' 10. VIEW LEADERBOARD ACTIVITY DIAGRAM
+' ========================================
+newpage
+title View Leaderboard Activity Diagram
+
+|Student|
+start
+:Navigate to leaderboard page;
+:Select leaderboard filter;
+
+|System|
+:Load leaderboard data;
+:Calculate user rankings;
+:Sort users by points;
+:Display leaderboard;
+
+|Student|
+:View top performers;
+:View own ranking;
+:View point differences;
+:View user statistics;
+stop
+
+@enduml 

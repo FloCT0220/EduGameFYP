@@ -112,8 +112,8 @@ const createTables = async () => {
     // Quiz questions table
     `CREATE TABLE IF NOT EXISTS quiz_questions (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      subject_id INT NOT NULL,
-      node_id INT,
+      course_id INT NOT NULL,
+      topic_id INT,
       question TEXT NOT NULL,
       answers JSON NOT NULL,
       correct_answer INT NOT NULL CHECK (correct_answer BETWEEN 0 AND 3),
@@ -121,7 +121,9 @@ const createTables = async () => {
       difficulty ENUM('easy', 'medium', 'hard') DEFAULT 'easy',
       is_active BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      INDEX idx_subject_node (subject_id, node_id),
+      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
+      INDEX idx_course_topic (course_id, topic_id),
       INDEX idx_active (is_active),
       INDEX idx_difficulty (difficulty)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
@@ -147,8 +149,8 @@ const createTables = async () => {
     `CREATE TABLE IF NOT EXISTS quiz_attempts (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,
-      subject_id INT NOT NULL,
-      node_id INT,
+      course_id INT NOT NULL,
+      topic_id INT,
       questions_total INT NOT NULL,
       questions_correct INT NOT NULL,
       score_percentage DECIMAL(5,2) NOT NULL,
@@ -157,7 +159,9 @@ const createTables = async () => {
       started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       completed_at TIMESTAMP NULL,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      INDEX idx_user_quiz (user_id, subject_id, node_id),
+      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+      FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE,
+      INDEX idx_user_quiz (user_id, course_id, topic_id),
       INDEX idx_user_attempts (user_id),
       INDEX idx_completed (completed_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,

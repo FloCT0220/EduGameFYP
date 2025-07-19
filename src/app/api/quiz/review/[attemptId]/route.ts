@@ -12,8 +12,8 @@ interface QuizReviewQuestion {
   correct_answer: number;
   points: number;
   difficulty: string;
-  subject_id: number;
-  node_id: number;
+  course_id: number;
+  topic_id: number;
 }
 
 interface QuizReviewAnswer {
@@ -43,7 +43,7 @@ export async function GET(
     // Get attempt details
     const attemptResult = await query(
       `SELECT 
-        id, user_id, subject_id, node_id, questions_total, questions_correct,
+        id, user_id, course_id, topic_id, questions_total, questions_correct,
         score_percentage, total_points
       FROM quiz_attempts 
       WHERE id = ?`,
@@ -59,7 +59,7 @@ export async function GET(
     // Get attempt with answers JSON
     const attemptWithAnswers = await query(
       `SELECT 
-        id, user_id, subject_id, node_id, questions_total, questions_correct,
+        id, user_id, course_id, topic_id, questions_total, questions_correct,
         score_percentage, total_points, answers
       FROM quiz_attempts 
       WHERE id = ?`,
@@ -101,8 +101,8 @@ export async function GET(
         correct_answer,
         points,
         difficulty,
-        subject_id,
-        node_id
+        course_id,
+        topic_id
       FROM quiz_questions 
       WHERE id IN (${questionIds.map(() => '?').join(',')})
       ORDER BY FIELD(id, ${questionIds.map(() => '?').join(',')})`,
@@ -145,8 +145,8 @@ export async function GET(
         correct_answer: questionRow.correct_answer,
         points: questionRow.points,
         difficulty: questionRow.difficulty,
-        subject_id: questionRow.subject_id,
-        node_id: questionRow.node_id,
+        course_id: questionRow.course_id,
+        topic_id: questionRow.topic_id,
         options
       };
 

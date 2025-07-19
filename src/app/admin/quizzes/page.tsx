@@ -5,8 +5,8 @@ import Link from 'next/link';
 
 interface QuizQuestion {
   id: number;
-  subject_id: number;
-  node_id: number;
+  course_id: number;
+  topic_id: number;
   question: string;
   answers: string[];
   correct_answer: number;

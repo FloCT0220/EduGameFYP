@@ -1,0 +1,414 @@
+@startuml Unit Testing Documentation
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+title Unit Testing Documentation - Educational Game System
+
+' ===== TESTING FRAMEWORK SETUP =====
+package "Testing Framework" {
+  class "Jest" {
+    + describe()
+    + it()
+    + expect()
+    + beforeEach()
+    + afterEach()
+  }
+  
+  class "Testing Library" {
+    + render()
+    + screen.getByText()
+    + fireEvent.click()
+    + waitFor()
+  }
+  
+  class "MSW (Mock Service Worker)" {
+    + setupServer()
+    + rest.get()
+    + rest.post()
+  }
+}
+
+' ===== AUTHENTICATION TESTS =====
+package "Authentication Tests" {
+  class "AuthService Tests" {
+    + testAuthenticateUser()
+    + testGenerateToken()
+    + testVerifyToken()
+    + testInvalidCredentials()
+    + testExpiredToken()
+  }
+  
+  class "Login API Tests" {
+    + testSuccessfulLogin()
+    + testInvalidCredentials()
+    + testMissingFields()
+    + testDatabaseConnectionFailure()
+  }
+  
+  class "Token Verification Tests" {
+    + testValidToken()
+    + testInvalidToken()
+    + testExpiredToken()
+    + testMissingToken()
+  }
+}
+
+' ===== USER SERVICE TESTS =====
+package "User Service Tests" {
+  class "User CRUD Tests" {
+    + testGetUserById()
+    + testGetUserByEmail()
+    + testUserNotFound()
+  }
+  
+  class "Dashboard Data Tests" {
+    + testGetUserDashboardData()
+    + testUserEnrollments()
+    + testUserAchievements()
+    + testQuizStatistics()
+  }
+  
+  class "Progress Tracking Tests" {
+    + testUpdateTopicProgress()
+    + testUpdateCourseProgress()
+    + testUpdateUserGameStats()
+    + testEnrollUserInCourse()
+  }
+  
+  class "Leaderboard Tests" {
+    + testGetLeaderboard()
+    + testLeaderboardLimit()
+    + testEmptyLeaderboard()
+  }
+}
+
+' ===== COURSE SERVICE TESTS =====
+package "Course Service Tests" {
+  class "Course CRUD Tests" {
+    + testGetCourseById()
+    + testGetTopicsByCourseId()
+    + testCourseNotFound()
+  }
+  
+  class "Enrollment Tests" {
+    + testIsUserEnrolled()
+    + testGetUserProgress()
+    + testGetTopicProgress()
+    + testEnrollUser()
+  }
+  
+  class "Course Listing Tests" {
+    + testGetAllCourses()
+    + testFilterByDifficulty()
+    + testMyCoursesFilter()
+    + testEnrollmentStatus()
+  }
+}
+
+' ===== QUIZ SERVICE TESTS =====
+package "Quiz Service Tests" {
+  class "Quiz Questions Tests" {
+    + testGetQuizQuestions()
+    + testFilterBySubject()
+    + testFilterByTopic()
+    + testRandomQuestionSelection()
+  }
+  
+  class "Quiz Submission Tests" {
+    + testSubmitQuizAnswers()
+    + testCalculateScore()
+    + testAwardPoints()
+    + testInvalidSubmission()
+  }
+  
+  class "Quiz Review Tests" {
+    + testGetQuizReview()
+    + testAttemptNotFound()
+    + testAnswerValidation()
+  }
+}
+
+' ===== ACHIEVEMENT SERVICE TESTS =====
+package "Achievement Service Tests" {
+  class "Achievement CRUD Tests" {
+    + testGetAllAchievements()
+    + testGetUserAchievements()
+    + testAwardAchievement()
+  }
+  
+  class "Achievement Logic Tests" {
+    + testCheckCompletionAchievements()
+    + testCheckStreakAchievements()
+    + testCheckLevelAchievements()
+    + testCheckSpeedAchievements()
+  }
+  
+  class "Achievement Validation Tests" {
+    + testDuplicateAchievement()
+    + testInvalidAchievement()
+    + testAchievementConditions()
+  }
+}
+
+' ===== CODING CHALLENGE TESTS =====
+package "Coding Challenge Tests" {
+  class "Challenge CRUD Tests" {
+    + testGetAllChallenges()
+    + testGetChallengeById()
+    + testCreateChallenge()
+    + testUpdateChallenge()
+    + testDeleteChallenge()
+  }
+  
+  class "Submission Tests" {
+    + testSubmitCode()
+    + testCodeValidation()
+    + testLanguageSupport()
+    + testPointsAward()
+  }
+  
+  class "Code Execution Tests" {
+    + testCodeCompilation()
+    + testTestCases()
+    + testSecurityValidation()
+  }
+}
+
+' ===== API ENDPOINT TESTS =====
+package "API Endpoint Tests" {
+  class "Authentication Endpoints" {
+    + testLoginEndpoint()
+    + testVerifyEndpoint()
+    + testUnauthorizedAccess()
+  }
+  
+  class "Course Endpoints" {
+    + testGetCourses()
+    + testGetCourseById()
+    + testCourseEnrollment()
+  }
+  
+  class "Quiz Endpoints" {
+    + testGetQuestions()
+    + testSubmitQuiz()
+    + testReviewQuiz()
+  }
+  
+  class "User Endpoints" {
+    + testGetUserProfile()
+    + testUpdateProfile()
+    + testGetLeaderboard()
+  }
+  
+  class "Admin Endpoints" {
+    + testAdminAccess()
+    + testUserManagement()
+    + testContentManagement()
+    + testAnalytics()
+  }
+}
+
+' ===== COMPONENT TESTS =====
+package "React Component Tests" {
+  class "Navigation Tests" {
+    + testStudentNavigation()
+    + testAdminNavigation()
+    + testActiveStates()
+    + testResponsiveDesign()
+  }
+  
+  class "Dashboard Tests" {
+    + testDashboardRendering()
+    + testProgressDisplay()
+    + testAchievementDisplay()
+    + testLoadingStates()
+  }
+  
+  class "Course Tests" {
+    + testCourseListing()
+    + testCourseDetails()
+    + testEnrollmentButton()
+    + testProgressTracking()
+  }
+  
+  class "Quiz Tests" {
+    + testQuestionDisplay()
+    + testAnswerSelection()
+    + testTimerFunctionality()
+    + testSubmission()
+  }
+  
+  class "Gamification Tests" {
+    + testProgressBar()
+    + testPointsDisplay()
+    + testBadgeDisplay()
+    + testLeaderboard()
+  }
+}
+
+' ===== DATABASE TESTS =====
+package "Database Tests" {
+  class "Connection Tests" {
+    + testDatabaseConnection()
+    + testConnectionPool()
+    + testConnectionTimeout()
+  }
+  
+  class "Query Tests" {
+    + testBasicQueries()
+    + testComplexJoins()
+    + testTransactionRollback()
+    + testQueryPerformance()
+  }
+  
+  class "Data Integrity Tests" {
+    + testForeignKeyConstraints()
+    + testUniqueConstraints()
+    + testDataValidation()
+  }
+}
+
+' ===== UTILITY TESTS =====
+package "Utility Function Tests" {
+  class "Validation Tests" {
+    + testEmailValidation()
+    + testPasswordValidation()
+    + testInputSanitization()
+  }
+  
+  class "Helper Functions" {
+    + testDateFormatters()
+    + testScoreCalculators()
+    + testStringUtils()
+  }
+}
+
+' ===== INTEGRATION TESTS =====
+package "Integration Tests" {
+  class "User Journey Tests" {
+    + testCompleteRegistration()
+    + testCourseEnrollmentFlow()
+    + testQuizCompletionFlow()
+    + testAchievementEarning()
+  }
+  
+  class "API Integration Tests" {
+    + testEndToEndAPI()
+    + testDatabaseIntegration()
+    + testAuthenticationFlow()
+  }
+}
+
+' ===== PERFORMANCE TESTS =====
+package "Performance Tests" {
+  class "Load Tests" {
+    + testConcurrentUsers()
+    + testDatabasePerformance()
+    + testAPIResponseTime()
+  }
+  
+  class "Memory Tests" {
+    + testMemoryUsage()
+    + testMemoryLeaks()
+    + testGarbageCollection()
+  }
+}
+
+' ===== SECURITY TESTS =====
+package "Security Tests" {
+  class "Authentication Security" {
+    + testPasswordHashing()
+    + testTokenSecurity()
+    + testSessionManagement()
+  }
+  
+  class "Input Validation" {
+    + testSQLInjection()
+    + testXSSPrevention()
+    + testCSRFProtection()
+  }
+  
+  class "Authorization Tests" {
+    + testRoleBasedAccess()
+    + testResourceProtection()
+    + testAdminPrivileges()
+  }
+}
+
+' ===== TEST DATA MANAGEMENT =====
+package "Test Data" {
+  class "Test Users" {
+    + studentUser
+    + adminUser
+    + testUserWithProgress
+  }
+  
+  class "Test Courses" {
+    + beginnerCourse
+    + intermediateCourse
+    + advancedCourse
+  }
+  
+  class "Test Quizzes" {
+    + easyQuiz
+    + mediumQuiz
+    + hardQuiz
+  }
+  
+  class "Test Achievements" {
+    + completionAchievement
+    + streakAchievement
+    + levelAchievement
+  }
+}
+
+' ===== TEST COVERAGE METRICS =====
+package "Coverage Metrics" {
+  note as N1
+    **Target Coverage:**
+    - Lines: 90%
+    - Functions: 95%
+    - Branches: 85%
+    - Statements: 90%
+  end note
+}
+
+' ===== TEST EXECUTION COMMANDS =====
+package "Test Commands" {
+  note as N2
+    **Jest Commands:**
+    - npm test (run all tests)
+    - npm test -- --watch (watch mode)
+    - npm test -- --coverage (with coverage)
+    - npm test -- --verbose (verbose output)
+    
+    **Specific Test Suites:**
+    - npm test -- --testNamePattern="Auth"
+    - npm test -- --testPathPattern="services"
+    - npm test -- --testPathPattern="components"
+  end note
+}
+
+' ===== RELATIONSHIPS =====
+Jest --> "AuthService Tests"
+Jest --> "User Service Tests"
+Jest --> "Course Service Tests"
+Jest --> "Quiz Service Tests"
+Jest --> "Achievement Service Tests"
+
+"Testing Library" --> "Navigation Tests"
+"Testing Library" --> "Dashboard Tests"
+"Testing Library" --> "Course Tests"
+"Testing Library" --> "Quiz Tests"
+
+"MSW (Mock Service Worker)" --> "API Endpoint Tests"
+"MSW (Mock Service Worker)" --> "Integration Tests"
+
+"Test Data" --> "User Service Tests"
+"Test Data" --> "Course Service Tests"
+"Test Data" --> "Quiz Service Tests"
+
+@enduml 

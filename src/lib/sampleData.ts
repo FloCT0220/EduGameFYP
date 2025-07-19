@@ -204,7 +204,7 @@ export const insertDefaultData = async () => {
 
       for (const question of sampleQuizQuestions) {
         await pool.execute(
-          'INSERT INTO quiz_questions (subject_id, node_id, question, answers, correct_answer, points, difficulty, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO quiz_questions (course_id, topic_id, question, answers, correct_answer, points, difficulty, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
           [...question, true]
         );
       }
