@@ -20,11 +20,50 @@ interface QuizQuestion {
 
 export default function AdminQuizzes() {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [filteredQuestions, setFilteredQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    subject: '',
+    difficulty: '',
+    search: ''
+  });
 
   useEffect(() => {
     fetchQuestions();
   }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [questions, filters]);
+
+  const applyFilters = () => {
+    let filtered = [...questions];
+
+    // Filter by search term
+    if (filters.search) {
+      filtered = filtered.filter(question =>
+        question.question.toLowerCase().includes(filters.search.toLowerCase()) ||
+        question.subject_name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        question.topic_name.toLowerCase().includes(filters.search.toLowerCase())
+      );
+    }
+
+    // Filter by subject
+    if (filters.subject) {
+      filtered = filtered.filter(question =>
+        question.subject_name === filters.subject
+      );
+    }
+
+    // Filter by difficulty
+    if (filters.difficulty) {
+      filtered = filtered.filter(question =>
+        question.difficulty === filters.difficulty
+      );
+    }
+
+    setFilteredQuestions(filtered);
+  };
 
   const fetchQuestions = async () => {
     try {
@@ -71,6 +110,9 @@ export default function AdminQuizzes() {
     );
   }
 
+  // Get unique subjects for filter dropdown
+  const uniqueSubjects = [...new Set(questions.map(q => q.subject_name))];
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -83,13 +125,73 @@ export default function AdminQuizzes() {
         </Link>
       </div>
 
+      {/* Filter Section */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Search Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Search
+            </label>
+            <input
+              type="text"
+              placeholder="Search questions..."
+              value={filters.search}
+              onChange={(e) => setFilters({...filters, search: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Subject Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Subject
+            </label>
+            <select
+              value={filters.subject}
+              onChange={(e) => setFilters({...filters, subject: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">All Subjects</option>
+              {uniqueSubjects.map(subject => (
+                <option key={subject} value={subject}>{subject}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Difficulty Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Difficulty
+            </label>
+            <select
+              value={filters.difficulty}
+              onChange={(e) => setFilters({...filters, difficulty: e.target.value})}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">All Difficulties</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+
+          {/* Clear Filters */}
+          <div className="flex items-end">
+            <button
+              onClick={() => setFilters({subject: '', difficulty: '', search: ''})}
+              className="w-full p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ID
-              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Subject/Topic
               </th>
@@ -108,11 +210,8 @@ export default function AdminQuizzes() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {questions.map((question) => (
+            {filteredQuestions.map((question) => (
               <tr key={question.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {question.id}
-                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <div className="flex flex-col">
                     <span className="text-black font-medium text-sm">
@@ -160,9 +259,11 @@ export default function AdminQuizzes() {
         </table>
       </div>
 
-      {questions.length === 0 && (
+      {filteredQuestions.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No quiz questions found.</p>
+          <p className="text-gray-500 text-lg">
+            {questions.length === 0 ? 'No quiz questions found.' : 'No questions match your filters.'}
+          </p>
         </div>
       )}
     </div>

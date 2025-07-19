@@ -10,7 +10,7 @@ interface CodingChallenge {
   description: string;
   difficulty: 'easy' | 'intermediate' | 'hard';
   points: number;
-  supported_languages: string[];
+  supported_language: string;
   is_active: boolean;
   created_at: string;
   created_by_username: string;
@@ -159,8 +159,8 @@ export default function AdminCodingChallenges() {
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Languages:</span>
-                    <span className="text-gray-900">{challenge.supported_languages.join(', ')}</span>
+                    <span className="text-gray-500">Language:</span>
+                    <span className="text-gray-900">{challenge.supported_language}</span>
                   </div>
                   
                   <div className="flex justify-between">

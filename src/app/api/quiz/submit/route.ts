@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
        (user_id, subject_id, node_id, questions_total, questions_correct, score_percentage, total_points, answers, completed_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [finalUserId, finalSubjectId, finalNodeId, questionIds.length, correctAnswers, scorePercentage, totalPoints, JSON.stringify(results)]
-    );
+      );
 
     let newlyEarnedAchievements: any[] = [];
 

@@ -13,7 +13,7 @@ interface CodingChallenge {
   description: string;
   difficulty: 'easy' | 'intermediate' | 'hard';
   points: number;
-  supported_languages: string[];
+  supported_language: string;
   is_active: boolean;
   created_at: string;
   created_by_username: string;
@@ -34,7 +34,6 @@ export default function ChallengeDetailPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [challenge, setChallenge] = useState<CodingChallenge | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedLanguage, setSelectedLanguage] = useState('python');
   const [availableSnippets, setAvailableSnippets] = useState<CodeSnippet[]>([]);
   const [dropZones, setDropZones] = useState<(CodeSnippet | null)[]>([null, null, null, null]);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -42,7 +41,7 @@ export default function ChallengeDetailPage() {
 
   const fetchChallenge = useCallback(async () => {
     try {
-      const response = await fetch(`/api/coding-challenges/${params.id}?language=${selectedLanguage}`);
+      const response = await fetch(`/api/coding-challenges/${params.id}`);
       if (response.ok) {
         const data = await response.json();
         setChallenge(data);
@@ -52,7 +51,7 @@ export default function ChallengeDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [params.id, selectedLanguage]);
+  }, [params.id]);
 
   const generateCodeSnippets = useCallback(() => {
     if (!challenge) return;
@@ -83,7 +82,7 @@ export default function ChallengeDetailPage() {
     if (challenge) {
       generateCodeSnippets();
     }
-  }, [challenge, selectedLanguage, generateCodeSnippets]);
+  }, [challenge, generateCodeSnippets]);
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination, draggableId } = result;
@@ -147,7 +146,7 @@ export default function ChallengeDetailPage() {
         },
         body: JSON.stringify({
           challengeId: challenge?.id,
-          programmingLanguage: selectedLanguage,
+          programmingLanguage: challenge?.supported_language || 'python',
           submittedAnswer
         }),
       });
@@ -216,22 +215,13 @@ export default function ChallengeDetailPage() {
 
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">{challenge?.title}</h1>
-            {/* Language Dropdown */}
-            {challenge?.supported_languages && challenge.supported_languages.length > 1 && (
-              <div className="flex items-center gap-2">
-                <label htmlFor="language-select" className="font-semibold text-blue-900">Language:</label>
-              <select
-                  id="language-select"
-                value={selectedLanguage}
-                  onChange={e => setSelectedLanguage(e.target.value)}
-                  className="border border-blue-300 rounded px-2 py-1 text-blue-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
-                >
-                  {challenge.supported_languages.map(lang => (
-                    <option value={lang} key={lang}>{lang.charAt(0).toUpperCase() + lang.slice(1)}</option>
-                ))}
-              </select>
+            {/* Language Display */}
+            <div className="flex items-center gap-2">
+              <label className="font-semibold text-blue-900">Language:</label>
+              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg font-medium">
+                {challenge?.supported_language ? challenge.supported_language.charAt(0).toUpperCase() + challenge.supported_language.slice(1) : 'Unknown'}
+              </span>
             </div>
-            )}
           </div>
           {challenge?.description && (
             <div className="bg-white rounded-lg shadow p-4 border border-blue-100 mb-4">

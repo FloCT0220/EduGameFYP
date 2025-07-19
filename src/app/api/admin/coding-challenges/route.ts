@@ -88,51 +88,47 @@ export async function POST(request: NextRequest) {
       description,
       difficulty,
       points,
-      supported_languages,
+      supported_language,
       challenge_answers
     } = body;
 
     // Validate required fields
-    if (!title || !description || !difficulty || !supported_languages) {
+    if (!title || !description || !difficulty || !supported_language) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Insert challenge
+    // Process challenge_answers to extract code_snippets and correct_answer
+    let code_snippets = [];
+    let correct_answer = [];
+    
+    if (challenge_answers && Array.isArray(challenge_answers) && challenge_answers.length > 0) {
+      // For now, we'll use the first language's data as the primary answer
+      // In the future, this could be expanded to support multiple languages
+      const primaryAnswer = challenge_answers[0];
+      code_snippets = primaryAnswer.code_snippets || [];
+      correct_answer = primaryAnswer.correct_answer || [];
+    }
+
+    // Insert challenge with merged fields
     const challengeResult = await query(`
       INSERT INTO coding_challenges (
         title, description, difficulty,
-        points, supported_languages, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?)
+        points, supported_language, code_snippets, correct_answer, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       title,
       description,
       difficulty,
       points || 10,
-      JSON.stringify(supported_languages),
+      supported_language,
+      JSON.stringify(code_snippets),
+      JSON.stringify(correct_answer),
       user.id
     ]) as { insertId: number };
 
-    const challengeId = challengeResult.insertId;
-
-    // Insert challenge answers if provided
-    if (challenge_answers && Array.isArray(challenge_answers)) {
-      for (const answer of challenge_answers) {
-        await query(`
-          INSERT INTO coding_challenge_answers 
-          (challenge_id, programming_language, code_snippets, correct_answer)
-          VALUES (?, ?, ?, ?)
-        `, [
-          challengeId,
-          answer.programming_language,
-          JSON.stringify(answer.code_snippets),
-          JSON.stringify(answer.correct_answer)
-        ]);
-      }
-    }
-
     return NextResponse.json({ 
       message: 'Challenge created successfully',
-      challengeId 
+      challengeId: challengeResult.insertId
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating coding challenge:', error);

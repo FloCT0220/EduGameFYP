@@ -8,7 +8,7 @@ interface ChallengeRow {
   description: string;
   difficulty: string;
   points: number;
-  supported_languages: string;
+  supported_language: string;
   code_snippets: string;
   correct_answer: string;
   created_at: string;
@@ -27,8 +27,6 @@ export async function GET(
   try {
     const { id } = await params;
     const challengeId = parseInt(id);
-    const { searchParams } = new URL(request.url);
-    const language = searchParams.get('language') || 'python';
 
     if (isNaN(challengeId)) {
       return NextResponse.json(
@@ -45,7 +43,7 @@ export async function GET(
         cc.description,
         cc.difficulty,
         cc.points,
-        cc.supported_languages,
+        cc.supported_language,
         cc.code_snippets,
         cc.correct_answer,
         cc.created_at
@@ -83,10 +81,8 @@ export async function GET(
       }
     }
 
-    // Filter code snippets by language if specified
-    if (language && language !== 'all') {
-      codeSnippets = codeSnippets.filter((snippet: CodeSnippet) => snippet.language === language);
-    }
+    // No need to filter by language since each challenge has its own supported_language
+    // The language parameter is not used for filtering in this context
 
     // Parse JSON fields using utility function
     const parsedChallenge = parseCodingChallengeListFields(challenge as unknown as Record<string, unknown>);

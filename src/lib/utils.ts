@@ -62,11 +62,9 @@ export function parseJsonFields<T extends Record<string, unknown>>(
  */
 export function parseCodingChallengeFields(challenge: Record<string, unknown>): Record<string, unknown> {
   return parseJsonFields(challenge, [
-    'supported_languages',
     'function_signature', 
     'examples'
   ], {
-    supported_languages: [],
     function_signature: {},
     examples: []
   });
@@ -88,11 +86,9 @@ export function parseQuizQuestionFields(question: Record<string, unknown>): Reco
  */
 export function parseCodingChallengeListFields(challenge: Record<string, unknown>): Record<string, unknown> {
   return parseJsonFields(challenge, [
-    'supported_languages',
     'code_snippets',
     'correct_answer'
   ], {
-    supported_languages: [],
     code_snippets: [],
     correct_answer: []
   });

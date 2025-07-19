@@ -9,13 +9,13 @@ export async function PUT(
     const awaitedParams = await params;
     const courseId = parseInt(awaitedParams.subjectId);
     const body = await request.json();
-    const { title, description, difficulty, thumbnail_url } = body;
+    const { title, description, difficulty, is_published } = body;
 
     await query(`
       UPDATE courses 
-      SET title = ?, description = ?, difficulty_level = ?, thumbnail_url = ?, updated_at = NOW()
+      SET title = ?, description = ?, difficulty_level = ?, is_published = ?, updated_at = NOW()
       WHERE id = ?
-    `, [title, description, difficulty, thumbnail_url, courseId]);
+    `, [title, description, difficulty, is_published, courseId]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -7,7 +7,6 @@ interface Course {
   title: string;
   description: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
-  thumbnail_url: string | null;
   is_active: boolean;
   enrolled_count: number;
 }
@@ -24,7 +23,6 @@ export default function AdminSubjects() {
     title: '',
     description: '',
     difficulty: 'beginner' as Difficulty,
-    thumbnail_url: '',
     is_published: false
   });
 
@@ -73,7 +71,6 @@ export default function AdminSubjects() {
           title: '',
           description: '',
           difficulty: 'beginner',
-          thumbnail_url: '',
           is_published: false
         });
         fetchCourses();
@@ -89,7 +86,6 @@ export default function AdminSubjects() {
       title: course.title,
       description: course.description,
       difficulty: course.difficulty as Difficulty,
-      thumbnail_url: course.thumbnail_url || '',
       is_published: course.is_active
     });
     setShowForm(true);
@@ -187,18 +183,7 @@ export default function AdminSubjects() {
                       </select>
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Thumbnail URL
-                      </label>
-                      <input
-                        type="url"
-                        value={formData.thumbnail_url || ''}
-                        onChange={(e) => setFormData({...formData, thumbnail_url: e.target.value || ''})}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
-                        placeholder="https://example.com/image.jpg"
-                      />
-                    </div>
+
 
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-gray-700">
@@ -230,7 +215,6 @@ export default function AdminSubjects() {
                           title: '',
                           description: '',
                           difficulty: 'beginner',
-                          thumbnail_url: '',
                           is_published: false
                         });
                       }}
@@ -307,18 +291,7 @@ export default function AdminSubjects() {
                   </div>
                 </div>
                 
-                {course.thumbnail_url && (
-                  <div className="mt-4">
-                    <img 
-                      src={course.thumbnail_url} 
-                      alt={course.title}
-                      className="w-full h-32 object-cover rounded-lg"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
+
               </div>
             ))}
           </div>

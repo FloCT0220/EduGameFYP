@@ -10,7 +10,7 @@ interface ChallengeData extends RowDataPacket {
   description: string;
   difficulty: string;
   points: number;
-  supported_languages: string;
+  supported_language: string;
   created_by: number;
   is_active: boolean;
   created_at: Date;
@@ -18,11 +18,7 @@ interface ChallengeData extends RowDataPacket {
   created_by_username?: string;
 }
 
-interface ChallengeAnswerData extends RowDataPacket {
-  programming_language: string;
-  code_snippets: string;
-  correct_answer: string;
-}
+
 
 // GET /api/admin/coding-challenges/[id] - Get a specific coding challenge
 export async function GET(
@@ -58,34 +54,27 @@ export async function GET(
     
     const challenge = challenges[0] as ChallengeData;
     
-    // Get challenge answers
-    const answersQuery = `
-      SELECT 
-        programming_language,
-        code_snippets,
-        correct_answer
-      FROM coding_challenge_answers
-      WHERE challenge_id = ?
-      ORDER BY programming_language
-    `;
-    
-    const answers = await query(answersQuery, [challengeId]);
-    
     // Parse JSON fields using utility function
     const challengeData = parseCodingChallengeListFields(challenge as Record<string, unknown>);
     
-    // Add challenge answers to the response
+    // Parse code_snippets and correct_answer from the database
+    const code_snippets = typeof challenge.code_snippets === 'string' 
+      ? JSON.parse(challenge.code_snippets) 
+      : challenge.code_snippets || [];
+    const correct_answer = typeof challenge.correct_answer === 'string' 
+      ? JSON.parse(challenge.correct_answer) 
+      : challenge.correct_answer || [];
+    
+    // Create challenge_answers structure that the frontend expects
+    const challenge_answers = [{
+      programming_language: 'python', // Default language
+      code_snippets: code_snippets,
+      correct_answer: correct_answer
+    }];
+    
     const response = {
       ...challengeData,
-      challenge_answers: Array.isArray(answers) ? (answers as ChallengeAnswerData[]).map(answer => ({
-        programming_language: answer.programming_language,
-        code_snippets: typeof answer.code_snippets === 'string' 
-          ? JSON.parse(answer.code_snippets) 
-          : answer.code_snippets,
-        correct_answer: typeof answer.correct_answer === 'string' 
-          ? JSON.parse(answer.correct_answer) 
-          : answer.correct_answer
-      })) : []
+      challenge_answers: challenge_answers
     };
     
     return NextResponse.json(response);
@@ -116,21 +105,33 @@ export async function PUT(
       description,
       difficulty,
       points,
-      supported_languages,
+      supported_language,
       is_active,
       challenge_answers
     } = body;
 
     // Validate required fields
-    if (!title || !description || !difficulty || !supported_languages) {
+    if (!title || !description || !difficulty || !supported_language) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Update challenge
+    // Process challenge_answers to extract code_snippets and correct_answer
+    let code_snippets = [];
+    let correct_answer = [];
+    
+    if (challenge_answers && Array.isArray(challenge_answers) && challenge_answers.length > 0) {
+      // For now, we'll use the first language's data as the primary answer
+      // In the future, this could be expanded to support multiple languages
+      const primaryAnswer = challenge_answers[0];
+      code_snippets = primaryAnswer.code_snippets || [];
+      correct_answer = primaryAnswer.correct_answer || [];
+    }
+
+    // Update challenge with merged fields
     await query(`
       UPDATE coding_challenges SET
         title = ?, description = ?, difficulty = ?,
-        points = ?, supported_languages = ?,
+        points = ?, supported_language = ?, code_snippets = ?, correct_answer = ?,
         is_active = ?, updated_at = NOW()
       WHERE id = ?
     `, [
@@ -138,30 +139,12 @@ export async function PUT(
       description,
       difficulty,
       points || 10,
-      JSON.stringify(supported_languages),
+      supported_language,
+      JSON.stringify(code_snippets),
+      JSON.stringify(correct_answer),
       is_active !== false, // default to true
       challengeId
     ]);
-
-    // Update challenge answers if provided
-    if (challenge_answers && Array.isArray(challenge_answers)) {
-      // Delete existing answers
-      await query('DELETE FROM coding_challenge_answers WHERE challenge_id = ?', [challengeId]);
-      
-      // Insert new answers
-      for (const answer of challenge_answers) {
-        await query(`
-          INSERT INTO coding_challenge_answers 
-          (challenge_id, programming_language, code_snippets, correct_answer)
-          VALUES (?, ?, ?, ?)
-        `, [
-          challengeId,
-          answer.programming_language,
-          JSON.stringify(answer.code_snippets),
-          JSON.stringify(answer.correct_answer)
-        ]);
-      }
-    }
 
     return NextResponse.json({ message: 'Challenge updated successfully' });
   } catch (error) {

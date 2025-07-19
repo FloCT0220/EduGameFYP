@@ -10,7 +10,7 @@ interface CodingChallenge {
   description: string;
   difficulty: 'easy' | 'intermediate' | 'hard';
   points: number;
-  supported_languages: string[];
+  supported_language: string;
   is_active: boolean;
   created_at: string;
   created_by_username: string;
@@ -25,14 +25,47 @@ const difficulties = [
   { value: 'hard', label: 'Hard', color: 'bg-red-500/20 text-black' }
 ];
 
-const languages = [
-  { value: 'all', label: 'All Languages', icon: '💻' },
-  { value: 'python', label: 'Python', icon: '🐍' },
-  { value: 'javascript', label: 'JavaScript', icon: '⚡' },
-  { value: 'java', label: 'Java', icon: '☕' },
-  { value: 'cpp', label: 'C++', icon: '⚙️' },
-  { value: 'c', label: 'C', icon: '🔧' }
-];
+// Language icons mapping
+const languageIcons: Record<string, string> = {
+  'python': '🐍',
+  'javascript': '⚡',
+  'java': '☕',
+  'cpp': '⚙️',
+  'c': '🔧',
+  'typescript': '📘',
+  'go': '🐹',
+  'rust': '🦀'
+};
+
+// Function to generate language filters based on available challenges
+const generateLanguageFilters = (challenges: CodingChallenge[]) => {
+  const availableLanguages = new Set<string>();
+  
+  // Add all supported languages from challenges
+  challenges.forEach(challenge => {
+    if (challenge.supported_language) {
+      availableLanguages.add(challenge.supported_language);
+    }
+  });
+  
+  // Convert to filter options
+  const languageOptions = [
+    { value: 'all', label: 'All Languages', icon: '💻' }
+  ];
+  
+  // Sort languages alphabetically
+  const sortedLanguages = Array.from(availableLanguages).sort();
+  
+  sortedLanguages.forEach(lang => {
+    languageOptions.push({
+      value: lang,
+      label: lang.charAt(0).toUpperCase() + lang.slice(1), // Capitalize first letter
+      icon: languageIcons[lang] || '💻' // Default icon if not found
+    });
+  });
+  
+  return languageOptions;
+};
 
 export default function CodingSimPage() {
   const [challenges, setChallenges] = useState<CodingChallenge[]>([]);
@@ -41,6 +74,9 @@ export default function CodingSimPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
+  
+  // Generate language filters based on available challenges
+  const languages = generateLanguageFilters(challenges);
 
   useEffect(() => {
     fetchChallenges();
@@ -83,7 +119,7 @@ export default function CodingSimPage() {
     // Filter by language
     if (selectedLanguage !== 'all') {
       filtered = filtered.filter(challenge =>
-        challenge.supported_languages.includes(selectedLanguage)
+        challenge.supported_language === selectedLanguage
       );
     }
 
@@ -185,7 +221,7 @@ export default function CodingSimPage() {
           {/* Language Filter */}
           <div className="mt-4">
             <div className="flex flex-wrap gap-2">
-              {languages.map((language) => (
+              {languages.map((language: { value: string; label: string; icon: string }) => (
                 <button
                   key={language.value}
                   onClick={() => setSelectedLanguage(language.value)}
@@ -242,21 +278,11 @@ export default function CodingSimPage() {
                 </div>
               </div>
 
-              {/* Languages */}
+              {/* Language */}
               <div className="flex flex-wrap gap-2 mb-4">
-                {challenge.supported_languages.slice(0, 3).map((lang) => (
-                  <span
-                    key={lang}
-                    className="px-2 py-1 bg-gray-200 text-white/80 text-xs rounded"
-                  >
-                    {lang}
-                  </span>
-                ))}
-                {challenge.supported_languages.length > 3 && (
-                  <span className="px-2 py-1 bg-gray-200 text-white/80 text-xs rounded">
-                    +{challenge.supported_languages.length - 3} more
-                  </span>
-                )}
+                <span className="px-2 py-1 bg-gray-200 text-white/80 text-xs rounded">
+                  {challenge.supported_language}
+                </span>
               </div>
 
               {/* Success Rate */}

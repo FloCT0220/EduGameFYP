@@ -38,7 +38,7 @@ export default function AddCodingChallenge() {
     description: '',
     difficulty: 'easy' as Difficulty,
     points: 10,
-    supported_languages: ['python'],
+    supported_language: 'python',
     is_active: true
   });
 
@@ -246,33 +246,17 @@ export default function AddCodingChallenge() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Supported Languages
+                      Supported Language
                     </label>
-                    <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto border rounded-lg p-4">
+                    <select
+                      value={formData.supported_language || 'python'}
+                      onChange={(e) => setFormData({...formData, supported_language: e.target.value})}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
                       {LANGUAGE_OPTIONS.map(lang => (
-                        <label key={lang} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={formData.supported_languages.includes(lang)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  supported_languages: [...prev.supported_languages, lang]
-                                }));
-                              } else {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  supported_languages: prev.supported_languages.filter(l => l !== lang)
-                                }));
-                              }
-                            }}
-                            className="mr-3"
-                          />
-                          <span className="text-sm">{lang}</span>
-                        </label>
+                        <option key={lang} value={lang}>{lang}</option>
                       ))}
-                    </div>
+                    </select>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -315,20 +299,7 @@ export default function AddCodingChallenge() {
                       </div>
                       
                       <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Programming Language
-                          </label>
-                          <select
-                            value={answer.programming_language}
-                            onChange={(e) => updateLanguageAnswer(answerIndex, 'programming_language', e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          >
-                            {LANGUAGE_OPTIONS.map(lang => (
-                              <option key={lang} value={lang}>{lang}</option>
-                            ))}
-                          </select>
-                        </div>
+
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
