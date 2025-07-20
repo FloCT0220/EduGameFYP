@@ -96,26 +96,11 @@ export async function GET(
             }
         }
 
-        // Parse structured content
-        let structuredContent: StructuredContent | undefined;
-        
-        if (topicData.structured_content) {
-            try {
-                structuredContent = typeof topicData.structured_content === 'string' 
-                    ? JSON.parse(topicData.structured_content) 
-                    : topicData.structured_content;
-            } catch (error) {
-                console.error('Error parsing structured content:', error);
-            }
-        }
-        
-        // Generate enhanced content using structured content
-        const enhancedContent = generateEnhancedContent(topicData.title, topicData.content || '', structuredContent);
-
         const topic = {
             id: topicData.id,
             title: topicData.title,
-            content: enhancedContent,
+            content: topicData.content,
+            structured_content: topicData.structured_content,
             lesson_order: topicData.lesson_order,
             points_reward: topicData.points,
             is_completed: isCompleted,
@@ -138,48 +123,4 @@ export async function GET(
     }
 }
 
-interface ContentSection {
-    title: string;
-    content: string;
-}
-
-interface StructuredContent {
-    sections: ContentSection[];
-}
-
-function generateEnhancedContent(title: string, basicContent: string, structuredContent?: StructuredContent): string {
-    // Use structured content if available, otherwise create default sections
-    const sections = structuredContent?.sections || [
-        {
-            title: "Introduction",
-            content: basicContent || `Welcome to ${title}! In this lesson, we'll explore the fundamental concepts and practical applications.`
-        },
-        {
-            title: "Key Concepts", 
-            content: `Let's dive into the core principles that make ${title} so important in modern development.`
-        },
-        {
-            title: "Practical Examples",
-            content: `Here are some real-world examples of how ${title} is used in professional development environments.`
-        },
-        {
-            title: "Best Practices",
-            content: `To master ${title}, follow these industry-standard best practices and guidelines.`
-        },
-        {
-            title: "Summary",
-            content: `You've now learned the essential concepts of ${title}. Take the quiz below to test your understanding and earn points!`
-        }
-    ];
-
-    return sections.map(section => `
-        <div style="margin-bottom: 2rem;">
-            <h2 style="color: #1f2937; font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 2px solid #3b82f6; padding-bottom: 0.5rem;">
-                ${section.title}
-            </h2>
-            <div style="color: #4b5563; line-height: 1.6; font-size: 1.1rem;">
-                <p>${section.content}</p>
-            </div>
-        </div>
-    `).join('');
-} 
+ 

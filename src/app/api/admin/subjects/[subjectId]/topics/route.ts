@@ -72,6 +72,7 @@ export async function POST(
     const body = await request.json();
     const { 
       title, 
+      content,
       structured_content,
       points_reward, 
       is_published
@@ -86,20 +87,35 @@ export async function POST(
 
     const nextLessonOrder = (existingTopics[0]?.max_order || 0) + 1;
 
+    // --- Fix: unwrap structured_content if needed ---
+    let structuredContentToSave = [];
+    if (structured_content) {
+      if (typeof structured_content === 'object' && structured_content !== null && 'sections' in structured_content && Array.isArray(structured_content.sections)) {
+        structuredContentToSave = structured_content.sections;
+      } else if (Array.isArray(structured_content)) {
+        structuredContentToSave = structured_content;
+      } else {
+        structuredContentToSave = [];
+      }
+    }
+    // --- End fix ---
+
     const result = await query(`
       INSERT INTO topics (
         course_id, 
         title, 
+        content,
         structured_content,
         lesson_order, 
         points_reward, 
         is_published
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [
       courseId,
       title,
-      structured_content ? JSON.stringify(structured_content) : null,
+      content || null,
+      JSON.stringify(structuredContentToSave),
       nextLessonOrder,
       points_reward,
       is_published

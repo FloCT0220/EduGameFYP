@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSession } from '@/lib/session';
@@ -59,6 +59,9 @@ export default function EditCodingChallenge({ params }: { params: Promise<{ id: 
     supported_language: 'python',
     is_active: true
   });
+  const [titleError, setTitleError] = useState('');
+  const [isCheckingTitle, setIsCheckingTitle] = useState(false);
+  const [titleCheckTimeout, setTitleCheckTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Challenge answers state
   const [challengeAnswers, setChallengeAnswers] = useState<ChallengeAnswer[]>([
@@ -85,9 +88,18 @@ export default function EditCodingChallenge({ params }: { params: Promise<{ id: 
     }
 
     fetchChallenge();
-  }, [user, router, id]);
+  }, [user?.role, router, id]);
 
-  const fetchChallenge = async () => {
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (titleCheckTimeout) {
+        clearTimeout(titleCheckTimeout);
+      }
+    };
+  }, [titleCheckTimeout]);
+
+  const fetchChallenge = useCallback(async () => {
     try {
       const token = getSession('authToken');
       const response = await fetch(`/api/admin/coding-challenges/${id}`, {
@@ -121,10 +133,50 @@ export default function EditCodingChallenge({ params }: { params: Promise<{ id: 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, router]);
+
+  const checkTitleAvailability = useCallback(async (title: string) => {
+    if (!title.trim()) {
+      setTitleError('');
+      return;
+    }
+
+    setIsCheckingTitle(true);
+    try {
+      const token = getSession('authToken');
+      const response = await fetch('/api/admin/coding-challenges', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const challenges = await response.json();
+        const existingChallenge = challenges.find((challenge: { id: number; title: string }) => 
+          challenge.title.toLowerCase() === title.toLowerCase() && 
+          challenge.id !== parseInt(id)
+        );
+        
+        if (existingChallenge) {
+          setTitleError('A challenge with this title already exists');
+        } else {
+          setTitleError('');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking title availability:', error);
+    } finally {
+      setIsCheckingTitle(false);
+    }
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submission if there's a title error
+    if (titleError) {
+      alert('Please fix the title error before submitting');
+      return;
+    }
+    
     setIsSaving(true);
     
     try {
@@ -280,13 +332,38 @@ export default function EditCodingChallenge({ params }: { params: Promise<{ id: 
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Title
                     </label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={formData.title}
+                        onChange={(e) => {
+                          setFormData({...formData, title: e.target.value});
+                          // Check title availability when title changes
+                          setTitleError('');
+                          if (e.target.value.trim()) {
+                            // Clear existing timeout
+                            if (titleCheckTimeout) {
+                              clearTimeout(titleCheckTimeout);
+                            }
+                            // Set new timeout
+                            const timeoutId = setTimeout(() => checkTitleAvailability(e.target.value), 500);
+                            setTitleCheckTimeout(timeoutId);
+                          }
+                        }}
+                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          titleError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
+                        }`}
+                        required
+                      />
+                      {isCheckingTitle && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        </div>
+                      )}
+                    </div>
+                    {titleError && (
+                      <p className="mt-1 text-sm text-red-600">{titleError}</p>
+                    )}
                   </div>
                   
                   <div>

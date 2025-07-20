@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { FaTrophy, FaArrowLeft, FaCheck, FaSpinner } from 'react-icons/fa';
 import { getSession } from '@/lib/session';
 import toast from 'react-hot-toast';
+import { parseJsonField } from '@/lib/utils';
 
 interface User {
     id: number;
@@ -20,6 +21,7 @@ interface Topic {
     is_completed: boolean;
     last_attempt_id?: number;
     points_earned?: number;
+    structured_content?: string; // <-- add this
 }
 
 interface QuizQuestion {
@@ -451,10 +453,29 @@ export default function TopicContentPage() {
             {/* Content */}
             <div className="max-w-4xl mx-auto px-6 py-8">
                 <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-                    <div 
-                        className="prose prose-lg max-w-none"
-                        dangerouslySetInnerHTML={{ __html: topic.content }}
-                    />
+                  {topic.structured_content ? (
+                    (() => {
+                      try {
+                        const parsedContent = parseJsonField(topic.structured_content, []) as Array<{ title: string; content: string }>;
+                        if (parsedContent && Array.isArray(parsedContent)) {
+                          return parsedContent.map((section, idx) => (
+                            <div key={idx} className="mb-8 pb-8 border-b border-gray">
+                              <h2 className="text-2xl font-bold mb-2">{section.title}</h2>
+                              <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: section.content }} />
+                            </div>
+                          ));
+                        } else {
+                          console.warn('Invalid structured_content format:', parsedContent);
+                          return <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: topic.content }} />;
+                        }
+                      } catch (error) {
+                        console.error('Error parsing structured_content:', error);
+                        return <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: topic.content }} />;
+                      }
+                    })()
+                  ) : (
+                    <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: topic.content }} />
+                  )}
                 </div>
                 {/* Quiz Section */}
                 {!topic.is_completed && (

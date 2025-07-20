@@ -34,6 +34,9 @@ export default function AdminAchievements() {
     category: "streak" as Category,
     is_active: true,
   });
+  const [nameError, setNameError] = useState('');
+  const [isCheckingName, setIsCheckingName] = useState(false);
+  const [nameCheckTimeout, setNameCheckTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const fetchAchievements = useCallback(async () => {
     try {
@@ -52,8 +55,52 @@ export default function AdminAchievements() {
     fetchAchievements();
     }, [fetchAchievements]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (nameCheckTimeout) {
+        clearTimeout(nameCheckTimeout);
+      }
+    };
+  }, [nameCheckTimeout]);
+
+  const checkNameAvailability = useCallback(async (name: string) => {
+    if (!name.trim()) {
+      setNameError('');
+      return;
+    }
+
+    setIsCheckingName(true);
+    try {
+      const response = await fetch('/api/admin/achievements');
+      if (response.ok) {
+        const achievementsData = await response.json();
+        const existingAchievement = achievementsData.find((achievement: { id: number; title?: string; name?: string }) => 
+          (achievement.title || achievement.name || '').toLowerCase() === name.toLowerCase() && 
+          (!editingAchievement || achievement.id !== editingAchievement.id)
+        );
+        
+        if (existingAchievement) {
+          setNameError('An achievement with this name already exists');
+        } else {
+          setNameError('');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking name availability:', error);
+    } finally {
+      setIsCheckingName(false);
+    }
+  }, [editingAchievement]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submission if there's a name error
+    if (nameError) {
+      alert('Please fix the name error before submitting');
+      return;
+    }
     
     // Clear previous errors
     setErrors({});
@@ -187,14 +234,37 @@ export default function AdminAchievements() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={e => setFormData({ ...formData, name: e.target.value })}
-                      className={`w-full p-2 border rounded-lg ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={e => {
+                          setFormData({ ...formData, name: e.target.value });
+                          // Check name availability when name changes
+                          setNameError('');
+                          if (e.target.value.trim()) {
+                            // Clear existing timeout
+                            if (nameCheckTimeout) {
+                              clearTimeout(nameCheckTimeout);
+                            }
+                            // Set new timeout
+                            const timeoutId = setTimeout(() => checkNameAvailability(e.target.value), 500);
+                            setNameCheckTimeout(timeoutId);
+                          }
+                        }}
+                        className={`w-full p-2 border rounded-lg ${
+                          errors.name || nameError ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        required
+                      />
+                      {isCheckingName && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        </div>
+                      )}
+                    </div>
                     {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                    {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -271,6 +341,7 @@ export default function AdminAchievements() {
                       setShowForm(false);
                       setEditingAchievement(null);
                       setErrors({});
+                      setNameError('');
                       setFormData({
                         name: "",
                         description: "",

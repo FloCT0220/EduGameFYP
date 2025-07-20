@@ -1,23 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-
-interface ContentSection {
-  title: string;
-  content: string;
-}
-
-interface StructuredContent {
-  sections: ContentSection[];
-}
 
 interface Topic {
   id: number;
   course_id: number;
   title: string;
   content: string;
-  structured_content?: StructuredContent;
   lesson_order: number;
   points_reward: number;
   is_published: boolean;
@@ -33,11 +23,7 @@ export default function AdminCourseTopics() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchTopics();
-  }, [courseId]);
-
-  const fetchTopics = async () => {
+  const fetchTopics = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/admin/subjects/${courseId}/topics`);
@@ -49,7 +35,11 @@ export default function AdminCourseTopics() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [courseId]);
+
+  useEffect(() => {
+    fetchTopics();
+  }, [fetchTopics]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this topic?")) return;
@@ -127,15 +117,6 @@ export default function AdminCourseTopics() {
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900">
                         {topic.title}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {topic.structured_content && topic.structured_content.sections ? (
-                          <span>
-                            {topic.structured_content.sections.length} sections
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">No content</span>
-                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

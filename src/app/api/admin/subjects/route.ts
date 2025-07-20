@@ -47,6 +47,18 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { title, description, difficulty, is_published } = body;
 
+    // Check if a course with the same title already exists
+    const existingCourse = await query(`
+      SELECT id FROM courses WHERE title = ?
+    `, [title]) as Course[];
+
+    if (existingCourse.length > 0) {
+      return NextResponse.json(
+        { error: 'A course with this title already exists' },
+        { status: 400 }
+      );
+    }
+
     const result = await query(`
       INSERT INTO courses (title, description, difficulty_level, is_published)
       VALUES (?, ?, ?, ?)

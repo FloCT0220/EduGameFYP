@@ -231,7 +231,7 @@ const createTables = async () => {
       INDEX idx_submitted_at (submitted_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-    // User progress table (merged with user_topic_progress)
+    // User progress table
     `CREATE TABLE IF NOT EXISTS user_progress (
       id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL,

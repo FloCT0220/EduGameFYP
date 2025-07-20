@@ -1,3 +1,12 @@
+function hasSections(obj: unknown): obj is { sections: unknown[] } {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'sections' in obj &&
+    Array.isArray((obj as { sections: unknown[] }).sections)
+  );
+}
+
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
@@ -23,14 +32,22 @@ export async function GET(
       return NextResponse.json({ error: 'Topic not found' }, { status: 404 });
     }
 
-    const topic = result[0] as any;
+    const topic = result[0] as Record<string, unknown>;
     
     // Parse structured_content if it exists
     if (topic.structured_content) {
-      try {
-        topic.structured_content = JSON.parse(topic.structured_content);
-      } catch {
-        topic.structured_content = null;
+      if (typeof topic.structured_content === 'string') {
+        try {
+          topic.structured_content = JSON.parse(topic.structured_content);
+        } catch (error) {
+          console.error('Error parsing structured_content:', error);
+          topic.structured_content = null;
+        }
+      }
+      // If it's already an object/array, no need to parse
+      // If it's wrapped in { sections: [...] }, unwrap it
+      if (hasSections(topic.structured_content)) {
+        topic.structured_content = topic.structured_content.sections;
       }
     }
 
@@ -55,7 +72,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid course or topic ID' }, { status: 400 });
     }
 
-    const { title, is_published, lesson_order, points_reward, structured_content } = body;
+    const { title, content, is_published, lesson_order, points_reward, structured_content } = body;
 
     // Validate required fields
     if (!title || !lesson_order || points_reward === undefined) {
@@ -77,11 +94,21 @@ export async function PUT(
       return NextResponse.json({ error: `Lesson order ${lesson_order} is already taken by another topic in this course` }, { status: 400 });
     }
 
-    // Update topic
-    const structuredContentJson = structured_content ? JSON.stringify(structured_content) : null;
+    // Save structured_content as a direct array
+    let structuredContentJson = null;
+    if (structured_content) {
+      if (hasSections(structured_content)) {
+        structuredContentJson = JSON.stringify(structured_content.sections);
+      } else if (Array.isArray(structured_content)) {
+        structuredContentJson = JSON.stringify(structured_content);
+      } else {
+        structuredContentJson = JSON.stringify([]);
+      }
+    }
+
     await query(
-      'UPDATE topics SET title = ?, lesson_order = ?, points_reward = ?, is_published = ?, structured_content = ?, updated_at = NOW() WHERE id = ? AND course_id = ?',
-      [title, lesson_order, points_reward, is_published, structuredContentJson, topicIdNum, courseId]
+      'UPDATE topics SET title = ?, content = ?, lesson_order = ?, points_reward = ?, is_published = ?, structured_content = ?, updated_at = NOW() WHERE id = ? AND course_id = ?',
+      [title, content || null, lesson_order, points_reward, is_published, structuredContentJson, topicIdNum, courseId]
     );
 
     return NextResponse.json({ message: 'Topic updated successfully' });

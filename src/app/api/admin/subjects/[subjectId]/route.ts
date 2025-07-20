@@ -55,6 +55,18 @@ export async function PUT(
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
+    // Check if another course with the same title already exists (excluding current course)
+    const duplicateCourse = await query(
+      'SELECT id FROM courses WHERE title = ? AND id != ?',
+      [title, courseId]
+    );
+    if (duplicateCourse && Array.isArray(duplicateCourse) && duplicateCourse.length > 0) {
+      return NextResponse.json(
+        { error: 'A course with this title already exists' },
+        { status: 400 }
+      );
+    }
+
     // Update course
     await query(
       'UPDATE courses SET title = ?, description = ?, difficulty_level = ?, is_published = ? WHERE id = ?',

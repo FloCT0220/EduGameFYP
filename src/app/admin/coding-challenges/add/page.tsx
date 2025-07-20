@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSession } from '@/lib/session';
@@ -41,6 +41,16 @@ export default function AddCodingChallenge() {
     supported_language: 'python',
     is_active: true
   });
+  const [titleError, setTitleError] = useState('');
+  const [isCheckingTitle, setIsCheckingTitle] = useState(false);
+  const [titleCheckTimeout, setTitleCheckTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Function to scroll to top
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Challenge answers state
   const [challengeAnswers, setChallengeAnswers] = useState<ChallengeAnswer[]>([
@@ -61,11 +71,76 @@ export default function AddCodingChallenge() {
     if (user?.role !== 'admin') {
       router.push('/dashboard');
     }
-  }, [user, router]);
+  }, [user?.role, router]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (titleCheckTimeout) {
+        clearTimeout(titleCheckTimeout);
+      }
+    };
+  }, [titleCheckTimeout]);
+
+  const checkTitleAvailability = useCallback(async (title: string, language?: string) => {
+    if (!title.trim()) {
+      setTitleError('');
+      return;
+    }
+
+    setIsCheckingTitle(true);
+    try {
+      const token = getSession('authToken');
+      const response = await fetch('/api/admin/coding-challenges', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Check if data is an array, if not, try to access the challenges property
+        const challenges = Array.isArray(data) ? data : (data.challenges || []);
+        
+        if (Array.isArray(challenges)) {
+          const currentLanguage = language || formData.supported_language;
+          const existingChallenge = challenges.find((challenge: { 
+            id: number; 
+            title: string; 
+            supported_language?: string 
+          }) => 
+            challenge.title.toLowerCase() === title.toLowerCase() &&
+            challenge.supported_language === currentLanguage
+          );
+          
+          if (existingChallenge) {
+            setTitleError(`A challenge with this title and language (${currentLanguage}) already exists`);
+          } else {
+            setTitleError('');
+          }
+        } else {
+          console.error('Unexpected response format:', data);
+          setTitleError('');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking title availability:', error);
+    } finally {
+      setIsCheckingTitle(false);
+    }
+  }, [formData.supported_language]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submission if there are errors
+    if (titleError || error) {
+      setError('Please fix the errors before submitting');
+      scrollToTop();
+      return;
+    }
+    
     setIsLoading(true);
+    setError('');
+    setSuccess('');
     
     try {
       const token = getSession('authToken');
@@ -84,14 +159,19 @@ export default function AddCodingChallenge() {
       });
 
       if (response.ok) {
-        router.push('/admin/coding-challenges');
+        setSuccess('Challenge created successfully!');
+        setTimeout(() => {
+          router.push('/admin/coding-challenges');
+        }, 1500);
       } else {
-        const error = await response.json();
-        alert(error.error || 'Error creating challenge');
+        const errorData = await response.json();
+        setError(errorData.error || 'Error creating challenge');
+        scrollToTop();
       }
     } catch (error) {
       console.error('Error creating challenge:', error);
-      alert('Error creating challenge');
+      setError('Error creating challenge');
+      scrollToTop();
     } finally {
       setIsLoading(false);
     }
@@ -183,6 +263,19 @@ export default function AddCodingChallenge() {
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-8">
+            {/* Error/Success Messages */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+                {success}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Basic Information */}
@@ -193,13 +286,38 @@ export default function AddCodingChallenge() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Title
                     </label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={formData.title}
+                        onChange={(e) => {
+                          setFormData({...formData, title: e.target.value});
+                          // Check title availability when title changes
+                          setTitleError('');
+                          if (e.target.value.trim()) {
+                            // Clear existing timeout
+                            if (titleCheckTimeout) {
+                              clearTimeout(titleCheckTimeout);
+                            }
+                            // Set new timeout
+                            const timeoutId = setTimeout(() => checkTitleAvailability(e.target.value), 500);
+                            setTitleCheckTimeout(timeoutId);
+                          }
+                        }}
+                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          titleError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
+                        }`}
+                        required
+                      />
+                      {isCheckingTitle && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        </div>
+                      )}
+                    </div>
+                    {titleError && (
+                      <p className="mt-1 text-sm text-red-600">{titleError}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -250,7 +368,19 @@ export default function AddCodingChallenge() {
                     </label>
                     <select
                       value={formData.supported_language || 'python'}
-                      onChange={(e) => setFormData({...formData, supported_language: e.target.value})}
+                      onChange={(e) => {
+                        const newLanguage = e.target.value;
+                        setFormData({...formData, supported_language: newLanguage});
+                        // Re-check title availability when language changes
+                        if (formData.title.trim()) {
+                          setTitleError('');
+                          if (titleCheckTimeout) {
+                            clearTimeout(titleCheckTimeout);
+                          }
+                          const timeoutId = setTimeout(() => checkTitleAvailability(formData.title, newLanguage), 500);
+                          setTitleCheckTimeout(timeoutId);
+                        }
+                      }}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       {LANGUAGE_OPTIONS.map(lang => (

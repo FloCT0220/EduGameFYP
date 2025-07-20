@@ -1,12 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaArrowLeft, FaSave } from 'react-icons/fa';
 
 
 
 type Difficulty = 'beginner' | 'intermediate' | 'advanced';
+
+interface Course {
+  id: number;
+  title: string;
+  description: string;
+  difficulty: string;
+  is_active: boolean;
+  enrolled_count: number;
+}
 
 export default function AddEditCoursePage() {
   const router = useRouter();
@@ -24,6 +33,9 @@ export default function AddEditCoursePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoadingCourse, setIsLoadingCourse] = useState(false);
+  const [titleError, setTitleError] = useState('');
+  const [isCheckingTitle, setIsCheckingTitle] = useState(false);
+  const [titleCheckTimeout, setTitleCheckTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isEditing && courseId) {
@@ -31,7 +43,16 @@ export default function AddEditCoursePage() {
     }
   }, [courseId, isEditing]);
 
-  const fetchCourse = async () => {
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (titleCheckTimeout) {
+        clearTimeout(titleCheckTimeout);
+      }
+    };
+  }, [titleCheckTimeout]);
+
+  const fetchCourse = useCallback(async () => {
     setIsLoadingCourse(true);
     try {
       const response = await fetch(`/api/admin/subjects/${courseId}`);
@@ -52,10 +73,17 @@ export default function AddEditCoursePage() {
     } finally {
       setIsLoadingCourse(false);
     }
-  };
+  }, [courseId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submission if there's a title error
+    if (titleError) {
+      setError('Please fix the title error before submitting');
+      return;
+    }
+    
     setIsLoading(true);
     setError('');
     setSuccess('');
@@ -91,11 +119,54 @@ export default function AddEditCoursePage() {
     }
   };
 
+  const checkTitleAvailability = useCallback(async (title: string) => {
+    if (!title.trim()) {
+      setTitleError('');
+      return;
+    }
+
+    setIsCheckingTitle(true);
+    try {
+      const response = await fetch('/api/admin/subjects');
+      const courses = await response.json();
+      
+      const existingCourse = courses.find((course: Course) => 
+        course.title.toLowerCase() === title.toLowerCase() && 
+        (!isEditing || course.id !== parseInt(courseId!))
+      );
+      
+      if (existingCourse) {
+        setTitleError('A course with this title already exists');
+      } else {
+        setTitleError('');
+      }
+    } catch (error) {
+      console.error('Error checking title availability:', error);
+    } finally {
+      setIsCheckingTitle(false);
+    }
+  }, [isEditing, courseId]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
     if (error) setError('');
     if (success) setSuccess('');
+    
+    // Check title availability when title changes
+    if (name === 'title') {
+      setTitleError('');
+      if (value.trim()) {
+        // Clear existing timeout
+        if (titleCheckTimeout) {
+          clearTimeout(titleCheckTimeout);
+        }
+        // Set new timeout
+        const timeoutId = setTimeout(() => checkTitleAvailability(value), 500);
+        setTitleCheckTimeout(timeoutId);
+      }
+    }
   };
 
   if (isLoadingCourse) {
@@ -152,16 +223,28 @@ export default function AddEditCoursePage() {
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
                   Course Title *
                 </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Enter course title"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    required
+                    className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                      titleError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter course title"
+                  />
+                  {isCheckingTitle && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    </div>
+                  )}
+                </div>
+                {titleError && (
+                  <p className="mt-1 text-sm text-red-600">{titleError}</p>
+                )}
               </div>
 
               {/* Description */}

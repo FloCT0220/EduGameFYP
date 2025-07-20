@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { FaArrowLeft, FaSave } from 'react-icons/fa';
 
@@ -26,28 +26,7 @@ interface Topic {
   updated_at: string;
 }
 
-const defaultSections: ContentSection[] = [
-  {
-    title: "Introduction",
-    content: "Welcome to this lesson! In this topic, we'll explore the fundamental concepts and practical applications."
-  },
-  {
-    title: "Key Concepts",
-    content: "Let's dive into the core principles that make this topic important in modern development."
-  },
-  {
-    title: "Practical Examples",
-    content: "Here are some real-world examples of how this topic is used in professional development environments."
-  },
-  {
-    title: "Best Practices",
-    content: "To master this topic, follow these industry-standard best practices and guidelines."
-  },
-  {
-    title: "Summary",
-    content: "You've now learned the essential concepts. Take the quiz below to test your understanding and earn points!"
-  }
-];
+
 
 export default function AddEditTopicPage() {
   const router = useRouter();
@@ -59,28 +38,27 @@ export default function AddEditTopicPage() {
 
   const [formData, setFormData] = useState({
     title: "",
+    content: "",
     lesson_order: 1,
     points_reward: 10,
     is_published: true,
   });
-  const [structuredContent, setStructuredContent] = useState<ContentSection[]>(defaultSections);
+  const [structuredContent, setStructuredContent] = useState<ContentSection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoadingTopic, setIsLoadingTopic] = useState(false);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [titleError, setTitleError] = useState('');
+  const [isCheckingTitle, setIsCheckingTitle] = useState(false);
+  const [titleCheckTimeout, setTitleCheckTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    fetchTopics();
-  }, [courseId]);
+  // Function to scroll to top
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-  useEffect(() => {
-    if (isEditing && topicId) {
-      fetchTopic();
-    }
-  }, [topicId, isEditing, courseId]);
-
-  const fetchTopics = async () => {
+  const fetchTopics = useCallback(async () => {
     try {
       const response = await fetch(`/api/admin/subjects/${courseId}/topics`);
       const data = await response.json();
@@ -89,9 +67,9 @@ export default function AddEditTopicPage() {
       console.error("Error fetching topics:", error);
       setTopics([]);
     }
-  };
+  }, [courseId]);
 
-  const fetchTopic = async () => {
+    const fetchTopic = useCallback(async () => {
     setIsLoadingTopic(true);
     try {
       const response = await fetch(`/api/admin/subjects/${courseId}/topics/${topicId}`);
@@ -99,27 +77,67 @@ export default function AddEditTopicPage() {
         const topic = await response.json();
         setFormData({
           title: topic.title,
+          content: topic.content || "",
           lesson_order: topic.lesson_order,
           points_reward: topic.points_reward,
           is_published: topic.is_published,
         });
         
-        // Load structured content if available, otherwise use defaults
-        if (topic.structured_content && topic.structured_content.sections) {
-          setStructuredContent(topic.structured_content.sections);
+        // Load structured content if available, otherwise start with empty array
+        if (topic.structured_content && topic.structured_content !== null) {
+          try {
+            // Parse the JSON string if it's a string
+            const parsedContent = typeof topic.structured_content === 'string' 
+              ? JSON.parse(topic.structured_content) 
+              : topic.structured_content;
+            
+            // Handle both formats: { sections: [...] } and direct array [...]
+            if (parsedContent && parsedContent.sections && Array.isArray(parsedContent.sections)) {
+              setStructuredContent(parsedContent.sections);
+            } else if (Array.isArray(parsedContent)) {
+              // Direct array format
+              setStructuredContent(parsedContent);
+            } else {
+              setStructuredContent([]);
+            }
+          } catch (error) {
+            console.error('Error parsing structured content:', error);
+            setStructuredContent([]);
+          }
         } else {
-          setStructuredContent(defaultSections);
+          setStructuredContent([]);
         }
       } else {
         setError('Failed to fetch topic data');
+        scrollToTop();
       }
     } catch (error) {
       console.error('Error fetching topic:', error);
       setError('Failed to fetch topic data');
+      scrollToTop();
     } finally {
       setIsLoadingTopic(false);
     }
-  };
+  }, [courseId, topicId]);
+
+  useEffect(() => {
+    fetchTopics();
+  }, [fetchTopics]);
+
+  useEffect(() => {
+    if (isEditing && topicId) {
+      fetchTopic();
+    }
+  }, [fetchTopic, isEditing, topicId]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (titleCheckTimeout) {
+        clearTimeout(titleCheckTimeout);
+      }
+    };
+  }, [titleCheckTimeout]);
 
   // Auto-generate the next lesson order
   const getNextLessonOrder = () => {
@@ -135,6 +153,35 @@ export default function AddEditTopicPage() {
       (!excludeTopicId || topic.id !== excludeTopicId)
     );
   };
+
+  const checkTitleAvailability = useCallback(async (title: string) => {
+    if (!title.trim()) {
+      setTitleError('');
+      return;
+    }
+
+    setIsCheckingTitle(true);
+    try {
+      const response = await fetch(`/api/admin/subjects/${courseId}/topics`);
+      if (response.ok) {
+        const topicsData = await response.json();
+        const existingTopic = topicsData.find((topic: { id: number; title: string }) => 
+          topic.title.toLowerCase() === title.toLowerCase() && 
+          (!isEditing || topic.id !== parseInt(topicId!))
+        );
+        
+        if (existingTopic) {
+          setTitleError('A topic with this title already exists in this course');
+        } else {
+          setTitleError('');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking title availability:', error);
+    } finally {
+      setIsCheckingTitle(false);
+    }
+  }, [courseId, isEditing, topicId]);
 
   const handleSectionChange = (index: number, field: 'title' | 'content', value: string) => {
     const updatedSections = [...structuredContent];
@@ -155,6 +202,14 @@ export default function AddEditTopicPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submission if there's a title error
+    if (titleError) {
+      setError('Please fix the title error before submitting');
+      scrollToTop();
+      return;
+    }
+    
     setIsLoading(true);
     setError('');
     setSuccess('');
@@ -162,6 +217,7 @@ export default function AddEditTopicPage() {
     // Validate lesson order uniqueness for editing
     if (isEditing && isLessonOrderTaken(formData.lesson_order, parseInt(topicId!))) {
       setError(`Lesson order ${formData.lesson_order} is already taken by another topic in this course.`);
+      scrollToTop();
       setIsLoading(false);
       return;
     }
@@ -195,16 +251,18 @@ export default function AddEditTopicPage() {
         }, 1500);
       } else {
         setError(result.error || 'An error occurred while saving the topic');
+        scrollToTop();
       }
     } catch (error) {
       console.error("Error saving topic:", error);
       setError('An error occurred while saving the topic');
+      scrollToTop();
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
     
@@ -215,6 +273,20 @@ export default function AddEditTopicPage() {
     
     if (error) setError('');
     if (success) setSuccess('');
+    
+    // Check title availability when title changes
+    if (name === 'title') {
+      setTitleError('');
+      if (value.trim()) {
+        // Clear existing timeout
+        if (titleCheckTimeout) {
+          clearTimeout(titleCheckTimeout);
+        }
+        // Set new timeout
+        const timeoutId = setTimeout(() => checkTitleAvailability(value), 500);
+        setTitleCheckTimeout(timeoutId);
+      }
+    }
   };
 
   if (isLoadingTopic) {
@@ -271,16 +343,47 @@ export default function AddEditTopicPage() {
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
                   Topic Title *
                 </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    required
+                    className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                      titleError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter topic title"
+                  />
+                  {isCheckingTitle && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    </div>
+                  )}
+                </div>
+                {titleError && (
+                  <p className="mt-1 text-sm text-red-600">{titleError}</p>
+                )}
+              </div>
+
+              {/* Content */}
+              <div>
+                <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+                  Topic Content
+                </label>
+                <textarea
+                  id="content"
+                  name="content"
+                  value={formData.content}
                   onChange={handleInputChange}
-                  required
+                  rows={6}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Enter topic title"
+                  placeholder="Enter the main content for this topic..."
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  This is the main content that will be displayed to students. You can also add structured sections below.
+                </p>
               </div>
 
               {/* Content Sections Editor */}

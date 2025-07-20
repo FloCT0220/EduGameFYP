@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
 export async function GET(
   request: NextRequest,
@@ -69,10 +70,13 @@ export async function PUT(
 
     // Update user
     if (password && password.trim() !== '') {
+      // Hash the password before storing
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
       // Update with password
       await query(
         'UPDATE users SET username = ?, email = ?, password = ?, role = ?, bio = ? WHERE id = ?',
-        [username, email, password, role, bio || null, userIdNum]
+        [username, email, hashedPassword, role, bio || null, userIdNum]
       );
     } else {
       // Update without password

@@ -178,35 +178,6 @@ export default function LeaderboardPage() {
           maxEntries={selectedLimit}
         />
 
-        {/* Stats */}
-        {leaderboardData.length > 0 && (
-          <div className="mt-8 bg-white/80 rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">📊 Leaderboard Stats</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-gradient-to-r from-yellow-100 to-yellow-200 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-800">
-                  {leaderboardData[0]?.total_points.toLocaleString()}
-                </div>
-                <div className="text-sm text-yellow-700">Highest Score</div>
-              </div>
-              
-              <div className="text-center p-4 bg-gradient-to-r from-green-100 to-green-200 rounded-lg">
-                <div className="text-2xl font-bold text-green-800">
-                  {Math.round(leaderboardData.reduce((sum, u) => sum + u.total_points, 0) / leaderboardData.length).toLocaleString()}
-                </div>
-                <div className="text-sm text-green-700">Average Score</div>
-              </div>
-              
-              <div className="text-center p-4 bg-gradient-to-r from-purple-100 to-purple-200 rounded-lg">
-                <div className="text-2xl font-bold text-purple-800">
-                  {Math.max(...leaderboardData.map(u => u.max_streak))}
-                </div>
-                <div className="text-sm text-purple-700">Longest Streak</div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Motivational Footer */}
         <div className="mt-8 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg p-6 text-center">
           <h3 className="text-lg font-semibold mb-2">🚀 Ready to climb higher?</h3>

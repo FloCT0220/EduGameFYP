@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 
@@ -54,6 +54,16 @@ export default function AddEditQuizQuestion() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [loadingTopics, setLoadingTopics] = useState(false);
+  const [questionError, setQuestionError] = useState('');
+  const [isCheckingQuestion, setIsCheckingQuestion] = useState(false);
+  const [questionCheckTimeout, setQuestionCheckTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Function to scroll to top
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     fetchCourses();
@@ -63,7 +73,7 @@ export default function AddEditQuizQuestion() {
     }
   }, [editId]);
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/quiz/courses');
       if (!response.ok) {
@@ -76,9 +86,9 @@ export default function AddEditQuizQuestion() {
     } finally {
       setLoadingCourses(false);
     }
-  };
+  }, []);
 
-  const fetchTopics = async (courseId: number) => {
+  const fetchTopics = useCallback(async (courseId: number) => {
     if (!courseId) {
       setTopics([]);
       return;
@@ -98,9 +108,9 @@ export default function AddEditQuizQuestion() {
     } finally {
       setLoadingTopics(false);
     }
-  };
+  }, []);
 
-  const fetchQuestion = async (id: number) => {
+  const fetchQuestion = useCallback(async (id: number) => {
     setLoading(true);
     try {
       const response = await fetch(`/api/admin/quiz/${id}`);
@@ -125,20 +135,44 @@ export default function AddEditQuizQuestion() {
       }
     } catch (error) {
       console.error('Error fetching question:', error);
-      alert('Failed to load question data');
+      setError('Failed to load question data');
+      scrollToTop();
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchTopics]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (questionCheckTimeout) {
+        clearTimeout(questionCheckTimeout);
+      }
+    };
+  }, [questionCheckTimeout]);
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submission if there are errors
+    if (questionError || error) {
+      setError('Please fix the errors before submitting');
+      scrollToTop();
+      return;
+    }
+    
     setSubmitting(true);
+    setError('');
+    setSuccess('');
 
     try {
       // Validate that all answers are filled
       if (formData.answers.some(answer => !answer.trim())) {
-        alert('Please fill in all answer options');
+        setError('Please fill in all answer options');
+        scrollToTop();
+        setSubmitting(false);
         return;
       }
 
@@ -164,15 +198,19 @@ export default function AddEditQuizQuestion() {
       const result = await response.json();
 
       if (result.success) {
-        alert(isEdit ? 'Question updated successfully!' : 'Question created successfully!');
-        router.push('/admin/quizzes');
+        setSuccess(isEdit ? 'Question updated successfully!' : 'Question created successfully!');
+        setTimeout(() => {
+          router.push('/admin/quizzes');
+        }, 1500);
       } else {
         console.error('Error saving question:', result.error);
-        alert('Failed to save question');
+        setError(result.error || 'Failed to save question');
+        scrollToTop();
       }
     } catch (error) {
       console.error('Error saving question:', error);
-      alert('Failed to save question');
+      setError('Failed to save question');
+      scrollToTop();
     } finally {
       setSubmitting(false);
     }
@@ -183,6 +221,38 @@ export default function AddEditQuizQuestion() {
     newAnswers[index] = value;
     setFormData({ ...formData, answers: newAnswers });
   };
+
+  const checkQuestionAvailability = useCallback(async (question: string) => {
+    if (!question.trim()) {
+      setQuestionError('');
+      return;
+    }
+
+    setIsCheckingQuestion(true);
+    try {
+      // Check against existing questions in the same topic
+      if (formData.course_id > 0 && formData.topic_id > 0) {
+        const response = await fetch(`/api/admin/quiz?courseId=${formData.course_id}&topicId=${formData.topic_id}`);
+        if (response.ok) {
+          const questions = await response.json();
+          const existingQuestion = questions.find((q: { id: number; question: string }) => 
+            q.question.toLowerCase() === question.toLowerCase() && 
+            (!isEdit || q.id !== parseInt(editId || '0'))
+          );
+          
+          if (existingQuestion) {
+            setQuestionError('A similar question already exists in this topic');
+          } else {
+            setQuestionError('');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking question availability:', error);
+    } finally {
+      setIsCheckingQuestion(false);
+    }
+  }, [formData.course_id, formData.topic_id, isEdit, editId]);
 
   const handleCourseChange = (courseId: number) => {
     setFormData({ ...formData, course_id: courseId, topic_id: 0 });
@@ -217,6 +287,19 @@ export default function AddEditQuizQuestion() {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
+          {/* Error/Success Messages */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+              {success}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Subject and Topic Selection */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -266,14 +349,39 @@ export default function AddEditQuizQuestion() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Question
               </label>
-              <textarea
-                value={formData.question}
-                onChange={(e) => setFormData({...formData, question: e.target.value})}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows={4}
-                required
-                placeholder="Enter your question here..."
-              />
+              <div className="relative">
+                <textarea
+                  value={formData.question}
+                  onChange={(e) => {
+                    setFormData({...formData, question: e.target.value});
+                    // Check question availability when question changes
+                    setQuestionError('');
+                    if (e.target.value.trim()) {
+                      // Clear existing timeout
+                      if (questionCheckTimeout) {
+                        clearTimeout(questionCheckTimeout);
+                      }
+                      // Set new timeout
+                      const timeoutId = setTimeout(() => checkQuestionAvailability(e.target.value), 500);
+                      setQuestionCheckTimeout(timeoutId);
+                    }
+                  }}
+                  className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    questionError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
+                  }`}
+                  rows={4}
+                  required
+                  placeholder="Enter your question here..."
+                />
+                {isCheckingQuestion && (
+                  <div className="absolute right-3 top-3">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  </div>
+                )}
+              </div>
+              {questionError && (
+                <p className="mt-1 text-sm text-red-600">{questionError}</p>
+              )}
             </div>
 
             {/* Answer Options */}
