@@ -183,56 +183,7 @@ export default function CoursesPage() {
                     <p className="text-gray-700">Welcome back, {user?.username}! Explore courses and master topics with different levels and prerequisites!</p>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                    <div className="card">
-                        <div className="flex items-center">
-                            <div className="text-3xl mr-3">📖</div>
-                            <div>
-                                <p className="text-sm text-gray-600">Enrolled Courses</p>
-                                <p className="text-2xl font-bold text-blue-600">
-                                    {courses.filter(c => c.enrolled).length}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="card">
-                        <div className="flex items-center">
-                            <div className="text-3xl mr-3">🎯</div>
-                            <div>
-                                <p className="text-sm text-gray-600">In Progress</p>
-                                <p className="text-2xl font-bold text-orange-600">
-                                    {courses.filter(c => c.enrolled && c.progress_percentage > 0 && c.progress_percentage < 100).length}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="card">
-                        <div className="flex items-center">
-                            <div className="text-3xl mr-3">✅</div>
-                            <div>
-                                <p className="text-sm text-gray-600">Completed Courses</p>
-                                <p className="text-2xl font-bold text-green-600">
-                                    {courses.filter(c => c.enrolled && c.progress_percentage === 100).length}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="card">
-                        <div className="flex items-center">
-                            <div className="text-3xl mr-3">⭐</div>
-                            <div>
-                                <p className="text-sm text-gray-600">Total Points Earned</p>
-                                <p className="text-2xl font-bold text-purple-600">
-                                    {courses.reduce((total, course) => total + course.total_points_earned, 0)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+               
 
                 {/* Search and Filters */}
                 <div className="card mb-8">

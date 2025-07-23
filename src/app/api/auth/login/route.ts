@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateUser, generateToken } from '@/lib/auth';
-import { initializeDatabase, checkConnection } from '@/lib/db';
+// import { initializeDatabase, checkConnection } from '@/lib/db';
+import { checkConnection } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,10 +15,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize database on first login attempt
-    console.log('🔄 Initializing database...');
-    await initializeDatabase();
-    console.log('✅ Database initialized');
+    // // Initialize database on first login attempt
+    // console.log('🔄 Initializing database...');
+    // await initializeDatabase();
+    // console.log('✅ Database initialized');
     
     const { email, password } = await request.json();
 
